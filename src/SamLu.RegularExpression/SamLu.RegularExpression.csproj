@@ -34,6 +34,9 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ValueTuple, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.3.1\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -49,14 +52,30 @@
     <Compile Include="RegexRange.cs" />
     <Compile Include="RegexRepeat.cs" />
     <Compile Include="RegexSeries.cs" />
+    <Compile Include="StateMachine\NFAtoDFAContextInfo.cs" />
+    <Compile Include="StateMachine\RegexDFA.cs" />
+    <Compile Include="StateMachine\RegexDFAState.cs" />
+    <Compile Include="StateMachine\RegexFAEpsilonTransition.cs" />
+    <Compile Include="StateMachine\RegexFAStateGroup.cs" />
+    <Compile Include="StateMachine\RegexFAUtility.cs" />
+    <Compile Include="StateMachine\RegexNFA.cs" />
+    <Compile Include="StateMachine\RegexNFAState.cs" />
+    <Compile Include="StateMachine\RegexFATransition.cs" />
     <Compile Include="System\EqualityComparison.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="SamLu.RegularExpression.cd" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\StateMachine_Develop\src\SamLu.StateMachine\SamLu.StateMachine.csproj">
+      <Project>{23a9b2df-a5ff-4199-bc87-5ec50edfb3b3}</Project>
+      <Name>SamLu.StateMachine</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
