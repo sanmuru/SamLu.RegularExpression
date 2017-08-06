@@ -10,41 +10,41 @@ namespace SamLu.RegularExpression
         private RegexObject<T> innerRegex;
         public RegexObject<T> InnerRegex => this.innerRegex;
 
-        private ulong? minimum = null;
-        private ulong? maximum = null;
+        private ulong? minimumCount = null;
+        private ulong? maximumCount = null;
 
-        public ulong? Minimum => this.minimum;
-        public ulong? Maximum => this.maximum;
+        public ulong? MinimumCount => this.minimumCount;
+        public ulong? MaximumCount => this.maximumCount;
 
-        public bool IsInfinte => !this.maximum.HasValue;
+        public bool IsInfinte => !this.maximumCount.HasValue;
 
         protected RegexRepeat(RegexObject<T> regex)
         {
             this.innerRegex = regex;
         }
 
-        public RegexRepeat(RegexObject<T> regex, ulong? minimum, ulong? maximum) : this(regex)
+        public RegexRepeat(RegexObject<T> regex, ulong? minimumCount, ulong? maximumCount) : this(regex)
         {
-            if ((minimum.HasValue && maximum.HasValue) &&
-                (minimum.Value > maximum.Value)
+            if ((minimumCount.HasValue && maximumCount.HasValue) &&
+                (minimumCount.Value > maximumCount.Value)
             )
                 throw new ArgumentOutOfRangeException(
-                    string.Format("{0}, {1}", nameof(minimum), nameof(maximum)),
-                    string.Format("{0}, {1}", minimum, maximum),
+                    string.Format("{0}, {1}", nameof(minimumCount), nameof(maximumCount)),
+                    string.Format("{0}, {1}", minimumCount, maximumCount),
                     string.Format("次数最小值不能大于最大值。")
                 );
 
-            this.minimum = minimum;
-            this.maximum = maximum;
+            this.minimumCount = minimumCount;
+            this.maximumCount = maximumCount;
         }
 
-        public RegexRepeat(RegexObject<T> regex, ulong minimum, ulong maximum) : this(regex, (ulong?)minimum, (ulong?)maximum) { }
+        public RegexRepeat(RegexObject<T> regex, ulong minimumCount, ulong maximumCount) : this(regex, (ulong?)minimumCount, (ulong?)maximumCount) { }
 
         public RegexRepeat(RegexObject<T> regex, bool isInfinite) : this(regex, null, isInfinite) { }
 
-        public RegexRepeat(RegexObject<T> regex, ulong? minimum, bool isInfinite) : this(regex, minimum, null) { }
+        public RegexRepeat(RegexObject<T> regex, ulong? minimumCount, bool isInfinite) : this(regex, minimumCount, (isInfinite ? null : (ulong?)(minimumCount ?? ulong.MinValue))) { }
 
-        public RegexRepeat(RegexObject<T> regex, ulong minimum, bool isInfinite) : this(regex, (ulong?)minimum, isInfinite) { }
+        public RegexRepeat(RegexObject<T> regex, ulong minimumCount, bool isInfinite) : this(regex, (ulong?)minimumCount, isInfinite) { }
 
         public override RegexObject<T> Concat(RegexObject<T> regex)
         {
@@ -53,15 +53,15 @@ namespace SamLu.RegularExpression
             if (regex is RegexRepeat<T> repeat && this.innerRegex.Equals(repeat.innerRegex))
                 return new RegexRepeat<T>(
                     this.innerRegex,
-                    ((this.Minimum.HasValue && repeat.Minimum.HasValue) ? this.minimum + repeat.minimum : null),
-                    ((this.Maximum.HasValue && repeat.Maximum.HasValue) ? this.maximum + repeat.maximum : null)
+                    ((this.MinimumCount.HasValue && repeat.MinimumCount.HasValue) ? this.minimumCount + repeat.minimumCount : null),
+                    ((this.MaximumCount.HasValue && repeat.MaximumCount.HasValue) ? this.maximumCount + repeat.maximumCount : null)
                 );
             else return base.Concat(regex);
         }
 
         protected internal override RegexObject<T> Clone()
         {
-            return new RegexRepeat<T>(this.innerRegex, this.minimum, this.maximum);
+            return new RegexRepeat<T>(this.innerRegex, this.minimumCount, this.maximumCount);
         }
     }
 }

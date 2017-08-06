@@ -53,6 +53,7 @@
     <Compile Include="RegexRepeat.cs" />
     <Compile Include="RegexSeries.cs" />
     <Compile Include="StateMachine\NFAtoDFAContextInfo.cs" />
+    <Compile Include="StateMachine\Regex.cs" />
     <Compile Include="StateMachine\RegexDFA.cs" />
     <Compile Include="StateMachine\RegexDFAState.cs" />
     <Compile Include="StateMachine\RegexFAEpsilonTransition.cs" />

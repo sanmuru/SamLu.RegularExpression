@@ -14,8 +14,8 @@ namespace SamLu.RegularExpression
             if (regex is RegexRepeat<T> repeat && this.Equals(repeat.InnerRegex))
                 return new RegexRepeat<T>(
                     this,
-                    repeat.Minimum.HasValue ? repeat.Minimum + 1 : null,
-                    repeat.Maximum.HasValue ? repeat.Maximum + 1 : null
+                    repeat.MinimumCount.HasValue ? repeat.MinimumCount + 1 : null,
+                    repeat.MaximumCount.HasValue ? repeat.MaximumCount + 1 : null
                 );
             else if (regex is RegexSeries<T> series)
                 return new RegexSeries<T>(new RegexObject<T>[] { this }.Concat(series.Series));
@@ -58,6 +58,27 @@ namespace SamLu.RegularExpression
             if (right == null) throw new ArgumentNullException(nameof(right));
 
             return left.Unions(right);
+        }
+
+        public static RegexRepeat<T> operator *(ulong count, RegexObject<T> regex) => regex * count;
+        
+        public static RegexRepeat<T> operator *(RegexObject<T> regex, ulong count)
+        {
+            if (regex == null) throw new ArgumentNullException(nameof(regex));
+
+            if (regex is RegexRepeat<T> repeat)
+            {
+                if (!repeat.MinimumCount.HasValue && !repeat.MaximumCount.HasValue)
+                    return repeat;
+                else
+                    return new RegexRepeat<T>(
+                        repeat.InnerRegex,
+                        repeat.MinimumCount * count,
+                        repeat.MaximumCount * count
+                    );
+            }
+            else
+                return new RegexRepeat<T>(regex, count, count);
         }
 
         protected internal abstract RegexObject<T> Clone();

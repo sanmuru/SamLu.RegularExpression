@@ -18,14 +18,15 @@ namespace SamLu.RegularExpression.StateMachine
             RegexDFA<T> dfa = new RegexDFA<T>() { StartState = new RegexDFAState<T>() };
 
             // 队列 Q 放置的是未被处理的已经创建了的 NFA 状态组（及其对应的 DFA 状态）。
-            Queue<(RegexFAStateGroup<RegexNFAState<T>>,RegexDFAState<T>)> Q = new Queue<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)>();
+            var Q = new Queue<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)>();
             // 集合 C 放置的是已经存在的 NFA 状态组（及其对应的 DFA 状态）。
-            Collection<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)> C = new Collection<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)>();
+            var C = new Collection<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)>();
             // 集合 D 放置的是处理后连接指定两个 DFA 状态的所有转换接受的对象的并集。
-            Dictionary<(RegexDFAState<T>, RegexDFAState<T>), ISet<T>> D = new Dictionary<(RegexDFAState<T>, RegexDFAState<T>), ISet<T>>();
+            var D = new Dictionary<(RegexDFAState<T>, RegexDFAState<T>), ISet<T>>();
 
-            Q.Enqueue((new RegexFAStateGroup<RegexNFAState<T>>(nfa.StartState), dfa.StartState));
-            C.Add((new RegexFAStateGroup<RegexNFAState<T>>(nfa.StartState), dfa.StartState));
+            var startTuple = (new RegexFAStateGroup<RegexNFAState<T>>(nfa.StartState), dfa.StartState);
+            Q.Enqueue(startTuple);
+            C.Add(startTuple);
 
             while (Q.Count != 0)
             {
@@ -54,7 +55,7 @@ namespace SamLu.RegularExpression.StateMachine
                     {
                         (RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T> dfaState)? tuple = 
                             C
-                                .OfType<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)?>()
+                                .Cast<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)?>()
                                 .FirstOrDefault(_tuple =>
                                 {
                                     (RegexFAStateGroup<RegexNFAState<T>> __nfaStateGroup, RegexDFAState<T>) t = _tuple.Value;
