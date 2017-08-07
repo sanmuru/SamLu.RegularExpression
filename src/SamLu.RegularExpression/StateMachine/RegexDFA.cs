@@ -11,7 +11,7 @@ namespace SamLu.RegularExpression.StateMachine
     /// 表示正则表达式构造的确定的有限自动机。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
-    internal class RegexDFA<T> : DFA<RegexDFAState<T>, RegexFATransition<T, RegexDFAState<T>>>
+    public class RegexDFA<T> : DFA<RegexDFAState<T>, RegexFATransition<T, RegexDFAState<T>>>
     {
         /// <summary>
         /// 接受一个指定输入并进行转换。返回一个值，指示操作是否成功。

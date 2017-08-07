@@ -34,5 +34,10 @@ namespace SamLu.RegularExpression
         {
             return new RegexParallels<T>(this.parallels);
         }
+
+        public override string ToString()
+        {
+            return $"({string.Join("|", this.parallels)})";
+        }
     }
 }

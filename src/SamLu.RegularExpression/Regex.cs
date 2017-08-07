@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SamLu.RegularExpression.StateMachine
+namespace SamLu.RegularExpression
 {
     public static class Regex
     {
@@ -14,12 +14,16 @@ namespace SamLu.RegularExpression.StateMachine
         public static RegexSeries<T> Series<T>(IEnumerable<T> ts) => Regex.ConcatMany<T, RegexConst<T>>(ts?.Select(t => Regex.Const(t)));
 
         public static RegexSeries<T> Series<T>(params T[] ts) => Regex.Series<T>(ts?.AsEnumerable());
+
+        public static RegexSeries<S> Series<T, S>(IEnumerable<T> ts, Func<T, S> selector) => Regex.Series(ts.Select(selector ?? throw new ArgumentNullException(nameof(selector))));
         #endregion
 
         #region Parallels
         public static RegexParallels<T> Parallels<T>(IEnumerable<T> ts) => Regex.UnionMany<T, RegexConst<T>>(ts?.Select(t => Regex.Const(t)));
 
         public static RegexParallels<T> Parallels<T>(params T[] ts) => Regex.Parallels<T>(ts?.AsEnumerable());
+
+        public static RegexParallels<S> Parallels<T, S>(IEnumerable<T> ts, Func<T, S> selector) => Regex.Parallels(ts.Select(selector ?? throw new ArgumentNullException(nameof(selector))));
         #endregion
 
         public static RegexRange<T> Range<T>(T minimum, T maximum, bool canTakeMinimum = true, bool canTakeMaximum = true) => new RegexRange<T>(minimum, maximum, canTakeMinimum, canTakeMaximum);

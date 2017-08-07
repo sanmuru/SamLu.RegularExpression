@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.StateMachine
 {
-    internal interface IRegexFAProvider<T>
+    public interface IRegexFAProvider<T>
     {
         RegexNFA<T> GenerateNFAFromRegexObject(RegexObject<T> regex);
 

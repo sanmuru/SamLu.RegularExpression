@@ -1,12 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
 namespace SamLu.RegularExpression
 {
+    #region Debugger Support
+    [DebuggerDisplay("{InnerRegex}{__DebugString,nq}")]
+    #endregion
     public class RegexRepeat<T> : RegexObject<T>
     {
+        #region Debugger Support
+        private string __DebugString =>
+            $"{'{'}{this.MinimumCount ?? ulong.MinValue},{(this.IsInfinte ? string.Empty : this.MaximumCount.Value.ToString())}{'}'}";
+        #endregion
+
         private RegexObject<T> innerRegex;
         public RegexObject<T> InnerRegex => this.innerRegex;
 
@@ -50,11 +59,11 @@ namespace SamLu.RegularExpression
         {
             if (regex == null) throw new ArgumentNullException(nameof(regex));
 
-            if (regex is RegexRepeat<T> repeat && this.innerRegex.Equals(repeat.innerRegex))
+            if (regex is RegexRepeat<T> repeat && this.InnerRegex.Equals(repeat.InnerRegex))
                 return new RegexRepeat<T>(
-                    this.innerRegex,
-                    ((this.MinimumCount.HasValue && repeat.MinimumCount.HasValue) ? this.minimumCount + repeat.minimumCount : null),
-                    ((this.MaximumCount.HasValue && repeat.MaximumCount.HasValue) ? this.maximumCount + repeat.maximumCount : null)
+                    this.InnerRegex,
+                    ((this.MinimumCount.HasValue && repeat.MinimumCount.HasValue) ? this.MinimumCount + repeat.MinimumCount : null),
+                    ((this.MaximumCount.HasValue && repeat.MaximumCount.HasValue) ? this.MaximumCount + repeat.MaximumCount : null)
                 );
             else return base.Concat(regex);
         }
@@ -62,6 +71,11 @@ namespace SamLu.RegularExpression
         protected internal override RegexObject<T> Clone()
         {
             return new RegexRepeat<T>(this.innerRegex, this.minimumCount, this.maximumCount);
+        }
+
+        public override string ToString()
+        {
+            return $"{this.InnerRegex}{'{'}{this.MinimumCount ?? ulong.MinValue},{(this.IsInfinte ? string.Empty : this.MaximumCount.Value.ToString())}{'}'}";
         }
     }
 }

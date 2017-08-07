@@ -5,6 +5,10 @@ using System.Text;
 
 namespace SamLu.RegularExpression
 {
+    /// <summary>
+    /// 表示常量正则。匹配单个输入对象是否与内部常量对象相等。
+    /// </summary>
+    /// <typeparam name="T">正则接受的对象的类型。</typeparam>
     public class RegexConst<T> : RegexCondition<T>
     {
         /// <summary>
@@ -12,33 +16,54 @@ namespace SamLu.RegularExpression
         /// </summary>
         public static readonly EqualityComparison<T> DefaultEqualityComparison = EqualityComparer<T>.Default.Equals;
 
-        private T constValue;
+        protected T constValue;
 
-        private EqualityComparison<T> equalityComparison;
+        protected EqualityComparison<T> equalityComparison;
 
-        public T ConstValue => this.constValue;
+        /// <summary>
+        /// 获取常量正则内部储存的常量对象。
+        /// </summary>
+        public virtual T ConstValue => this.constValue;
+        public virtual EqualityComparison<T> EqualityComparison => this.equalityComparison;
+        
+        protected RegexConst() : base() { }
 
+        /// <summary>
+        /// 初始化 <see cref="RegexConst{T}"/> 类的新实例。该实例使用指定的对象作为内部储存的常量对象以及默认的常量正则的值相等性比较方法。
+        /// </summary>
+        /// <param name="constValue">指定的对象。</param>
         public RegexConst(T constValue) : this(constValue, RegexConst<T>.DefaultEqualityComparison) { }
 
-        protected RegexConst(T constValue, EqualityComparison<T> equalityComparison) :
-            base(
-                equalityComparison == null ?
-                    null :
-                    new Predicate<T>(t => equalityComparison(constValue, t))
-            )
+        /// <summary>
+        /// 初始化 <see cref="RegexConst{T}"/> 类的新实例。该实例使用指定的对象作为内部储存的常量对象以及指定的常量正则的值相等性比较方法。
+        /// </summary>
+        /// <param name="constValue">指定的对象。</param>
+        /// <param name="equalityComparison">指定的常量正则的值相等性比较方法。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="equalityComparison"/> 的值为 null 。</exception>
+        public RegexConst(T constValue, EqualityComparison<T> equalityComparison) : base()
         {
+            if (equalityComparison == null) throw new ArgumentNullException(nameof(equalityComparison));
+
             this.constValue = constValue;
 
             this.equalityComparison = equalityComparison;
+            base.condition = t => equalityComparison(constValue, t);
         }
 
+        /// <summary>
+        /// 将此常量正则与另一个正则对象并联。
+        /// </summary>
+        /// <param name="regex">另一个正则对象。</param>
+        /// <returns>并联后形成的新正则对象。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="regex"/> 的值为 null 。</exception>
+        /// <seealso cref="RegexObject{T}.Unions(RegexObject{T})"/>
         public override RegexObject<T> Unions(RegexObject<T> regex)
         {
             if (regex == null) throw new ArgumentNullException(nameof(regex));
 
             if ((regex is RegexRange<T> range) &&
-                (range.Comparison(range.Minimum, this.constValue) <= 0 &&
-                range.Comparison(this.constValue, range.Maximum) <= 0)
+                (range.Comparison(range.Minimum, this.ConstValue) <= 0 &&
+                range.Comparison(this.ConstValue, range.Maximum) <= 0)
             )
                 return regex;
             else return base.Unions(regex);
@@ -46,7 +71,12 @@ namespace SamLu.RegularExpression
 
         protected internal override RegexObject<T> Clone()
         {
-            return new RegexConst<T>(this.constValue);
+            return new RegexConst<T>(this.constValue, this.equalityComparison);
+        }
+
+        public override string ToString()
+        {
+            return this.ConstValue.ToString();
         }
     }
 }

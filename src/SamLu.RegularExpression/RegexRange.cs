@@ -1,49 +1,65 @@
-﻿using System;
+﻿using SamLu.RegularExpression.DebugView;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
 namespace SamLu.RegularExpression
 {
+    /// <summary>
+    /// 表示范围正则。匹配单个对象是否落在内部范围之间。
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    #region Debugger Support
+    [DebuggerDisplay("{__Debugger__CanTakeMinimum,nq}{Minimum},{Maximum}{__Debugger__CanTakeMaximum,nq}")]
+    [DebuggerTypeProxy(typeof(RegexRangeDebugView<>))]
+    #endregion
     public class RegexRange<T> : RegexCondition<T>
     {
+        #region Debugger Support
+        private string __Debugger__CanTakeMinimum => this.CanTakeMinimum ? "[" : "(";
+        private string __Debugger__CanTakeMaximum => this.CanTakeMaximum ? "]" : ")";
+        #endregion
+
         /// <summary>
         /// 一个默认的范围正则的值大小比较方法。
         /// </summary>
         public static readonly Comparison<T> DefaultComparison = Comparer<T>.Default.Compare;
 
-        private T minimum;
-        private T maximum;
+        protected T minimum;
+        protected T maximum;
 
-        private bool canTakeMinimum;
-        private bool canTakeMaximum;
+        protected bool canTakeMinimum;
+        protected bool canTakeMaximum;
 
-        private Comparison<T> comparison;
+        protected Comparison<T> comparison;
 
-        public T Minimum => this.minimum;
-        public T Maximum => this.maximum;
+        /// <summary>
+        /// 获取内部范围的最小值。
+        /// </summary>
+        public virtual T Minimum => this.minimum;
+        /// <summary>
+        /// 获取内部范围的最大值。
+        /// </summary>
+        public virtual T Maximum => this.maximum;
 
+        /// <summary>
+        /// 获取一个值，指示内部范围是否取到最小值。
+        /// </summary>
         public bool CanTakeMinimum => this.canTakeMinimum;
+        /// <summary>
+        /// 获取一个值，指示内部范围是否取到最大值。
+        /// </summary>
         public bool CanTakeMaximum => this.canTakeMaximum;
 
-        internal Comparison<T> Comparison => this.comparison;
+        public virtual Comparison<T> Comparison => this.comparison;
+
+        protected RegexRange() : base() { }
 
         public RegexRange(T minimum, T maximum, bool canTakeMinimum = true, bool canTakeMaximum = true) : this(minimum, maximum, canTakeMinimum, canTakeMaximum, RegexRange<T>.DefaultComparison) { }
 
-        protected RegexRange(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum, Comparison<T> comparison) :
-            base(
-                comparison == null ?
-                    null :
-                    new Predicate<T>(t =>
-                        (canTakeMinimum ?
-                            comparison(minimum, t) <= 0 :
-                            comparison(minimum, t) < 0
-                        ) &&
-                        (canTakeMaximum ?
-                            comparison(t, maximum) <= 0 :
-                            comparison(t, maximum) < 0)
-                    )
-            )
+        public RegexRange(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum, Comparison<T> comparison) : base()
         {
             if (comparison == null) throw new ArgumentNullException(nameof(comparison));
 
@@ -67,6 +83,16 @@ namespace SamLu.RegularExpression
             this.canTakeMaximum = canTakeMaximum;
 
             this.comparison = comparison;
+            base.condition =
+                t =>
+                    (canTakeMinimum ?
+                        comparison(minimum, t) <= 0 :
+                        comparison(minimum, t) < 0
+                    ) &&
+                    (canTakeMaximum ?
+                        comparison(t, maximum) <= 0 :
+                        comparison(t, maximum) < 0
+                    );
         }
 
         public override RegexObject<T> Unions(RegexObject<T> regex)
@@ -80,45 +106,45 @@ namespace SamLu.RegularExpression
                 if (this.comparison != range.comparison)
                     throw new NotSupportedException("无法对使用不同比较方法的范围正则进行结合。");
                 else if (
-                    (this.comparison(range.minimum, this.maximum) <= 0 &&
-                    range.comparison(range.minimum, this.maximum) <= 0)
+                    (this.comparison(range.Minimum, this.Maximum) <= 0 &&
+                    range.comparison(range.Minimum, this.Maximum) <= 0)
                 )
                 {
                     T newMinimum, newMaximum;
                     bool newCanTakeMinimum, newCanTakeMaximum;
                     int i;
 
-                    i = this.comparison(this.minimum, range.minimum);
+                    i = this.comparison(this.Minimum, range.Minimum);
                     if (i < 0)
                     {
-                        newMinimum = this.minimum;
+                        newMinimum = this.Minimum;
                         newCanTakeMinimum = this.canTakeMinimum;
                     }
                     else if (i > 0)
                     {
-                        newMinimum = range.minimum;
+                        newMinimum = range.Minimum;
                         newCanTakeMinimum = range.canTakeMinimum;
                     }
                     else
                     {
-                        newMinimum = this.minimum;
+                        newMinimum = this.Minimum;
                         newCanTakeMinimum = this.canTakeMinimum || range.canTakeMinimum;
                     }
 
-                    i = this.comparison(this.maximum, range.maximum);
+                    i = this.comparison(this.Maximum, range.Maximum);
                     if (i < 0)
                     {
-                        newMaximum = this.maximum;
+                        newMaximum = this.Maximum;
                         newCanTakeMaximum = this.canTakeMaximum;
                     }
                     else if (i > 0)
                     {
-                        newMaximum = range.maximum;
+                        newMaximum = range.Maximum;
                         newCanTakeMaximum = range.canTakeMaximum;
                     }
                     else
                     {
-                        newMaximum = this.maximum;
+                        newMaximum = this.Maximum;
                         newCanTakeMaximum = this.canTakeMaximum || range.canTakeMaximum;
                     }
 
@@ -135,7 +161,12 @@ namespace SamLu.RegularExpression
 
         protected internal override RegexObject<T> Clone()
         {
-            return new RegexRange<T>(this.minimum, this.maximum, this.canTakeMinimum, this.CanTakeMaximum, this.comparison);
+            return new RegexRange<T>(this.minimum, this.maximum, this.canTakeMinimum, this.canTakeMaximum, this.comparison);
+        }
+
+        public override string ToString()
+        {
+            return $"{(this.CanTakeMinimum ? '[' : '(')}{this.Minimum},{this.Maximum}{(this.CanTakeMaximum ? ']' : ')')}";
         }
     }
 }

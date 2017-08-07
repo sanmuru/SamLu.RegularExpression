@@ -34,5 +34,10 @@ namespace SamLu.RegularExpression
         {
             return new RegexSeries<T>(this.series);
         }
+
+        public override string ToString()
+        {
+            return string.Join(string.Empty, this.series);
+        }
     }
 }

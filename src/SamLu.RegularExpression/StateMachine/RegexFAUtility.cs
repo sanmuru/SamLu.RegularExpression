@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace SamLu.RegularExpression.StateMachine
 {
     [Obsolete]
-    internal static class RegexFAUtility
+    public static class RegexFAUtility
     {
         public static RegexDFA<T> ToDFA<T>(this RegexNFA<T> nfa, IRegexRunContextInfo<T> contextInfo)
         {

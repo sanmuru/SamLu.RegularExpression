@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.StateMachine
 {
-    internal class RegexFAProvider<T> : IRegexFAProvider<T>
+    public class RegexFAProvider<T> : IRegexFAProvider<T>
     {
         private IRegexRunContextInfo<T> contextInfo;
         public IRegexRunContextInfo<T> ContextInfo => this.contextInfo;

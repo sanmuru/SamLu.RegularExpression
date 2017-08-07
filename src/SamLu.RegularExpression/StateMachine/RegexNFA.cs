@@ -11,7 +11,7 @@ namespace SamLu.RegularExpression.StateMachine
     /// 表示正则表达式构造的非确定的有限自动机。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
-    internal class RegexNFA<T> : NFA<RegexNFAState<T>, RegexFATransition<T, RegexNFAState<T>>, RegexNFAEpsilonTransition<T>>
+    public class RegexNFA<T> : NFA<RegexNFAState<T>, RegexFATransition<T, RegexNFAState<T>>, RegexNFAEpsilonTransition<T>>
     {
         /// <summary>
         /// 最小化 NFA 。

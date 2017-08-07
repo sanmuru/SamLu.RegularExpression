@@ -45,6 +45,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Adapter\AdaptOption.cs" />
+    <Compile Include="Adapter\RegexConditionAdaptContextInfo.cs" />
+    <Compile Include="Adapter\RegexConditionAdaptor.cs" />
+    <Compile Include="Adapter\RegexConstAdaptor.cs" />
+    <Compile Include="Adapter\RegexRangeAdaptor.cs" />
+    <Compile Include="DebugView\RegexRangeDebugView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegexCondition.cs" />
     <Compile Include="RegexConst.cs" />
@@ -55,7 +61,7 @@
     <Compile Include="RegexSeries.cs" />
     <Compile Include="StateMachine\IRegexFAProvider.cs" />
     <Compile Include="StateMachine\IRegexRunContextInfo.cs" />
-    <Compile Include="StateMachine\Regex.cs" />
+    <Compile Include="Regex.cs" />
     <Compile Include="StateMachine\RegexDFA.cs" />
     <Compile Include="StateMachine\RegexDFAState.cs" />
     <Compile Include="StateMachine\RegexNFAEpsilonTransition.cs" />
@@ -72,9 +78,6 @@
     <None Include="SamLu.RegularExpression.cd" />
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <WCFMetadata Include="Connected Services\" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\StateMachine_Develop\src\SamLu.StateMachine\SamLu.StateMachine.csproj">
       <Project>{23a9b2df-a5ff-4199-bc87-5ec50edfb3b3}</Project>

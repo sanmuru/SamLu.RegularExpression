@@ -11,7 +11,7 @@ namespace SamLu.RegularExpression.StateMachine
     /// 表示正则表达式构造的确定的有限自动机的状态。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
-    internal class RegexDFAState<T> : DFAState<RegexFATransition<T, RegexDFAState<T>>>
+    public class RegexDFAState<T> : DFAState<RegexFATransition<T, RegexDFAState<T>>>
     {
         /// <summary>
         /// 获取或设置一个值，指示该有限自动机的状态是否为结束状态。

@@ -12,7 +12,7 @@ namespace SamLu.RegularExpression.StateMachine
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     /// <typeparam name="TRegexFAState">正则表达式构造的有限自动机的状态的类型。</typeparam>
-    internal class RegexFATransition<T, TRegexFAState> : FSMTransition<TRegexFAState>, ITransition<TRegexFAState>
+    public class RegexFATransition<T, TRegexFAState> : FSMTransition<TRegexFAState>, ITransition<TRegexFAState>
         where TRegexFAState : IState
     {
         private Predicate<T> predicate;
