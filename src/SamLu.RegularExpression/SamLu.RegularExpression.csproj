@@ -46,17 +46,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RegexCondition.cs" />
     <Compile Include="RegexConst.cs" />
     <Compile Include="RegexObject.cs" />
     <Compile Include="RegexParallels.cs" />
     <Compile Include="RegexRange.cs" />
     <Compile Include="RegexRepeat.cs" />
     <Compile Include="RegexSeries.cs" />
-    <Compile Include="StateMachine\NFAtoDFAContextInfo.cs" />
+    <Compile Include="StateMachine\IRegexFAProvider.cs" />
+    <Compile Include="StateMachine\IRegexRunContextInfo.cs" />
     <Compile Include="StateMachine\Regex.cs" />
     <Compile Include="StateMachine\RegexDFA.cs" />
     <Compile Include="StateMachine\RegexDFAState.cs" />
-    <Compile Include="StateMachine\RegexFAEpsilonTransition.cs" />
+    <Compile Include="StateMachine\RegexNFAEpsilonTransition.cs" />
+    <Compile Include="StateMachine\RegexFAProvider.cs" />
     <Compile Include="StateMachine\RegexFAStateGroup.cs" />
     <Compile Include="StateMachine\RegexFAUtility.cs" />
     <Compile Include="StateMachine\RegexNFA.cs" />

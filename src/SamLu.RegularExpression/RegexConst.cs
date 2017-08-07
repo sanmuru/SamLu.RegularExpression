@@ -5,28 +5,33 @@ using System.Text;
 
 namespace SamLu.RegularExpression
 {
-    public class RegexConst<T> : RegexObject<T>
+    public class RegexConst<T> : RegexCondition<T>
     {
         /// <summary>
         /// 一个默认的常量正则的值相等性比较方法。
         /// </summary>
         public static readonly EqualityComparison<T> DefaultEqualityComparison = EqualityComparer<T>.Default.Equals;
 
-        protected T constValue;
+        private T constValue;
 
-        protected EqualityComparison<T> equalityComparison;
+        private EqualityComparison<T> equalityComparison;
 
         public T ConstValue => this.constValue;
 
         public RegexConst(T constValue) : this(constValue, RegexConst<T>.DefaultEqualityComparison) { }
 
-        protected RegexConst(T constValue, EqualityComparison<T> equalityComparison)
+        protected RegexConst(T constValue, EqualityComparison<T> equalityComparison) :
+            base(
+                equalityComparison == null ?
+                    null :
+                    new Predicate<T>(t => equalityComparison(constValue, t))
+            )
         {
             this.constValue = constValue;
 
             this.equalityComparison = equalityComparison;
         }
-        
+
         public override RegexObject<T> Unions(RegexObject<T> regex)
         {
             if (regex == null) throw new ArgumentNullException(nameof(regex));

@@ -5,20 +5,20 @@ using System.Text;
 
 namespace SamLu.RegularExpression
 {
-    public class RegexRange<T> : RegexObject<T>
+    public class RegexRange<T> : RegexCondition<T>
     {
         /// <summary>
         /// 一个默认的范围正则的值大小比较方法。
         /// </summary>
         public static readonly Comparison<T> DefaultComparison = Comparer<T>.Default.Compare;
 
-        protected T minimum;
-        protected T maximum;
+        private T minimum;
+        private T maximum;
 
-        protected bool canTakeMinimum;
-        protected bool canTakeMaximum;
+        private bool canTakeMinimum;
+        private bool canTakeMaximum;
 
-        protected Comparison<T> comparison;
+        private Comparison<T> comparison;
 
         public T Minimum => this.minimum;
         public T Maximum => this.maximum;
@@ -27,10 +27,23 @@ namespace SamLu.RegularExpression
         public bool CanTakeMaximum => this.canTakeMaximum;
 
         internal Comparison<T> Comparison => this.comparison;
-        
+
         public RegexRange(T minimum, T maximum, bool canTakeMinimum = true, bool canTakeMaximum = true) : this(minimum, maximum, canTakeMinimum, canTakeMaximum, RegexRange<T>.DefaultComparison) { }
 
-        protected RegexRange(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum, Comparison<T> comparison)
+        protected RegexRange(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum, Comparison<T> comparison) :
+            base(
+                comparison == null ?
+                    null :
+                    new Predicate<T>(t =>
+                        (canTakeMinimum ?
+                            comparison(minimum, t) <= 0 :
+                            comparison(minimum, t) < 0
+                        ) &&
+                        (canTakeMaximum ?
+                            comparison(t, maximum) <= 0 :
+                            comparison(t, maximum) < 0)
+                    )
+            )
         {
             if (comparison == null) throw new ArgumentNullException(nameof(comparison));
 
@@ -40,7 +53,7 @@ namespace SamLu.RegularExpression
                     string.Format("{0}, {1}", minimum, maximum),
                     string.Format("范围最小值不能大于最大值。")
                 );
-            else if ((!this.canTakeMinimum||!this.canTakeMaximum)&&comparison(minimum,maximum)==0)
+            else if ((!this.canTakeMinimum || !this.canTakeMaximum) && comparison(minimum, maximum) == 0)
                 throw new ArgumentOutOfRangeException(
                     string.Format("{0}, {1}", nameof(minimum), nameof(maximum)),
                     string.Format("{0}, {1}", minimum, maximum),
