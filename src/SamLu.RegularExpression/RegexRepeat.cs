@@ -163,7 +163,14 @@ namespace SamLu.RegularExpression
 
         public override string ToString()
         {
-            return $"{this.InnerRegex}{'{'}{this.MinimumCount ?? ulong.MinValue},{(this.IsInfinte ? string.Empty : this.MaximumCount.Value.ToString())}{'}'}";
+            if (this.IsInfinte && (this.MinimumCount ?? ulong.MinValue) == ulong.MinValue)
+                return $"{this.InnerRegex}*";
+            else if (this.IsInfinte && this.MinimumCount == 1)
+                return $"{this.InnerRegex}+";
+            else if ((this.MinimumCount ?? ulong.MinValue) == ulong.MinValue && this.MaximumCount == 1)
+                return $"{this.InnerRegex}?";
+            else
+                return $"{this.InnerRegex}{'{'}{this.MinimumCount ?? ulong.MinValue},{(this.IsInfinte ? string.Empty : this.MaximumCount.Value.ToString())}{'}'}";
         }
     }
 }

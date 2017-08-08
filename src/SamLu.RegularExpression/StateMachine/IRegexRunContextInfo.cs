@@ -24,6 +24,13 @@ namespace SamLu.RegularExpression.StateMachine
         RegexNFA<T> ActivateRegexNFA();
 
         /// <summary>
+        /// 远程创建指定 <see cref="RegexNFA{T}"/> 对象的空副本。
+        /// </summary>
+        /// <param name="nfa">指定正则构造非确定自动机。</param>
+        /// <returns>指定正则构造非确定自动机的空副本。</returns>
+        RegexNFA<T> ActivateRegexNFAFromDumplication(RegexNFA<T> nfa);
+
+        /// <summary>
         /// 远程创建 <see cref="RegexDFA{T}"/> 类的新实例。
         /// </summary>
         /// <returns><see cref="RegexDFA{T}"/> 类的实例。</returns>
@@ -35,6 +42,13 @@ namespace SamLu.RegularExpression.StateMachine
         /// <param name="isTerminal">一个值，指示该有限自动机的状态是否为结束状态。默认为 false 。</param>
         /// <returns><see cref="RegexNFAState{T}"/> 类的新实例。</returns>
         RegexNFAState<T> ActivateRegexNFAState(bool isTerminal = false);
+
+        /// <summary>
+        /// 远程创建指定 <see cref="RegexNFAState{T}"/> 对象的空副本。
+        /// </summary>
+        /// <param name="state">指定正则构造非确定自动机的状态。</param>
+        /// <returns>指定正则构造非确定自动机的状态的空副本。</returns>
+        RegexNFAState<T> ActivateRegexNFAStateFromDumplication(RegexNFAState<T> state);
 
         /// <summary>
         /// 远程创建 <see cref="RegexDFAState{T}"/> 类的新实例。
@@ -50,6 +64,13 @@ namespace SamLu.RegularExpression.StateMachine
         /// <returns>NFA 转换的新实例。</returns>
         /// <exception cref="ArgumentNullException"><paramref name="regex"/> 的值为 null 。</exception>
         RegexFATransition<T, RegexNFAState<T>> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<T> regex);
+
+        /// <summary>
+        /// 远程创建指定正则构造非确定自动机的转换的空副本。
+        /// </summary>
+        /// <param name="transition">指定正则构造非确定自动机的转换。</param>
+        /// <returns>指定正则构造非确定自动机的转换的空副本。</returns>
+        RegexFATransition<T, RegexNFAState<T>> ActivateRegexNFATransitionFromDumplication(RegexFATransition<T, RegexNFAState<T>> transition);
 
         /// <summary>
         /// 远程创建 <see cref="RegexNFAEpsilonTransition{T}"/> 类的新实例。

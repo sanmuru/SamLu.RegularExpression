@@ -75,7 +75,13 @@ namespace SamLu.RegularExpression
 
         public override string ToString()
         {
-            return string.Join(string.Empty, this.series);
+            var series = this.Series;
+
+            if (series.Count == 0) return string.Empty;
+            else if (series.Count == 1)
+                return $"{series[0]}";
+            else
+                return $"({string.Join(string.Empty, series)})";
         }
     }
 }

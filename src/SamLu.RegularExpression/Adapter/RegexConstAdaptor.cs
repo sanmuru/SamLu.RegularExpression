@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.Adapter
 {
-    public class RegexConstAdaptor<TSource, TTarget> : RegexConst<TTarget>
+    public class RegexConstAdaptor<TSource, TTarget> : RegexConst<TTarget>, IAdaptor<TSource, TTarget>
     {
         /// <summary>
         /// 一个默认的常量正则适配器的源相等性比较方法。
@@ -17,27 +17,40 @@ namespace SamLu.RegularExpression.Adapter
 
         protected EqualityComparison<TSource> sourceEqualityComparison;
 
-        protected RegexConditionAdaptContextInfo<TSource, TTarget> contextInfo;
+        protected AdaptContextInfo<TSource, TTarget> contextInfo;
 
-        public override TTarget ConstValue =>
-            this.contextInfo.AlwaysAdaptSource ?
-                (base.constValue = this.contextInfo.SourceSelector(this.sourceConstValue)) :
-                base.constValue;
-        
-        public RegexConstAdaptor(TSource constValue, Func<TSource, TTarget> sourceSelector, Func<TTarget, TSource> targetSelector) : this(constValue, sourceSelector, targetSelector, RegexConstAdaptor<TSource, TTarget>.DefaultSourceEqualityComparison) { }
+        public override TTarget ConstValue
+        {
+            get
+            {
+                if (this.contextInfo.AlwaysAdaptSource)
+                {
+                    if (this.contextInfo.TryAdaptSource(this.sourceConstValue, out TTarget target, out Exception innerException))
+                        base.constValue = target;
+                    else
+                        throw new InvalidOperationException("适配源发生错误。", innerException);
+                }
 
-        public RegexConstAdaptor(TSource constValue, Func<TSource, TTarget> sourceSelector, Func<TTarget, TSource> targetSelector, EqualityComparison<TSource> equalityComparison) :
+                return base.constValue;
+            }
+        }
+
+        public AdaptContextInfo<TSource, TTarget> ContextInfo => this.contextInfo;
+
+        public RegexConstAdaptor(TSource constValue, Func<TSource, TTarget> sourceAdaptor, Func<TTarget, TSource> targetAdaptor) : this(constValue, sourceAdaptor, targetAdaptor, RegexConstAdaptor<TSource, TTarget>.DefaultSourceEqualityComparison) { }
+
+        public RegexConstAdaptor(TSource constValue, Func<TSource, TTarget> sourceAdaptor, Func<TTarget, TSource> targetAdaptor, EqualityComparison<TSource> equalityComparison) :
             this(
                 constValue,
                 equalityComparison,
-                new RegexConditionAdaptContextInfo<TSource, TTarget>(
-                    sourceSelector ?? throw new ArgumentNullException(nameof(sourceSelector)),
-                    targetSelector ?? throw new ArgumentNullException(nameof(targetSelector))
+                new AdaptContextInfo<TSource, TTarget>(
+                    sourceAdaptor ?? throw new ArgumentNullException(nameof(sourceAdaptor)),
+                    targetAdaptor ?? throw new ArgumentNullException(nameof(targetAdaptor))
                 )
             )
         { }
 
-        public RegexConstAdaptor(TSource constValue, EqualityComparison<TSource> equalityComparison, RegexConditionAdaptContextInfo<TSource,TTarget> contextInfo)
+        public RegexConstAdaptor(TSource constValue, EqualityComparison<TSource> equalityComparison, AdaptContextInfo<TSource,TTarget> contextInfo)
         {
             if (equalityComparison == null) throw new ArgumentNullException(nameof(equalityComparison));
             if (contextInfo == null) throw new ArgumentNullException(nameof(contextInfo));
@@ -46,13 +59,21 @@ namespace SamLu.RegularExpression.Adapter
             this.sourceEqualityComparison = equalityComparison;
             this.contextInfo = contextInfo;
 
-            base.condition = target => this.sourceEqualityComparison(
-                this.sourceConstValue, 
-                this.contextInfo.TargetSelector(target)
-            );
+            base.condition =
+                target =>
+                {
+                    if (this.contextInfo.TryAdaptTarget(target, out TSource source))
+                        return this.sourceEqualityComparison(this.sourceConstValue, source);
+                    else return false;
+                };
 
             if (contextInfo.OnlyAdaptConstSourceWhenInitialization)
-                base.constValue = this.contextInfo.SourceSelector(constValue);
+            {
+                if (this.contextInfo.TryAdaptSource(this.sourceConstValue, out TTarget target, out Exception innerException))
+                    base.constValue = target;
+                else
+                    throw new InvalidOperationException("在初始化常量时适配源发生错误", innerException);
+            }
         }
     }
 }

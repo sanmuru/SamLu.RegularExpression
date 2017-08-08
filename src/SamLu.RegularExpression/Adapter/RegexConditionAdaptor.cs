@@ -6,23 +6,25 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.Adapter
 {
-    public class RegexConditionAdaptor<TSource, TTarget> : RegexCondition<TTarget>
+    public class RegexConditionAdaptor<TSource, TTarget> : RegexCondition<TTarget>, IAdaptor<TSource, TTarget>
     {
         protected Predicate<TSource> sourceCondition;
 
-        protected RegexConditionAdaptContextInfo<TSource, TTarget> contextInfo;
+        protected AdaptContextInfo<TSource, TTarget> contextInfo;
 
-        public RegexConditionAdaptor(Predicate<TSource> condition, Func<TTarget, TSource> targetSelector) :
+        public AdaptContextInfo<TSource, TTarget> ContextInfo => this.contextInfo;
+
+        public RegexConditionAdaptor(Predicate<TSource> condition, Func<TTarget, TSource> targetAdaptor) :
             this(
                 condition,
-                new RegexConditionAdaptContextInfo<TSource, TTarget>(
+                new AdaptContextInfo<TSource, TTarget>(
                     null,
-                    targetSelector ?? throw new ArgumentNullException(nameof(targetSelector))
+                    targetAdaptor ?? throw new ArgumentNullException(nameof(targetAdaptor))
                 )
             )
         { }
 
-        public RegexConditionAdaptor(Predicate<TSource> condition, RegexConditionAdaptContextInfo<TSource, TTarget> contextInfo) : base()
+        public RegexConditionAdaptor(Predicate<TSource> condition, AdaptContextInfo<TSource, TTarget> contextInfo) : base()
         {
             if (condition == null) throw new ArgumentNullException(nameof(condition));
             if (contextInfo == null) throw new ArgumentNullException(nameof(contextInfo));
@@ -30,7 +32,13 @@ namespace SamLu.RegularExpression.Adapter
             this.sourceCondition = condition;
             this.contextInfo = contextInfo;
 
-            base.condition = target => this.sourceCondition(this.contextInfo.TargetSelector(target));
+            base.condition =
+                target =>
+                {
+                    if (this.contextInfo.TryAdaptTarget(target, out TSource source))
+                        return this.sourceCondition(source);
+                    else return false;
+                };
         }
     }
 }

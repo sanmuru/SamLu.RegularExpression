@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SamLu.StateMachine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,12 +42,7 @@ namespace SamLu.RegularExpression.StateMachine
         )
         {
             if (regex is RegexCondition<T> condition)
-            {
-                RegexFATransition<T, RegexNFAState<T>> transition = this.contextInfo.ActivateRegexNFATransitionFromRegexCondition(condition);
-                nfa.AttachTransition(state, transition);
-
-                return transition;
-            }
+                return this.GenerateNFATransitionFromRegexCondition(condition, nfa, state);
             else if (regex is RegexRepeat<T> repeat)
                 return this.GenerateNFATransitionFromRegexRepeat(repeat, nfa, state);
             else if (regex is RegexSeries<T> series)
@@ -56,6 +52,7 @@ namespace SamLu.RegularExpression.StateMachine
                 {
                     var transition = this.GenerateNFATransitionFromRegexObject(item, nfa, nextState);
                     nextState = this.contextInfo.ActivateRegexNFAState();
+                    nfa.SetTarget(transition, nextState);
                 }
 
                 RegexNFAEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
@@ -79,6 +76,18 @@ namespace SamLu.RegularExpression.StateMachine
                 return epsilonTransition;
             }
             else throw new NotSupportedException(string.Format("不支持的正则类型：{0}", regex.GetType()));
+        }
+        
+        protected virtual RegexFATransition<T, RegexNFAState<T>> GenerateNFATransitionFromRegexCondition(
+            RegexCondition<T> condition,
+            RegexNFA<T> nfa,
+            RegexNFAState<T> state
+        )
+        {
+            RegexFATransition<T, RegexNFAState<T>> transition = this.contextInfo.ActivateRegexNFATransitionFromRegexCondition(condition);
+            nfa.AttachTransition(state, transition);
+
+            return transition;
         }
 
         protected virtual RegexFATransition<T, RegexNFAState<T>> GenerateNFATransitionFromRegexRepeat(
@@ -141,7 +150,7 @@ namespace SamLu.RegularExpression.StateMachine
 
             return epsilonTransition;
         }
-
+        
         public RegexDFA<T> GenerateDFAFromNFA(RegexNFA<T> nfa)
         {
             return nfa.ToDFA(this.contextInfo);

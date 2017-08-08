@@ -46,7 +46,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Adapter\AdaptOption.cs" />
-    <Compile Include="Adapter\RegexConditionAdaptContextInfo.cs" />
+    <Compile Include="Adapter\IAdaptor.cs" />
+    <Compile Include="Adapter\AdaptContextInfo.cs" />
     <Compile Include="Adapter\RegexConditionAdaptor.cs" />
     <Compile Include="Adapter\RegexConstAdaptor.cs" />
     <Compile Include="Adapter\RegexRangeAdaptor.cs" />

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.Adapter
 {
-    public class RegexRangeAdaptor<TSource, TTarget> : RegexRange<TTarget>
+    public class RegexRangeAdaptor<TSource, TTarget> : RegexRange<TTarget>, IAdaptor<TSource, TTarget>
     {
         /// <summary>
         /// 一个默认的范围正则适配器的源大小比较方法。
@@ -18,25 +18,49 @@ namespace SamLu.RegularExpression.Adapter
         
         protected Comparison<TSource> sourceComparison;
 
-        protected RegexConditionAdaptContextInfo<TSource, TTarget> contextInfo;
+        protected AdaptContextInfo<TSource, TTarget> contextInfo;
 
-        public override TTarget Minimum =>
-            this.contextInfo.AlwaysAdaptSource ?
-                (base.minimum = this.contextInfo.SourceSelector(this.sourceMinimum)) :
-                base.minimum;
+        public override TTarget Minimum
+        {
+            get
+            {
+                if (this.contextInfo.AlwaysAdaptSource)
+                {
+                    if (this.contextInfo.TryAdaptSource(this.sourceMinimum, out TTarget target, out Exception innerException))
+                        base.minimum = target;
+                    else
+                        throw new InvalidOperationException("适配源发生错误。", innerException);
+                }
 
-        public override TTarget Maximum =>
-            this.contextInfo.AlwaysAdaptSource ?
-                (base.maximum = this.contextInfo.SourceSelector(this.sourceMaximum)) :
-                base.maximum;
+                return base.minimum;
+            }
+        }
+
+        public override TTarget Maximum
+        {
+            get
+            {
+                if (this.contextInfo.AlwaysAdaptSource)
+                {
+                    if (this.contextInfo.TryAdaptSource(this.sourceMaximum, out TTarget target, out Exception innerException))
+                        base.maximum = target;
+                    else
+                        throw new InvalidOperationException("适配源发生错误。", innerException);
+                }
+
+                return base.maximum;
+            }
+        }
+
+        public AdaptContextInfo<TSource, TTarget> ContextInfo => this.contextInfo;
 
         public RegexRangeAdaptor(
             TSource minimum, TSource maximum,
-            Func<TSource, TTarget> sourceSelector, Func<TTarget, TSource> targetSelector,
+            Func<TSource, TTarget> sourceAdaptor, Func<TTarget, TSource> targetAdaptor,
             bool canTakeMinimum = true, bool canTakeMaximum = true
         ) : this(
             minimum, maximum,
-            sourceSelector, targetSelector,
+            sourceAdaptor, targetAdaptor,
             canTakeMinimum, canTakeMaximum,
             RegexRangeAdaptor<TSource, TTarget>.DefaultSourceComparison
         )
@@ -44,16 +68,16 @@ namespace SamLu.RegularExpression.Adapter
 
         public RegexRangeAdaptor(
             TSource minimum, TSource maximum,
-            Func<TSource, TTarget> sourceSelector, Func<TTarget, TSource> targetSelector,
+            Func<TSource, TTarget> sourceAdaptor, Func<TTarget, TSource> targetAdaptor,
             bool canTakeMinimum, bool canTakeMaximum,
             Comparison<TSource> comparison) :
             this(
                 minimum, maximum,
                 canTakeMinimum, canTakeMaximum,
                 comparison,
-                new RegexConditionAdaptContextInfo<TSource, TTarget>(
-                    sourceSelector ?? throw new ArgumentNullException(nameof(sourceSelector)),
-                    targetSelector ?? throw new ArgumentNullException(nameof(targetSelector))
+                new AdaptContextInfo<TSource, TTarget>(
+                    sourceAdaptor ?? throw new ArgumentNullException(nameof(sourceAdaptor)),
+                    targetAdaptor ?? throw new ArgumentNullException(nameof(targetAdaptor))
                 )
             )
         { }
@@ -62,7 +86,7 @@ namespace SamLu.RegularExpression.Adapter
             TSource minimum, TSource maximum,
             bool canTakeMinimum, bool canTakeMaximum,
             Comparison<TSource> comparison,
-            RegexConditionAdaptContextInfo<TSource,TTarget> contextInfo
+            AdaptContextInfo<TSource,TTarget> contextInfo
         )
         {
             if (comparison == null) throw new ArgumentNullException(nameof(comparison));
@@ -92,20 +116,38 @@ namespace SamLu.RegularExpression.Adapter
 
             if (contextInfo.OnlyAdaptConstSourceWhenInitialization)
             {
-                base.minimum = this.contextInfo.SourceSelector(this.sourceMinimum);
-                base.maximum = this.contextInfo.SourceSelector(this.sourceMaximum);
+                Exception innerException;
+
+                if (this.contextInfo.TryAdaptSource(this.sourceMinimum, out TTarget targetMinimum, out innerException))
+                    base.minimum = targetMinimum;
+                else
+                    throw new InvalidOperationException("在初始化常量时适配源发生错误", innerException);
+
+                if (this.contextInfo.TryAdaptSource(this.sourceMinimum, out TTarget targetMaximum, out innerException))
+                    base.maximum = targetMaximum;
+                else
+                    throw new InvalidOperationException("在初始化常量时适配源发生错误", innerException);
             }
-            
+
             base.condition =
                 target =>
-                    (base.canTakeMinimum ?
-                        this.sourceComparison(this.sourceMinimum, this.contextInfo.TargetSelector(target)) <= 0 :
-                        this.sourceComparison(this.sourceMinimum, this.contextInfo.TargetSelector(target)) < 0
-                    ) &&
-                    (base.canTakeMaximum ?
-                        this.sourceComparison(this.contextInfo.TargetSelector(target), this.sourceMaximum) <= 0 :
-                        this.sourceComparison(this.contextInfo.TargetSelector(target), this.sourceMaximum) < 0
-                    );
+                {
+                    if (this.contextInfo.TryAdaptTarget(target, out TSource source))
+                    {
+                        return (
+                            (base.canTakeMinimum ?
+                                this.sourceComparison(this.sourceMinimum, source) <= 0 :
+                                this.sourceComparison(this.sourceMinimum, source) < 0
+                            ) &&
+                            (base.canTakeMaximum ?
+                                this.sourceComparison(source, this.sourceMaximum) <= 0 :
+                                this.sourceComparison(source, this.sourceMaximum) < 0
+                            )
+                        );
+                    }
+                    else return false;
+                };
+                    
 
         }
     }

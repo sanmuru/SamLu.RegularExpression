@@ -49,6 +49,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\StateMachine_Develop\src\SamLu.StateMachine\SamLu.StateMachine.csproj">
+      <Project>{23A9B2DF-A5FF-4199-BC87-5EC50EDFB3B3}</Project>
+      <Name>SamLu.StateMachine</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\SamLu.RegularExpression\SamLu.RegularExpression.csproj">
       <Project>{11899032-8ad2-4440-90be-db0b5bf6ad53}</Project>
       <Name>SamLu.RegularExpression</Name>

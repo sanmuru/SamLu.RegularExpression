@@ -75,7 +75,13 @@ namespace SamLu.RegularExpression
 
         public override string ToString()
         {
-            return $"({string.Join("|", this.parallels)})";
+            var parallels = this.Parallels;
+
+            if (parallels.Count == 0) return string.Empty;
+            else if (parallels.Count == 1)
+                return $"{parallels[0]}";
+            else
+                return $"({string.Join("|", this.Parallels)})";
         }
     }
 }
