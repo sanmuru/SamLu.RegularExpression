@@ -10,7 +10,7 @@ namespace SamLu.RegularExpression
     /// <summary>
     /// 表示范围正则。匹配单个对象是否落在内部范围之间。
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">正则接受的对象的类型。</typeparam>
     #region Debugger Support
     [DebuggerDisplay("{__Debugger__CanTakeMinimum,nq}{Minimum},{Maximum}{__Debugger__CanTakeMaximum,nq}")]
     [DebuggerTypeProxy(typeof(RegexRangeDebugView<>))]
@@ -27,12 +27,27 @@ namespace SamLu.RegularExpression
         /// </summary>
         public static readonly Comparison<T> DefaultComparison = Comparer<T>.Default.Compare;
 
+        /// <summary>
+        /// 内部范围的最小值。
+        /// </summary>
         protected T minimum;
+        /// <summary>
+        /// 内部范围的最大值。
+        /// </summary>
         protected T maximum;
 
+        /// <summary>
+        /// 一个值，指示内部范围是否取到最小值。
+        /// </summary>
         protected bool canTakeMinimum;
+        /// <summary>
+        /// 一个值，指示内部范围是否取到最大值。
+        /// </summary>
         protected bool canTakeMaximum;
 
+        /// <summary>
+        /// 正则内部的值大小比较方法。
+        /// </summary>
         protected Comparison<T> comparison;
 
         /// <summary>
@@ -53,13 +68,35 @@ namespace SamLu.RegularExpression
         /// </summary>
         public bool CanTakeMaximum => this.canTakeMaximum;
 
+        /// <summary>
+        /// 获取范围正则内部的值大小比较方法。
+        /// </summary>
         public virtual Comparison<T> Comparison => this.comparison;
 
+        /// <summary>
+        /// 初始化 <see cref="RegexRange{T}"/> 类的新实例。子类继承的默认构造函数。
+        /// </summary>
         protected RegexRange() : base() { }
 
+        /// <summary>
+        /// 初始化 <see cref="RegexRange{T}"/> 类的新实例。该实例指定范围的最小值、最大值，是否能取到最小值、最大值。
+        /// </summary>
+        /// <param name="minimum">指定的范围的最小值。</param>
+        /// <param name="maximum">指定的范围的最大值。</param>
+        /// <param name="canTakeMinimum">一个值，指示内部范围是否取到最小值。默认为 true 。</param>
+        /// <param name="canTakeMaximum">一个值，指示内部范围是否取到最大值。默认为 true 。</param>
         public RegexRange(T minimum, T maximum, bool canTakeMinimum = true, bool canTakeMaximum = true) : this(minimum, maximum, canTakeMinimum, canTakeMaximum, RegexRange<T>.DefaultComparison) { }
 
-        public RegexRange(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum, Comparison<T> comparison) : base()
+        /// <summary>
+        /// 初始化 <see cref="RegexRange{T}"/> 类的新实例。该实例指定范围的最小值、最大值，是否能取到最小值、最大值以及值大小比较方法。
+        /// </summary>
+        /// <param name="minimum">指定的范围的最小值。</param>
+        /// <param name="maximum">指定的范围的最大值。</param>
+        /// <param name="canTakeMinimum">一个值，指示内部范围是否取到最小值。</param>
+        /// <param name="canTakeMaximum">一个值，指示内部范围是否取到最大值。</param>
+        /// <param name="comparison">指定的值大小比较方法。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="comparison"/> 的值为 null 。</exception>
+        public RegexRange(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum, Comparison<T> comparison) : this()
         {
             if (comparison == null) throw new ArgumentNullException(nameof(comparison));
 
@@ -95,6 +132,13 @@ namespace SamLu.RegularExpression
                     );
         }
 
+        /// <summary>
+        /// 将此范围正则与另一个正则对象并联。
+        /// </summary>
+        /// <param name="regex">另一个正则对象。</param>
+        /// <returns>并联后形成的新正则对象。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="regex"/> 的值为 null 。</exception>
+        /// <seealso cref="RegexObject{T}.Unions(RegexObject{T})"/>
         public override RegexObject<T> Unions(RegexObject<T> regex)
         {
             if (regex == null) throw new ArgumentNullException(nameof(regex));

@@ -16,16 +16,29 @@ namespace SamLu.RegularExpression
         /// </summary>
         public static readonly EqualityComparison<T> DefaultEqualityComparison = EqualityComparer<T>.Default.Equals;
 
+        /// <summary>
+        /// 常量正则内部储存的常量对象。
+        /// </summary>
         protected T constValue;
 
+        /// <summary>
+        /// 常量正则内部的值相等性比较方法。
+        /// </summary>
         protected EqualityComparison<T> equalityComparison;
 
         /// <summary>
         /// 获取常量正则内部储存的常量对象。
         /// </summary>
         public virtual T ConstValue => this.constValue;
+
+        /// <summary>
+        /// 获取常量正则内部的值相等性比较方法。
+        /// </summary>
         public virtual EqualityComparison<T> EqualityComparison => this.equalityComparison;
         
+        /// <summary>
+        /// 初始化 <see cref="RegexConst{T}"/> 类的新实例。子类继承的默认构造函数。
+        /// </summary>
         protected RegexConst() : base() { }
 
         /// <summary>
@@ -40,7 +53,7 @@ namespace SamLu.RegularExpression
         /// <param name="constValue">指定的对象。</param>
         /// <param name="equalityComparison">指定的常量正则的值相等性比较方法。</param>
         /// <exception cref="ArgumentNullException"><paramref name="equalityComparison"/> 的值为 null 。</exception>
-        public RegexConst(T constValue, EqualityComparison<T> equalityComparison) : base()
+        public RegexConst(T constValue, EqualityComparison<T> equalityComparison) : this()
         {
             if (equalityComparison == null) throw new ArgumentNullException(nameof(equalityComparison));
 
