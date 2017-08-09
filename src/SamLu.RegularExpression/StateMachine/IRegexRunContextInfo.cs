@@ -86,6 +86,16 @@ namespace SamLu.RegularExpression.StateMachine
         /// <exception cref="ArgumentNullException"><paramref name="set"/> 的值为 null 。</exception>
         RegexFATransition<T, RegexDFAState<T>> ActivateRegexDFATransitionFromAccreditedSet(ISet<T> set);
 
+        ISet<T> GetAccreditedSetFromRegexNFATransition(RegexFATransition<T, RegexNFAState<T>> transition);
+
+        ISet<T> GetAccreditedSetExceptResult(ISet<T> first, ISet<T> second);
+
+        ISet<T> GetAccreditedSetIntersectResult(ISet<T> first, ISet<T> second);
+
+        ISet<T> GetAccreditedSetSymmetricExceptResult(ISet<T> first, ISet<T> second);
+
+        ISet<T> GetAccreditedSetUnionResult(ISet<T> first, ISet<T> second);
+
         /// <summary>
         /// 合并多个指向相同目标状态的 DFA 转换。
         /// </summary>

@@ -65,10 +65,12 @@ namespace RegexTest
             }
         }
 
-        public class MyRegexNFATransitionAdaptor<TSource, TTarget> : MyRegexNFATransition<TTarget>
+        public class MyRegexNFATransitionAdaptor<TSource, TTarget> : MyRegexNFATransition<TTarget>, IAdaptor<TSource, TTarget>
         {
             private ISet<TSource> set;
             private AdaptContextInfo<TSource, TTarget> contextInfo;
+
+            public virtual AdaptContextInfo<TSource, TTarget> ContextInfo => this.contextInfo;
 
             protected MyRegexNFATransitionAdaptor() : base() { }
 
@@ -153,7 +155,7 @@ namespace RegexTest
                 return new RegexFATransition<string, RegexNFAState<string>>(s => regex.Condition(s));
             }
 
-            public RegexFATransition<string,RegexNFAState<string>> ActivateRegexNFATransitionFromDumplication(RegexFATransition<string, RegexNFAState<string>> transition)
+            public RegexFATransition<string, RegexNFAState<string>> ActivateRegexNFATransitionFromDumplication(RegexFATransition<string, RegexNFAState<string>> transition)
             {
                 if (transition == null) throw new ArgumentNullException(nameof(transition));
 
@@ -163,6 +165,57 @@ namespace RegexTest
             public RegexFATransition<string, RegexDFAState<string>> CombineRegexDFATransitions(IEnumerable<RegexFATransition<string, RegexDFAState<string>>> dfaTransitions)
             {
                 throw new NotImplementedException();
+            }
+
+            public ISet<string> GetAccreditedSetFromRegexNFATransition(RegexFATransition<string, RegexNFAState<string>> transition)
+            {
+                if (transition == null) throw new ArgumentNullException(nameof(transition));
+
+                return new HashSet<string>(this.AccreditedSet.Where(item => transition.Predicate(item)));
+            }
+
+            public ISet<string> GetAccreditedSetExceptResult(ISet<string> first, ISet<string> second)
+            {
+                if (first == null) throw new ArgumentNullException(nameof(first));
+                if (second == null) throw new ArgumentNullException(nameof(second));
+
+                return new SamLu.Collections.ObjectModel.SetGroup<string>(
+                    new[] { first, second },
+                    (predications => predications.Count() == 2 && (predications.First() && !predications.Last()))
+                );
+            }
+
+            public ISet<string> GetAccreditedSetIntersectResult(ISet<string> first, ISet<string> second)
+            {
+                if (first == null) throw new ArgumentNullException(nameof(first));
+                if (second == null) throw new ArgumentNullException(nameof(second));
+
+                return new SamLu.Collections.ObjectModel.SetGroup<string>(
+                    new[] { first, second },
+                    SamLu.Collections.ObjectModel.SetGroup<string>.IntersectGroupPredicate
+                );
+            }
+
+            public ISet<string> GetAccreditedSetSymmetricExceptResult(ISet<string> first, ISet<string> second)
+            {
+                if (first == null) throw new ArgumentNullException(nameof(first));
+                if (second == null) throw new ArgumentNullException(nameof(second));
+
+                return new SamLu.Collections.ObjectModel.SetGroup<string>(
+                    new[] { first, second },
+                    (predications => predications.Count() == 2 && (predications.First() ^ predications.Last()))
+                );
+            }
+
+            public ISet<string> GetAccreditedSetUnionResult(ISet<string> first, ISet<string> second)
+            {
+                if (first == null) throw new ArgumentNullException(nameof(first));
+                if (second == null) throw new ArgumentNullException(nameof(second));
+
+                return new SamLu.Collections.ObjectModel.SetGroup<string>(
+                    new[] { first, second },
+                    SamLu.Collections.ObjectModel.SetGroup<string>.UnionGroupPredicate
+                );
             }
         }
 

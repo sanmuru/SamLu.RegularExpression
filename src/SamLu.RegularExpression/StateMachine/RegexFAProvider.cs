@@ -1,6 +1,7 @@
 ﻿using SamLu.StateMachine;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -153,7 +154,142 @@ namespace SamLu.RegularExpression.StateMachine
         
         public RegexDFA<T> GenerateDFAFromNFA(RegexNFA<T> nfa)
         {
-            return nfa.ToDFA(this.contextInfo);
+            if (nfa == null) throw new ArgumentNullException(nameof(nfa));
+
+            nfa.Optimize();
+
+            RegexDFA<T> dfa = new RegexDFA<T>() { StartState = new RegexDFAState<T>() };
+
+            // 队列 Q 放置的是未被处理的已经创建了的 NFA 状态组（及其对应的 DFA 状态）。
+            var Q = new Queue<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)>();
+            // 集合 C 放置的是已经存在的 NFA 状态组（及其对应的 DFA 状态）。
+            var C = new Collection<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)>();
+            // 集合 D 放置的是处理后连接指定两个 DFA 状态的所有转换接受的对象的并集。
+            var D = new Dictionary<(RegexDFAState<T>, RegexDFAState<T>), IList<ISet<T>>>();
+
+            var startTuple = (new RegexFAStateGroup<RegexNFAState<T>>(nfa.StartState), dfa.StartState);
+            Q.Enqueue(startTuple);
+            C.Add(startTuple);
+
+            while (Q.Count != 0)
+            {
+                /* 从队列 Q 中取出一个状态。 */
+                (var group, var dfaStateFrom) = Q.Dequeue();
+
+                /* 计算从这个状态输出的所有转换及其所接受的对象集的并集。 */
+                // 计算所有输出转换。
+                var transitions = new HashSet<RegexFATransition<T, RegexNFAState<T>>>(
+                        group.SelectMany(__state => __state.Transitions)
+                    );
+                /* 优化：构建转换/可接受对象集字典。 */
+                var accreditedSetsDic = transitions
+                    .ToDictionary(
+                        (transition => transition),
+                        (transition => this.contextInfo.GetAccreditedSetFromRegexNFATransition(transition))
+                    );
+                // 计算接受的对象集的并集。
+                var sets = accreditedSetsDic.Values.ToArray();
+
+                if (sets.Length > 1)
+                {
+                    /* 优化：对并集进行拆分，拆分成最小单位的字符集。 */
+                    // 不需要拆分的字符集（与并集中的其他字符集都没有相交）。
+                    var reservedSets = sets
+                    //.Where(l_set => l_set != null)
+                    .Where(l_set =>
+                        sets
+                            //.Where(r_set => r_set != null)
+                            .Where(r_set => l_set != r_set)
+                            .All(r_set => !l_set.Overlaps(r_set))
+                    ).ToArray();
+                    var elseSets = sets.Except(reservedSets).ToList();
+
+                    if (elseSets.Count == 0) sets = reservedSets;
+                    else if (elseSets.Count == 1) sets = reservedSets.Concat(elseSets).ToArray();
+                    else
+                    {
+                        var combinations = Math.Combination.GetCombinationsWithRank(elseSets, 2);
+                        var splitedSets = combinations
+                            .SelectMany(combination =>
+                            {
+                                var l_set = combination[0];
+                                var r_set = combination[1];
+
+                                if (l_set.IsProperSubsetOf(r_set))
+                                    return new[] { l_set, this.contextInfo.GetAccreditedSetExceptResult(r_set, l_set) };
+                                else if (l_set.IsProperSupersetOf(r_set))
+                                    return new[] { this.contextInfo.GetAccreditedSetExceptResult(l_set, r_set), r_set };
+                                else
+                                    return new[] { this.contextInfo.GetAccreditedSetUnionResult(l_set, r_set) };
+                            });
+
+                        sets = reservedSets.Concat(splitedSets).ToArray();
+                    }
+                }
+
+                /* 然后对这个并集中的每一个对象集寻找接受其的转换，把这些转换的目标状态的并集 newGroup 计算出来。 */
+                foreach (var set in sets)
+                {
+                    var newGroup = new RegexFAStateGroup<RegexNFAState<T>>(new HashSet<RegexNFAState<T>>(
+                        accreditedSetsDic
+                            .Where(pair => pair.Value.IsSupersetOf(set))
+                            .Select(pair => pair.Key.Target)
+                    ));
+
+                    if (newGroup.Count == 0) continue;
+                    else
+                    {
+                        (RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T> dfaState)? tuple =
+                            C
+                                .Cast<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)?>()
+                                .FirstOrDefault(_tuple =>
+                                {
+                                    (RegexFAStateGroup<RegexNFAState<T>> __nfaStateGroup, RegexDFAState<T>) t = _tuple.Value;
+                                    return t.__nfaStateGroup.Equals(group);
+                                });
+                        RegexDFAState<T> dfaStateTo;
+                        if (tuple.HasValue)
+                            // 如果 C 中含有获得接受了指定输入的 NFA 状态集。
+                            dfaStateTo = tuple.Value.dfaState;
+                        else
+                        {
+                            dfaStateTo = new RegexDFAState<T>();
+                            // 如果接受了指定输入的 NFA 状态集中有结束状态。
+                            bool isTerminal = newGroup.Any(__state => __state.IsTerminal);
+                            dfaStateTo.IsTerminal = isTerminal;
+
+                            // 将新状态集存入队列，进行后续处理。
+                            var newTuple = (newGroup, dfaStateTo);
+                            Q.Enqueue(newTuple);
+                            C.Add(newTuple);
+                        }
+
+                        var __key = (dfaStateFrom, dfaStateTo);
+                        IList<ISet<T>> __list;
+                        if (!D.ContainsKey(__key))
+                        {
+                            __list = new List<ISet<T>>();
+                            D.Add(__key, __list);
+                        }
+                        else __list = D[__key];
+                        __list.Add(set);
+                    }
+                }
+            }
+
+            foreach (var pair in D)
+            {
+                (RegexDFAState<T> dfaStateFrom, RegexDFAState<T> dfaStateTo) = pair.Key;
+                ISet<T> set;
+                if (pair.Value.Count == 1) set = pair.Value[0];
+                else set = pair.Value.Aggregate((s1, s2) => this.contextInfo.GetAccreditedSetUnionResult(s1, s2));
+
+                RegexFATransition<T, RegexDFAState<T>> dfaTransition = new RegexFATransition<T, RegexDFAState<T>>(__t => set.Contains(__t));
+                dfa.AttachTransition(dfaStateFrom, dfaTransition);
+                dfa.SetTarget(dfaTransition, dfaStateTo);
+            }
+
+            return dfa;
         }
     }
 }

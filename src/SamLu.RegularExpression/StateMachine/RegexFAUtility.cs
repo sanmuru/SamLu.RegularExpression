@@ -10,12 +10,13 @@ namespace SamLu.RegularExpression.StateMachine
     [Obsolete]
     public static class RegexFAUtility
     {
+        [Obsolete("Use IRegexFAProvider{T}.GenerateDFAFromNFA Instead.", true)]
         public static RegexDFA<T> ToDFA<T>(this RegexNFA<T> nfa, IRegexRunContextInfo<T> contextInfo)
         {
             if (nfa == null) throw new ArgumentNullException(nameof(nfa));
 
             nfa.Optimize();
-            
+
             RegexDFA<T> dfa = new RegexDFA<T>() { StartState = new RegexDFAState<T>() };
 
             // 队列 Q 放置的是未被处理的已经创建了的 NFA 状态组（及其对应的 DFA 状态）。
@@ -54,7 +55,7 @@ namespace SamLu.RegularExpression.StateMachine
                     if (newGroup.Count == 0) continue;
                     else
                     {
-                        (RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T> dfaState)? tuple = 
+                        (RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T> dfaState)? tuple =
                             C
                                 .Cast<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)?>()
                                 .FirstOrDefault(_tuple =>

@@ -60,6 +60,9 @@
     <Compile Include="RegexRange.cs" />
     <Compile Include="RegexRepeat.cs" />
     <Compile Include="RegexSeries.cs" />
+    <Compile Include="SamLu\Collections\ObjectModel\SetGroup.cs" />
+    <Compile Include="SamLu\Combination.cs" />
+    <Compile Include="SamLu\Math.cs" />
     <Compile Include="StateMachine\IRegexFAProvider.cs" />
     <Compile Include="StateMachine\IRegexRunContextInfo.cs" />
     <Compile Include="Regex.cs" />
