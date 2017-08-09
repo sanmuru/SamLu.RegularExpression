@@ -15,7 +15,7 @@ namespace SamLu.RegularExpression
     [DebuggerDisplay("{__Debugger__CanTakeMinimum,nq}{Minimum},{Maximum}{__Debugger__CanTakeMaximum,nq}")]
     [DebuggerTypeProxy(typeof(RegexRangeDebugView<>))]
     #endregion
-    public class RegexRange<T> : RegexCondition<T>
+    public class RegexRange<T> : RegexCondition<T>, IRange<T>
     {
         #region Debugger Support
         private string __Debugger__CanTakeMinimum => this.CanTakeMinimum ? "[" : "(";

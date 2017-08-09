@@ -6,6 +6,7 @@
       <HashCode>AAAAAAAAAAAACAAkAAgAIAAAAAAAEAAAAAAAAQAAABA=</HashCode>
       <FileName>RegexConst.cs</FileName>
     </TypeIdentifier>
+    <Lollipop Position="0.2" />
   </Class>
   <Class Name="SamLu.RegularExpression.RegexRange&lt;T&gt;">
     <Position X="4" Y="2.5" Width="1.5" />
@@ -21,6 +22,7 @@
       <HashCode>gAQAQICAAAEAggAFAAIAAAACAAAAAAAAAAAAAQAEARA=</HashCode>
       <FileName>RegexRange.cs</FileName>
     </TypeIdentifier>
+    <Lollipop Position="0.2" />
   </Class>
   <Class Name="SamLu.RegularExpression.RegexSeries&lt;T&gt;">
     <Position X="9.5" Y="2.5" Width="1.5" />
@@ -69,7 +71,7 @@
   <Class Name="SamLu.RegularExpression.Adapter.RegexConstAdaptor&lt;TSource, TTarget&gt;" Collapsed="true">
     <Position X="0.5" Y="6.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAIIAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAABAAACAQ=</HashCode>
+      <HashCode>BAIIAAAAAAEACAAAAAIAAAAQBAAAAAAAAAAABAAQCAQ=</HashCode>
       <FileName>Adapter\RegexConstAdaptor.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
@@ -77,7 +79,7 @@
   <Class Name="SamLu.RegularExpression.Adapter.RegexRangeAdaptor&lt;TSource, TTarget&gt;" Collapsed="true">
     <Position X="2.25" Y="6.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>gAAIAACAEAQAAAAAAAAAAAAAEAAAAAAAAAAAAABACAA=</HashCode>
+      <HashCode>hAAIAACAEAUAAAAAAAAAAAAAEAAAAAAAAAAAAABQCAA=</HashCode>
       <FileName>Adapter\RegexRangeAdaptor.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />

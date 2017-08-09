@@ -9,7 +9,7 @@ namespace SamLu.RegularExpression
     /// 表示常量正则。匹配单个输入对象是否与内部常量对象相等。
     /// </summary>
     /// <typeparam name="T">正则接受的对象的类型。</typeparam>
-    public class RegexConst<T> : RegexCondition<T>
+    public class RegexConst<T> : RegexCondition<T>, IRange<T>
     {
         /// <summary>
         /// 一个默认的常量正则的值相等性比较方法。
@@ -91,5 +91,21 @@ namespace SamLu.RegularExpression
         {
             return this.ConstValue.ToString();
         }
+
+        #region IRange{T} Implementations
+        T IRange<T>.Minimum => this.ConstValue;
+        T IRange<T>.Maximum => this.ConstValue;
+
+        bool IRange<T>.CanTakeMaximum => true;
+        bool IRange<T>.CanTakeMinimum => true;
+
+        private Comparison<T> comparison;
+        Comparison<T> IRange<T>.Comparison =>
+            this.comparison ??
+                ((x, y) =>
+                    this.EqualityComparison(x, y) ? 0 :
+                        RegexRange<T>.DefaultComparison(x, y)
+                );
+        #endregion
     }
 }

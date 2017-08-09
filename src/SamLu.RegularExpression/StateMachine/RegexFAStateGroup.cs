@@ -6,9 +6,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
+using System.Diagnostics;
+using System.Reflection;
+using SamLu.DebugView;
 
 namespace SamLu.RegularExpression.StateMachine
 {
+    [DebuggerDisplay("Count = {Count}")]
+    [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
+    [DefaultMember("Item")]
     internal sealed class RegexFAStateGroup<TRegexFAState> : ICollection<TRegexFAState>, IEquatable<RegexFAStateGroup<TRegexFAState>>
         where TRegexFAState : IState
     {

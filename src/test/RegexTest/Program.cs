@@ -32,8 +32,10 @@ namespace RegexTest
 
             var ipAddress = new RegexObject<string>[] { section, dot, section, dot, section, dot, section, new RegexObject<string>[] { colon, port }.ConcatMany().Optional() }.ConcatMany();
 
-            RegexNFA<string> nfa = new RegexFAProvider<string>(new MyRegexRunContextInfo()).GenerateNFAFromRegexObject(ipAddress);
-            RegexDFA<string> dfa = new RegexFAProvider<string>(new MyRegexRunContextInfo()).GenerateDFAFromNFA(nfa);
+            IRegexFAProvider<string> provider = new RegexFAProvider<string>(new MyRegexRunContextInfo());
+
+            RegexNFA<string> nfa = provider.GenerateNFAFromRegexObject(ipAddress);
+            RegexDFA<string> dfa = provider.GenerateDFAFromNFA(nfa);
             ;
         }
 

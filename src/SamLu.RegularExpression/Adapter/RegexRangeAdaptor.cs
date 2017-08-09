@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.Adapter
 {
-    public class RegexRangeAdaptor<TSource, TTarget> : RegexRange<TTarget>, IAdaptor<TSource, TTarget>
+    public class RegexRangeAdaptor<TSource, TTarget> : RegexRange<TTarget>, IAdaptor<TSource, TTarget>, IRange<TSource>
     {
         /// <summary>
         /// 一个默认的范围正则适配器的源大小比较方法。
@@ -51,7 +51,7 @@ namespace SamLu.RegularExpression.Adapter
                 return base.maximum;
             }
         }
-
+        
         public AdaptContextInfo<TSource, TTarget> ContextInfo => this.contextInfo;
 
         public RegexRangeAdaptor(
@@ -147,8 +147,13 @@ namespace SamLu.RegularExpression.Adapter
                     }
                     else return false;
                 };
-                    
-
         }
+
+        #region IRange{TSource} Implementations
+        TSource IRange<TSource>.Minimum => this.sourceMinimum;
+        TSource IRange<TSource>.Maximum => this.sourceMaximum;
+
+        Comparison<TSource> IRange<TSource>.Comparison => this.sourceComparison;
+        #endregion
     }
 }

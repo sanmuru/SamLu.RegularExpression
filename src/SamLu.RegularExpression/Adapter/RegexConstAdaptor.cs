@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.Adapter
 {
-    public class RegexConstAdaptor<TSource, TTarget> : RegexConst<TTarget>, IAdaptor<TSource, TTarget>
+    public class RegexConstAdaptor<TSource, TTarget> : RegexConst<TTarget>, IAdaptor<TSource, TTarget>, IRange<TSource>
     {
         /// <summary>
         /// 一个默认的常量正则适配器的源相等性比较方法。
@@ -18,7 +18,7 @@ namespace SamLu.RegularExpression.Adapter
         protected EqualityComparison<TSource> sourceEqualityComparison;
 
         protected AdaptContextInfo<TSource, TTarget> contextInfo;
-
+        
         public override TTarget ConstValue
         {
             get
@@ -75,5 +75,21 @@ namespace SamLu.RegularExpression.Adapter
                     throw new InvalidOperationException("在初始化常量时适配源发生错误", innerException);
             }
         }
+
+        #region IRange{TSource} Implementations
+        TSource IRange<TSource>.Minimum => this.sourceConstValue;
+        TSource IRange<TSource>.Maximum => this.sourceConstValue;
+
+        bool IRange<TSource>.CanTakeMaximum => true;
+        bool IRange<TSource>.CanTakeMinimum => true;
+
+        private Comparison<TSource> comparison;
+        Comparison<TSource> IRange<TSource>.Comparison =>
+            this.comparison ??
+                ((x, y) => 
+                    this.sourceEqualityComparison(x, y) ? 0 :
+                        RegexRangeAdaptor<TSource, TTarget>.DefaultSourceComparison(x, y)
+                );
+        #endregion
     }
 }
