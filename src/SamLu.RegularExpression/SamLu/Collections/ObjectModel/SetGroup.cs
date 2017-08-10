@@ -11,6 +11,8 @@ namespace SamLu.Collections.ObjectModel
     {
         public static readonly Predicate<IEnumerable<bool>> UnionGroupPredicate = (predications => predications.Any(predication => predication));
         public static readonly Predicate<IEnumerable<bool>> IntersectGroupPredicate = (predications => predications.All(predication => predication));
+        public static readonly Predicate<IEnumerable<bool>> ExceptGroupPredicate = (predications => predications.Count() <= 1 || (predications.First() && predications.All(predication => !predication)));
+        public static readonly Predicate<IEnumerable<bool>> SymmetricExceptGroupPredicate = (predications => predications.Count() <= 1 || (predications.First() && predications.All(predication => predication ^ predications.First())));
 
         protected IList<ISet<T>> setList;
         protected ISet<T> unionSet;

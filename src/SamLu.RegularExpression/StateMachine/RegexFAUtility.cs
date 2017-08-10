@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SamLu.StateMachine;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -7,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.StateMachine
 {
-    [Obsolete]
     public static class RegexFAUtility
     {
         [Obsolete("Use IRegexFAProvider{T}.GenerateDFAFromNFA Instead.", true)]
@@ -105,5 +105,61 @@ namespace SamLu.RegularExpression.StateMachine
 
             return dfa;
         }
+
+#if DEBUG
+        public static string GetStringInfo<T>(this RegexNFA<T> nfa)
+        {
+            var states = nfa.States.ToList();
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("StartState: ({0}), total: {1}{2}", nfa.StartState.GetStringInfo(states), states.Count, Environment.NewLine);
+            sb.Append(string.Join(
+                Environment.NewLine,
+                (from state in states
+                 from transition in state.Transitions
+                 select string.Format("  ({0}) --{1}-> ({2})", state.GetStringInfo(states), transition, transition.Target.GetStringInfo(states))
+                ).ToArray()
+            ));
+
+            return sb.ToString();
+        }
+        public static string GetStringInfo<T>(this RegexDFA<T> nfa)
+        {
+            var states = nfa.States.ToList();
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("StartState: ({0}), total: {1}{2}", nfa.StartState.GetStringInfo(states), states.Count, Environment.NewLine);
+            sb.Append(string.Join(
+                Environment.NewLine,
+                (from state in states
+                 from transition in state.Transitions
+                 select string.Format("  ({0}) --{1}-> ({2})", state.GetStringInfo(states), transition.GetStringInfo(), transition.Target.GetStringInfo(states))
+                ).ToArray()
+            ));
+
+            return sb.ToString();
+        }
+
+        public static string GetStringInfo<T>(this RegexFATransition<T, RegexNFAState<T>> nfaTransition)
+        {
+            if (nfaTransition is RegexNFAEpsilonTransition<T> epsilonTransition)
+                return epsilonTransition.GetStringInfo();
+            else if (nfaTransition.GetType() == typeof(RegexFATransition<T, RegexNFAState<T>>))
+                return string.Empty;
+            else return nfaTransition.ToString();
+        }
+
+        public static string GetStringInfo<T>(this RegexNFAEpsilonTransition<T> epsilonTransition)
+        {
+            if (epsilonTransition.GetType() == typeof(RegexNFAEpsilonTransition<T>))
+                return string.Empty;
+            else return epsilonTransition.ToString();
+        }
+
+        public static string GetStringInfo<T>(this RegexFATransition<T, RegexDFAState<T>> dfaTransition)
+        {
+            if (dfaTransition.GetType() == typeof(RegexFATransition<T, RegexDFAState<T>>))
+                return string.Empty;
+            else return dfaTransition.ToString();
+        }
+#endif
     }
 }

@@ -1,5 +1,7 @@
-﻿using System;
+﻿using SamLu.RegularExpression.DebugView;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -9,6 +11,10 @@ namespace SamLu.RegularExpression
     /// 表示常量正则。匹配单个输入对象是否与内部常量对象相等。
     /// </summary>
     /// <typeparam name="T">正则接受的对象的类型。</typeparam>
+    #region Debugger Support
+    [DebuggerDisplay("ConstValue = {ConstValue}")]
+    [DebuggerTypeProxy(typeof(RangeDebugView<>))]
+    #endregion
     public class RegexConst<T> : RegexCondition<T>, IRange<T>
     {
         /// <summary>

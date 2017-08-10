@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.DebugView
 {
-    internal class RegexRangeDebugView<T>
+    internal class RangeDebugView<T>
     {
         private RegexRange<T> regex;
 
@@ -19,7 +19,7 @@ namespace SamLu.RegularExpression.DebugView
         public bool CanTakeMinimum => this.regex.CanTakeMinimum;
         public bool CanTakeMaximum => this.regex.CanTakeMaximum;
 
-        public RegexRangeDebugView(RegexRange<T> regex)
+        public RangeDebugView(RegexRange<T> regex)
         {
             this.regex = regex;
         }

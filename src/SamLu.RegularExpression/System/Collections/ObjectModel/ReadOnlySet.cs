@@ -1,11 +1,15 @@
-﻿using System;
+﻿using SamLu.DebugView;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace System.Collections.ObjectModel
 {
+    [DebuggerDisplay("Count = {Count}")]
+    [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
     public class ReadOnlySet<T> : IReadOnlySet<T>, ISet<T>
     {
         private ISet<T> set;

@@ -1,11 +1,14 @@
-﻿using System;
+﻿using SamLu.RegularExpression.DebugView;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.ObjectModel
 {
+    [DebuggerTypeProxy(typeof(RangeDebugView<>))]
     public class ComparableRange<T> : IRange<T>, IEquatable<ComparableRange<T>>
         where T : IComparable<T>
     {

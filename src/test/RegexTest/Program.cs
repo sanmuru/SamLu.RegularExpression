@@ -1,5 +1,7 @@
-﻿using SamLu.RegularExpression;
+﻿using SamLu.Collections.ObjectModel;
+using SamLu.RegularExpression;
 using SamLu.RegularExpression.Adapter;
+using SamLu.RegularExpression.ObjectModel;
 using SamLu.RegularExpression.StateMachine;
 using System;
 using System.Collections.Generic;
@@ -18,24 +20,38 @@ namespace RegexTest
             var tchars = Regex.Range(new TT<char>('a'), new TT<char>('z'), false, true);
 
             var phone = Regex.Range(0, 9).RepeatMany(10);
+
+            Func<int, RegexRepeat<char>> func = (count) =>
+                  Regex.Range('0', '9').Repeat(1, (ulong)count);
+            var section = func(3);
+            var dot = Regex.Const('.');
+            var colon = Regex.Const(':');
+            var port = func(4);
+            var ipAddress = new RegexObject<char>[] { section, dot, section, dot, section, dot, section, new RegexObject<char>[] { colon, port }.ConcatMany().Optional() }.ConcatMany();
+
+            IRegexFAProvider<char> char_Provider = new RegexFAProvider<char>(new MyCharRegexRunContextInfo());
+            RegexNFA<char> char_nfa = char_Provider.GenerateNFAFromRegexObject(ipAddress);
+            RegexDFA<char> char_dfa = char_Provider.GenerateDFAFromNFA(char_nfa);
+            ;
+
+            Func<int, int, RegexRange<string>> func_adpator = (min, max) =>
+               new RegexRangeAdaptor<int, string>(
+                   min, max,
+                   (source => source.ToString()),
+                   (target => int.Parse(target))
+               );
+            var section_adpator = func_adpator(0, 255);
+            var dot_adaptor = new RegexConstAdaptor<char, string>('.', (source => source.ToString()), (target => target[0]));
+            var colon_adaptor = new RegexConstAdaptor<char, string>(':', (source => source.ToString()), (target => target[0]));
+            var port_adaptor = func_adpator(0, 9999);
+
+            var ipAddress_adaptor =
+                new RegexObject<string>[] { section_adpator, dot_adaptor, section_adpator, dot_adaptor, section_adpator, dot_adaptor, section_adpator, new RegexObject<string>[] { colon_adaptor, port_adaptor }.ConcatMany().Optional() }.ConcatMany();
+
+            IRegexFAProvider<string> string_Provider = new RegexFAProvider<string>(new MyStringRegexRunContextInfo());
             
-            Func<int, int, RegexRange<string>> func = (min, max) =>
-                new RegexRangeAdaptor<int, string>(
-                    min, max,
-                    (source => source.ToString()),
-                    (target => int.Parse(target))
-                );
-            var section = func(0, 255);
-            var dot = Regex.Const(".");
-            var colon = Regex.Const(":");
-            var port = func(0, 9999);
-
-            var ipAddress = new RegexObject<string>[] { section, dot, section, dot, section, dot, section, new RegexObject<string>[] { colon, port }.ConcatMany().Optional() }.ConcatMany();
-
-            IRegexFAProvider<string> provider = new RegexFAProvider<string>(new MyRegexRunContextInfo());
-
-            RegexNFA<string> nfa = provider.GenerateNFAFromRegexObject(ipAddress);
-            RegexDFA<string> dfa = provider.GenerateDFAFromNFA(nfa);
+            RegexNFA<string> string_nfa = string_Provider.GenerateNFAFromRegexObject(ipAddress_adaptor);
+            RegexDFA<string> string_dfa = string_Provider.GenerateDFAFromNFA(string_nfa);
             ;
         }
 
@@ -65,6 +81,11 @@ namespace RegexTest
                 this.set = set;
                 predicate = t => this.set.Contains(t);
             }
+
+            public override string ToString()
+            {
+                return $"< {this.set} >";
+            }
         }
 
         public class MyRegexNFATransitionAdaptor<TSource, TTarget> : MyRegexNFATransition<TTarget>, IAdaptor<TSource, TTarget>
@@ -88,15 +109,173 @@ namespace RegexTest
                       else return false;
                   };
             }
+
+            public override string ToString()
+            {
+                return $"< {this.set} >";
+            }
         }
 
-        public class MyRegexRunContextInfo : IRegexRunContextInfo<string>
+        public class MyCharRegexRunContextInfo : IRegexRunContextInfo<char>
+        {
+            private ISet<char> set;
+
+            public ISet<char> AccreditedSet => this.set;
+
+            public MyCharRegexRunContextInfo()
+            {
+                this.set = new CharRangeSet();
+            }
+
+            public RegexDFA<char> ActivateRegexDFA()
+            {
+                return new RegexDFA<char>();
+            }
+
+            public RegexDFAState<char> ActivateRegexDFAState(bool isTerminal = false)
+            {
+                return new RegexDFAState<char>(isTerminal);
+            }
+
+            public RegexFATransition<char, RegexDFAState<char>> ActivateRegexDFATransitionFromAccreditedSet(ISet<char> set)
+            {
+                if (set == null) throw new ArgumentNullException(nameof(set));
+
+                return new RegexFATransition<char, RegexDFAState<char>>(c => set.Contains(c));
+            }
+
+            public RegexNFA<char> ActivateRegexNFA()
+            {
+                return new RegexNFA<char>();
+            }
+
+            public RegexNFAEpsilonTransition<char> ActivateRegexNFAEpsilonTransition()
+            {
+                return new RegexNFAEpsilonTransition<char>();
+            }
+
+            public RegexNFA<char> ActivateRegexNFAFromDumplication(RegexNFA<char> nfa)
+            {
+                return new RegexNFA<char>();
+            }
+
+            public RegexNFAState<char> ActivateRegexNFAState(bool isTerminal = false)
+            {
+                return new RegexNFAState<char>(isTerminal);
+            }
+
+            public RegexNFAState<char> ActivateRegexNFAStateFromDumplication(RegexNFAState<char> state)
+            {
+                return new RegexNFAState<char>(state.IsTerminal);
+            }
+
+            public RegexFATransition<char, RegexNFAState<char>> ActivateRegexNFATransitionFromDumplication(RegexFATransition<char, RegexNFAState<char>> transition)
+            {
+                if (transition is RangeRegexNFATransition range)
+                    return new RangeRegexNFATransition(range.Range);
+                else if (transition is SetRegexNFATransition set)
+                    return new SetRegexNFATransition(set.Set);
+                else return new RegexFATransition<char, RegexNFAState<char>>(transition.Predicate);
+            }
+
+            public class SetRegexNFATransition : RegexFATransition<char, RegexNFAState<char>>
+            {
+                private ISet<char> set;
+                public ISet<char> Set => this.set;
+
+                public SetRegexNFATransition(ISet<char> set) :
+                    base(
+                        (set ?? throw new ArgumentNullException(nameof(set))).Contains
+                    )
+                {
+                    this.set = set;
+                }
+
+                public override string ToString()
+                {
+                    return $"< {this.set} >";
+                }
+            }
+
+            public class RangeRegexNFATransition : RegexFATransition<char, RegexNFAState<char>>
+            {
+                private IRange<char> range;
+                public IRange<char> Range => this.range;
+
+                public RangeRegexNFATransition(IRange<char> range) :
+                    base(
+                        new Func<IRange<char>, Predicate<char>>((_range) =>
+                        {
+                            return c =>
+                                (_range.CanTakeMinimum ?
+                                    _range.Comparison(_range.Minimum, c) <= 0 :
+                                    _range.Comparison(_range.Minimum, c) < 0) &&
+                                (_range.CanTakeMaximum ?
+                                    _range.Comparison(c, _range.Maximum) <= 0 :
+                                    _range.Comparison(c, _range.Maximum) < 0);
+                        })(range ?? throw new ArgumentNullException(nameof(range)))
+                    )
+                {
+                    this.range = range;
+                }
+
+                public override string ToString()
+                {
+                    return $"< {(this.range.CanTakeMinimum ? '[' : '(')}{this.range.Minimum},{this.range.Maximum}{(this.range.CanTakeMaximum ? ']' : ')')} >";
+                }
+            }
+
+            public RegexFATransition<char, RegexNFAState<char>> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<char> regex)
+            {
+                if (regex is IRange<char> range)
+                    return new RangeRegexNFATransition(range);
+                else
+                    return new RegexFATransition<char, RegexNFAState<char>>(regex.Condition);
+            }
+
+            public RegexFATransition<char, RegexDFAState<char>> CombineRegexDFATransitions(IEnumerable<RegexFATransition<char, RegexDFAState<char>>> dfaTransitions)
+            {
+                throw new NotImplementedException();
+            }
+
+            public ISet<char> GetAccreditedSetFromRegexNFATransition(RegexFATransition<char, RegexNFAState<char>> transition)
+            {
+                if (transition is SetRegexNFATransition set)
+                    return set.Set;
+                else if (transition is RangeRegexNFATransition range)
+                    return new CharRangeSet(range.Range.Minimum, range.Range.Maximum, range.Range.CanTakeMinimum, range.Range.CanTakeMaximum);
+                else
+                    return new HashSet<char>(this.AccreditedSet.Where(c => transition.Predicate(c)));
+            }
+
+            public ISet<char> GetAccreditedSetExceptResult(ISet<char> first, ISet<char> second)
+            {
+                return new SetGroup<char>(new[] { first, second }, SetGroup<char>.ExceptGroupPredicate);
+            }
+
+            public ISet<char> GetAccreditedSetIntersectResult(ISet<char> first, ISet<char> second)
+            {
+                return new SetGroup<char>(new[] { first, second }, SetGroup<char>.IntersectGroupPredicate);
+            }
+
+            public ISet<char> GetAccreditedSetSymmetricExceptResult(ISet<char> first, ISet<char> second)
+            {
+                return new SetGroup<char>(new[] { first, second }, SetGroup<char>.SymmetricExceptGroupPredicate);
+            }
+
+            public ISet<char> GetAccreditedSetUnionResult(ISet<char> first, ISet<char> second)
+            {
+                return new SetGroup<char>(new[] { first, second }, SetGroup<char>.UnionGroupPredicate);
+            }
+        }
+
+        public class MyStringRegexRunContextInfo : IRegexRunContextInfo<string>
         {
             private HashSet<string> set;
 
             public ISet<string> AccreditedSet => this.set;
 
-            public MyRegexRunContextInfo()
+            public MyStringRegexRunContextInfo()
             {
                 this.set = new HashSet<string>();
                 set.Add(".");
@@ -147,7 +326,7 @@ namespace RegexTest
             {
                 if (state == null) throw new ArgumentNullException(nameof(state));
 
-                return this.ActivateRegexNFAState();
+                return this.ActivateRegexNFAState(state.IsTerminal);
             }
 
             public RegexFATransition<string, RegexNFAState<string>> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<string> regex)

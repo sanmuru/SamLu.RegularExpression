@@ -13,7 +13,7 @@ namespace SamLu.RegularExpression
     /// <typeparam name="T">正则接受的对象的类型。</typeparam>
     #region Debugger Support
     [DebuggerDisplay("{__Debugger__CanTakeMinimum,nq}{Minimum},{Maximum}{__Debugger__CanTakeMaximum,nq}")]
-    [DebuggerTypeProxy(typeof(RegexRangeDebugView<>))]
+    [DebuggerTypeProxy(typeof(RangeDebugView<>))]
     #endregion
     public class RegexRange<T> : RegexCondition<T>, IRange<T>
     {

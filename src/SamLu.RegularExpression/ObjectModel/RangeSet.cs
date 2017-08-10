@@ -1,15 +1,18 @@
-﻿using System;
+﻿using SamLu.RegularExpression.DebugView;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.ObjectModel
 {
+    [DebuggerTypeProxy(typeof(RangeDebugView<>))]
     public abstract class RangeSet<T> : ISet<T>, IRange<T>
     {
-        private IRange<T> range;
+        protected IRange<T> range;
 
         public T Minimum => this.range.Minimum;
 
