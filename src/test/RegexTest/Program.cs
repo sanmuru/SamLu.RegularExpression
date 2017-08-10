@@ -3,6 +3,8 @@ using SamLu.RegularExpression;
 using SamLu.RegularExpression.Adapter;
 using SamLu.RegularExpression.ObjectModel;
 using SamLu.RegularExpression.StateMachine;
+using SamLu.StateMachine;
+using SamLu.StateMachine.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +32,16 @@ namespace RegexTest
             var ipAddress = new RegexObject<char>[] { section, dot, section, dot, section, dot, section, new RegexObject<char>[] { colon, port }.ConcatMany().Optional() }.ConcatMany();
 
             IRegexFAProvider<char> char_Provider = new RegexFAProvider<char>(new MyCharRegexRunContextInfo());
+
+            Action<RegexObject<char>> action =
+                regexObj =>
+                {
+                    var ___nfa = char_Provider.GenerateNFAFromRegexObject(regexObj);
+                };
+            action?.Invoke(Regex.Const('a').Optional().Concat(Regex.Const('b').Concat(Regex.Const('c').Optional())));
+
             RegexNFA<char> char_nfa = char_Provider.GenerateNFAFromRegexObject(ipAddress);
+            var debuginfo = char_nfa.GetDebugInfo();
             RegexDFA<char> char_dfa = char_Provider.GenerateDFAFromNFA(char_nfa);
             ;
 
@@ -64,7 +75,7 @@ namespace RegexTest
                 return base.GenerateNFATransitionFromRegexCondition(condition, nfa, state);
             }
         }
-
+        
         public class MyRegexNFATransition<T> : RegexFATransition<T, RegexNFAState<T>>
         {
             private ISet<T> set;
@@ -197,6 +208,7 @@ namespace RegexTest
                 }
             }
 
+            [DebugInfoProxy(typeof(RangeRegexNFATransition._DebugInfo))]
             public class RangeRegexNFATransition : RegexFATransition<char, RegexNFAState<char>>
             {
                 private IRange<char> range;
@@ -217,6 +229,49 @@ namespace RegexTest
                     )
                 {
                     this.range = range;
+                }
+
+                public class _DebugInfo
+                {
+                    private RangeRegexNFATransition transition;
+
+                    public static string QuoteChar(char c)
+                    {
+                        switch (c)
+                        {
+                            case '\0': return "'\\0'";
+                            case '\\': return "'\\'";
+                            case '\'': return "'\\''";
+                            case '"': return "'\"'";
+                            case '\a': return "'\\a'";
+                            case '\b': return "'\\b'";
+                            case '\t': return "'\\t'";
+                            case '\f': return "'\\f'";
+                            case '\v': return "'\\v'";
+                            case '\r': return "'\\r'";
+                            case '\n': return "'\\n'";
+                            default: return $"'{c}'";
+                        }
+                    }
+
+                    public string DebugInfo
+                    {
+                        get
+                        {
+                            if (
+                                this.transition.Range.Comparison(this.transition.Range.Minimum, this.transition.Range.Maximum) == 0 &&
+                                    (this.transition.Range.CanTakeMinimum && this.transition.Range.CanTakeMaximum)
+                            )
+                                return $"< {_DebugInfo.QuoteChar(this.transition.Range.Minimum)} >";
+                            else
+                                return $"< {(this.transition.Range.CanTakeMinimum ? '[' : '(')}{_DebugInfo.QuoteChar(this.transition.Range.Minimum)},{_DebugInfo.QuoteChar(this.transition.Range.Maximum)}{(this.transition.Range.CanTakeMaximum ? ']' : ')')} >";
+                        }
+                    }
+
+                    public _DebugInfo(RangeRegexNFATransition transition, params object[] args)
+                    {
+                        this.transition = transition ?? throw new ArgumentNullException(nameof(transition));
+                    }
                 }
 
                 public override string ToString()

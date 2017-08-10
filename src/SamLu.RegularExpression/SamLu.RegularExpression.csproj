@@ -85,7 +85,6 @@
     <Compile Include="StateMachine\RegexNFAState.cs" />
     <Compile Include="StateMachine\RegexFATransition.cs" />
     <Compile Include="System\Collections\ObjectModel\ReadOnlySet.cs" />
-    <Compile Include="System\EqualityComparison.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

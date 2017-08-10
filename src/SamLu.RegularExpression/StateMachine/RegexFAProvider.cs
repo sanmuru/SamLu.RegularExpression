@@ -117,10 +117,10 @@ namespace SamLu.RegularExpression.StateMachine
                 if (count > 0)
                 {
                     RegexNFAEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
-                    foreach (var _state in nodes.Take((int)(repeat.MaximumCount.Value - (repeat.MaximumCount ?? ulong.MinValue))))
+                    foreach (var _state in nodes.Take((int)(repeat.MaximumCount.Value - (repeat.MinimumCount ?? ulong.MinValue))))
                         nfa.AttachTransition(_state, epsilonTransition);
 
-                    nfa.SetTarget(transition, nodes.Reverse().ElementAt((int)(repeat.MinimumCount ?? ulong.MinValue)));
+                    nfa.SetTarget(epsilonTransition, nodes.Reverse().ElementAt((int)(repeat.MinimumCount ?? ulong.MinValue)));
                 }
             }
 
