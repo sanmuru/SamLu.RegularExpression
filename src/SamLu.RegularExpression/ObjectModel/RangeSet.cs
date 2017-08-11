@@ -10,20 +10,10 @@ using System.Threading.Tasks;
 namespace SamLu.RegularExpression.ObjectModel
 {
     [DebuggerTypeProxy(typeof(RangeDebugView<>))]
-    public abstract class RangeSet<T> : ISet<T>, IRange<T>
+    public abstract class RangeSet<T> : ISet<T>
     {
         protected IRange<T> range;
-
-        public T Minimum => this.range.Minimum;
-
-        public T Maximum => this.range.Maximum;
-
-        public bool CanTakeMinimum => this.range.CanTakeMinimum;
-
-        public bool CanTakeMaximum => this.range.CanTakeMaximum;
-
-        public Comparison<T> Comparison => this.range.Comparison;
-
+        
         public abstract int Count { get; }
         public abstract bool IsReadOnly { get; }
 
@@ -43,13 +33,13 @@ namespace SamLu.RegularExpression.ObjectModel
         public abstract void Clear();
 
         public virtual bool Contains(T item) =>
-            (this.CanTakeMinimum ?
-                this.Comparison(this.Minimum, item) <= 0 :
-                this.Comparison(this.Minimum, item) < 0
+            (this.range.CanTakeMinimum ?
+                this.range.Comparison(this.range.Minimum, item) <= 0 :
+                this.range.Comparison(this.range.Minimum, item) < 0
             ) &&
-            (this.CanTakeMaximum ?
-                this.Comparison(item, this.Maximum) <= 0 :
-                this.Comparison(item, this.Maximum) < 0
+            (this.range.CanTakeMaximum ?
+                this.range.Comparison(item, this.range.Maximum) <= 0 :
+                this.range.Comparison(item, this.range.Maximum) < 0
             );
 
         public abstract void CopyTo(T[] array, int arrayIndex);
@@ -65,7 +55,7 @@ namespace SamLu.RegularExpression.ObjectModel
 
         public virtual void ExceptWith(IRange<T> range)
         {
-            if (this.Comparison == range.Comparison)
+            if (this.range.Comparison == range.Comparison)
             {
 #warning 未完成。
             }

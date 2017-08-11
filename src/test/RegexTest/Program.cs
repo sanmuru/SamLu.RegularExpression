@@ -37,6 +37,7 @@ namespace RegexTest
                 regexObj =>
                 {
                     var ___nfa = char_Provider.GenerateNFAFromRegexObject(regexObj);
+                    var ___dfa = char_Provider.GenerateDFAFromNFA(___nfa);
                 };
             action?.Invoke(Regex.Const('a').Optional().Concat(Regex.Const('b').Concat(Regex.Const('c').Optional())));
 

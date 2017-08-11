@@ -8,15 +8,15 @@ using System.Threading.Tasks;
 namespace SamLu.RegularExpression.ObjectModel
 {
     [DebuggerDisplay("Count = {Count}")]
-    public class CharRangeSet : RangeSet<char>
+    public class CharRangeSet : RangeSet<char>, IReadOnlySet<char>
     {
         public CharRangeSet() : base(new CharRange()) { }
 
         public CharRangeSet(char minValue, char maxValue, bool canTakeMinValue = true, bool canTakeMaxValue = true) : base(new CharRange(minValue, maxValue, canTakeMinValue, canTakeMaxValue)) { }
 
         public override int Count =>
-            (this.Maximum - this.Minimum + 1) -
-                ((this.CanTakeMinimum ? 0 : 1) + (this.CanTakeMaximum ? 0 : 1));
+            (this.range.Maximum - this.range.Minimum + 1) -
+                ((this.range.CanTakeMinimum ? 0 : 1) + (this.range.CanTakeMaximum ? 0 : 1));
 
         public override bool IsReadOnly => true;
 
@@ -32,8 +32,8 @@ namespace SamLu.RegularExpression.ObjectModel
             if (this.Count == 0) yield break;
             else
             {
-                char minValue = this.CanTakeMinimum ? this.Minimum : (char)(this.Minimum + 1);
-                char maxValue = this.CanTakeMaximum ? this.Maximum : (char)(this.Maximum - 1);
+                char minValue = this.range.CanTakeMinimum ? this.range.Minimum : (char)(this.range.Minimum + 1);
+                char maxValue = this.range.CanTakeMaximum ? this.range.Maximum : (char)(this.range.Maximum - 1);
                 for (char c = minValue; c < maxValue; c++) yield return c;
             }
 
@@ -66,27 +66,27 @@ namespace SamLu.RegularExpression.ObjectModel
             bool minimumTest = false;
             bool maximumTest = false;
 
-            if (this.Minimum < range.Minimum) return false;
-            else if (this.Minimum == range.Minimum)
+            if (this.range.Minimum < range.Minimum) return false;
+            else if (this.range.Minimum == range.Minimum)
             {
-                if (!this.CanTakeMinimum && range.CanTakeMinimum) return false;
-                else if (this.CanTakeMinimum && !range.CanTakeMinimum) minimumTest = true;
+                if (!this.range.CanTakeMinimum && range.CanTakeMinimum) return false;
+                else if (this.range.CanTakeMinimum && !range.CanTakeMinimum) minimumTest = true;
             }
-            else if (this.Minimum + 1 == range.Minimum)
+            else if (this.range.Minimum + 1 == range.Minimum)
             {
-                if (this.CanTakeMinimum || !range.CanTakeMinimum) minimumTest = true;
+                if (this.range.CanTakeMinimum || !range.CanTakeMinimum) minimumTest = true;
             }
             else minimumTest = true;
 
             if (range.Maximum < range.Maximum) return false;
             else if (range.Maximum == range.Maximum)
             {
-                if (!this.CanTakeMaximum && range.CanTakeMaximum) return false;
-                else if (this.CanTakeMaximum && !range.CanTakeMaximum) maximumTest = true;
+                if (!this.range.CanTakeMaximum && range.CanTakeMaximum) return false;
+                else if (this.range.CanTakeMaximum && !range.CanTakeMaximum) maximumTest = true;
             }
             else if (range.Maximum + 1 == range.Maximum)
             {
-                if (this.CanTakeMaximum || !range.CanTakeMaximum) maximumTest = true;
+                if (this.range.CanTakeMaximum || !range.CanTakeMaximum) maximumTest = true;
             }
             else maximumTest = true;
 
@@ -106,27 +106,27 @@ namespace SamLu.RegularExpression.ObjectModel
             bool minimumTest = false;
             bool maximumTest = false;
 
-            if (range.Minimum < this.Minimum) return false;
-            else if (range.Minimum == this.Minimum)
+            if (range.Minimum < this.range.Minimum) return false;
+            else if (range.Minimum == this.range.Minimum)
             {
-                if (!range.CanTakeMinimum && this.CanTakeMinimum) return false;
-                else if (range.CanTakeMinimum && !this.CanTakeMinimum) minimumTest = true;
+                if (!range.CanTakeMinimum && this.range.CanTakeMinimum) return false;
+                else if (range.CanTakeMinimum && !this.range.CanTakeMinimum) minimumTest = true;
             }
-            else if (range.Minimum + 1 == this.Minimum)
+            else if (range.Minimum + 1 == this.range.Minimum)
             {
-                if (range.CanTakeMinimum || !this.CanTakeMinimum) minimumTest = true;
+                if (range.CanTakeMinimum || !this.range.CanTakeMinimum) minimumTest = true;
             }
             else minimumTest = true;
 
-            if (range.Maximum < this.Maximum) return false;
-            else if (range.Maximum == this.Maximum)
+            if (range.Maximum < this.range.Maximum) return false;
+            else if (range.Maximum == this.range.Maximum)
             {
-                if (!range.CanTakeMaximum && this.CanTakeMaximum) return false;
-                else if (range.CanTakeMaximum && !this.CanTakeMaximum) maximumTest = true;
+                if (!range.CanTakeMaximum && this.range.CanTakeMaximum) return false;
+                else if (range.CanTakeMaximum && !this.range.CanTakeMaximum) maximumTest = true;
             }
-            else if (range.Maximum + 1 == this.Maximum)
+            else if (range.Maximum + 1 == this.range.Maximum)
             {
-                if (range.CanTakeMaximum || !this.CanTakeMaximum) maximumTest = true;
+                if (range.CanTakeMaximum || !this.range.CanTakeMaximum) maximumTest = true;
             }
             else maximumTest = true;
 
@@ -149,18 +149,18 @@ namespace SamLu.RegularExpression.ObjectModel
             bool minimumTest = false;
             bool maximumTest = false;
 
-            if (this.Minimum < range.Minimum) return false;
-            else if (this.Minimum == range.Minimum)
+            if (this.range.Minimum < range.Minimum) return false;
+            else if (this.range.Minimum == range.Minimum)
             {
-                if (!this.CanTakeMinimum && range.CanTakeMinimum) return false;
+                if (!this.range.CanTakeMinimum && range.CanTakeMinimum) return false;
                 else minimumTest = true;
             }
             else minimumTest = true;
 
-            if (this.Maximum < range.Maximum) return false;
-            else if (this.Maximum == range.Maximum)
+            if (this.range.Maximum < range.Maximum) return false;
+            else if (this.range.Maximum == range.Maximum)
             {
-                if (!this.CanTakeMaximum && range.CanTakeMaximum) return false;
+                if (!this.range.CanTakeMaximum && range.CanTakeMaximum) return false;
                 else maximumTest = true;
             }
             else maximumTest = true;
@@ -184,18 +184,18 @@ namespace SamLu.RegularExpression.ObjectModel
             bool minimumTest = false;
             bool maximumTest = false;
 
-            if (range.Minimum < this.Minimum) return false;
-            else if (range.Minimum == this.Minimum)
+            if (range.Minimum < this.range.Minimum) return false;
+            else if (range.Minimum == this.range.Minimum)
             {
-                if (!range.CanTakeMinimum && this.CanTakeMinimum) return false;
+                if (!range.CanTakeMinimum && this.range.CanTakeMinimum) return false;
                 else minimumTest = true;
             }
             else minimumTest = true;
 
-            if (range.Maximum < this.Maximum) return false;
-            else if (range.Maximum == this.Maximum)
+            if (range.Maximum < this.range.Maximum) return false;
+            else if (range.Maximum == this.range.Maximum)
             {
-                if (!range.CanTakeMaximum && this.CanTakeMaximum) return false;
+                if (!range.CanTakeMaximum && this.range.CanTakeMaximum) return false;
                 else maximumTest = true;
             }
             else maximumTest = true;
@@ -216,25 +216,25 @@ namespace SamLu.RegularExpression.ObjectModel
             if (range == null) throw new ArgumentNullException(nameof(range));
             if (range == this) return false;
 
-            if (this.Maximum < range.Minimum || this.Minimum > range.Maximum) return false;
+            if (this.range.Maximum < range.Minimum || this.range.Minimum > range.Maximum) return false;
 
-            if (this.Maximum == range.Minimum)
+            if (this.range.Maximum == range.Minimum)
             {
-                if (this.CanTakeMaximum && range.CanTakeMinimum) return true;
+                if (this.range.CanTakeMaximum && range.CanTakeMinimum) return true;
             }
-            else if (this.Maximum - range.Minimum == 1)
+            else if (this.range.Maximum - range.Minimum == 1)
             {
-                if (this.CanTakeMaximum || range.CanTakeMinimum) return true;
+                if (this.range.CanTakeMaximum || range.CanTakeMinimum) return true;
             }
             else return true;
 
-            if (range.Maximum == this.Minimum)
+            if (range.Maximum == this.range.Minimum)
             {
-                if (this.CanTakeMaximum && range.CanTakeMinimum) return true;
+                if (this.range.CanTakeMaximum && range.CanTakeMinimum) return true;
             }
-            else if (range.Minimum - this.Maximum == 1)
+            else if (range.Minimum - this.range.Maximum == 1)
             {
-                if (this.CanTakeMaximum || range.CanTakeMinimum) return true;
+                if (this.range.CanTakeMaximum || range.CanTakeMinimum) return true;
             }
             else return true;
 
@@ -254,30 +254,30 @@ namespace SamLu.RegularExpression.ObjectModel
             if (range == null) throw new ArgumentNullException(nameof(range));
             if (range == this) return true;
 
-            if (this.CanTakeMinimum == range.CanTakeMinimum)
+            if (this.range.CanTakeMinimum == range.CanTakeMinimum)
             {
-                if (this.Minimum != range.Minimum) return false;
+                if (this.range.Minimum != range.Minimum) return false;
             }
-            else if (this.CanTakeMinimum)
+            else if (this.range.CanTakeMinimum)
             {
-                if (this.Minimum - range.Minimum != 1) return false;
+                if (this.range.Minimum - range.Minimum != 1) return false;
             }
             else if (range.CanTakeMinimum)
             {
-                if (range.Minimum - this.Minimum != 1) return false;
+                if (range.Minimum - this.range.Minimum != 1) return false;
             }
             
-            if (this.CanTakeMaximum == range.CanTakeMaximum)
+            if (this.range.CanTakeMaximum == range.CanTakeMaximum)
             {
-                if (this.Maximum != range.Maximum) return false;
+                if (this.range.Maximum != range.Maximum) return false;
             }
-            else if (this.CanTakeMaximum)
+            else if (this.range.CanTakeMaximum)
             {
-                if (this.Maximum - range.Maximum != 1) return false;
+                if (this.range.Maximum - range.Maximum != 1) return false;
             }
             else if (range.CanTakeMaximum)
             {
-                if (range.Maximum - this.Maximum != 1) return false;
+                if (range.Maximum - this.range.Maximum != 1) return false;
             }
 
             return true;

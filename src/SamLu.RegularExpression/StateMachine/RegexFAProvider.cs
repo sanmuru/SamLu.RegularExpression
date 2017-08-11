@@ -245,7 +245,7 @@ namespace SamLu.RegularExpression.StateMachine
                                 .FirstOrDefault(_tuple =>
                                 {
                                     (RegexFAStateGroup<RegexNFAState<T>> __nfaStateGroup, RegexDFAState<T>) t = _tuple.Value;
-                                    return t.__nfaStateGroup.Equals(group);
+                                    return t.__nfaStateGroup.Equals(newGroup);
                                 });
                         RegexDFAState<T> dfaStateTo;
                         if (tuple.HasValue)
@@ -253,10 +253,9 @@ namespace SamLu.RegularExpression.StateMachine
                             dfaStateTo = tuple.Value.dfaState;
                         else
                         {
-                            dfaStateTo = new RegexDFAState<T>();
                             // 如果接受了指定输入的 NFA 状态集中有结束状态。
                             bool isTerminal = newGroup.Any(__state => __state.IsTerminal);
-                            dfaStateTo.IsTerminal = isTerminal;
+                            dfaStateTo = this.contextInfo.ActivateRegexDFAState(isTerminal);
 
                             // 将新状态集存入队列，进行后续处理。
                             var newTuple = (newGroup, dfaStateTo);
@@ -284,7 +283,7 @@ namespace SamLu.RegularExpression.StateMachine
                 if (pair.Value.Count == 1) set = pair.Value[0];
                 else set = pair.Value.Aggregate((s1, s2) => this.contextInfo.GetAccreditedSetUnionResult(s1, s2));
 
-                RegexFATransition<T, RegexDFAState<T>> dfaTransition = new RegexFATransition<T, RegexDFAState<T>>(__t => set.Contains(__t));
+                RegexFATransition<T, RegexDFAState<T>> dfaTransition = this.contextInfo.ActivateRegexDFATransitionFromAccreditedSet(set);
                 dfa.AttachTransition(dfaStateFrom, dfaTransition);
                 dfa.SetTarget(dfaTransition, dfaStateTo);
             }
