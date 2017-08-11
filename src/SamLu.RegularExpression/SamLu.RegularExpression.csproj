@@ -57,6 +57,7 @@
     <Compile Include="ObjectModel\CharRangeSet.cs" />
     <Compile Include="ObjectModel\ComparableRange.cs" />
     <Compile Include="ObjectModel\Int32Range.cs" />
+    <Compile Include="ObjectModel\Range.cs" />
     <Compile Include="ObjectModel\RangeSet.cs" />
     <Compile Include="System\Collections\Generic\IReadOnlySet.cs" />
     <Compile Include="SamLu\DebugView\CollectionDebugView.cs" />

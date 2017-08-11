@@ -9,33 +9,14 @@ using System.Threading.Tasks;
 namespace SamLu.RegularExpression.ObjectModel
 {
     [DebuggerTypeProxy(typeof(RangeDebugView<>))]
-    public class ComparableRange<T> : IRange<T>, IEquatable<ComparableRange<T>>
+    public class ComparableRange<T> : Range<T>, IEquatable<ComparableRange<T>>
         where T : IComparable<T>
     {
-        public static readonly Comparison<T> DefaultComparison = Comparer<T>.Default.Compare;
+        protected ComparableRange() : base() { }
 
-        private T minimum;
-        private T maximum;
-
-        private bool canTakeMinimum;
-        private bool canTakeMaximum;
-
-        public T Minimum => this.minimum;
-        public T Maximum => this.maximum;
-
-        public bool CanTakeMinimum => this.canTakeMinimum;
-        public bool CanTakeMaximum => this.canTakeMaximum;
-
-        protected ComparableRange() { }
-
-        public ComparableRange(T minimum, T maximum, bool canTakeMinimum = true, bool canTakeMaximum = true) : this()
-        {
-            this.minimum = minimum;
-            this.maximum = maximum;
-
-            this.canTakeMinimum = canTakeMinimum;
-            this.canTakeMaximum = canTakeMaximum;
-        }
+        public ComparableRange(T minimum, T maximum, bool canTakeMinimum = true, bool canTakeMaximum = true) :
+            base(minimum, maximum, canTakeMinimum, canTakeMaximum)
+        { }
 
         public bool Equals(ComparableRange<T> other)
         {

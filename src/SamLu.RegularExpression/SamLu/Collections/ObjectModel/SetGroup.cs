@@ -49,10 +49,14 @@ namespace SamLu.Collections.ObjectModel
 
         public bool Add(T item)
         {
-            if (this.exceptSet.Contains(item))
-                return this.exceptSet.Remove(item);
+            if (this.Contains(item)) return false;
             else
-                return this.unionSet.Add(item);
+            {
+                if (this.exceptSet.Contains(item))
+                    return this.exceptSet.Remove(item);
+                else
+                    return this.unionSet.Add(item);
+            }
         }
 
         public void Add(ISet<T> item)
@@ -76,10 +80,14 @@ namespace SamLu.Collections.ObjectModel
 
         public bool Remove(T item)
         {
-            if (this.unionSet.Contains(item))
-                return this.unionSet.Remove(item);
+            if (!this.Contains(item)) return false;
             else
-                return this.exceptSet.Add(item);
+            {
+                if (this.unionSet.Contains(item))
+                    return this.unionSet.Remove(item);
+                else
+                    return this.exceptSet.Add(item);
+            }
         }
 
         public void ExceptWith(IEnumerable<T> other)
