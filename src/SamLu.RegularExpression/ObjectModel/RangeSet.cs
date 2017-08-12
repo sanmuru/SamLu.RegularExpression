@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -9,117 +10,718 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.ObjectModel
 {
-    [DebuggerTypeProxy(typeof(RangeDebugView<>))]
-    public abstract class RangeSet<T> : ISet<T>
+    public abstract class RangeSet<T> : ISet<T>, ISet<IRange<T>>
     {
-        protected IRange<T> range;
-        
-        public abstract int Count { get; }
-        public abstract bool IsReadOnly { get; }
+        protected ICollection<IRange<T>> ranges;
+        protected IComparer<T> comparer;
+        protected RangeInfo<T> rangeInfo;
 
-        protected RangeSet() { }
+        public ICollection<IRange<T>> Ranges => new ReadOnlyCollection<IRange<T>>(this.ranges.ToList());
+        public IComparer<T> Comparer => this.comparer;
 
-        protected RangeSet(IRange<T> range) : this() =>
-            this.range = range ?? throw new ArgumentNullException(nameof(range));
+        public virtual int Count =>
+            ((IEnumerable<T>)this).Count();
 
+        public virtual bool IsReadOnly => false;
+
+        protected RangeSet() =>
+            this.ranges = new Collection<IRange<T>>();
+
+        protected RangeSet(RangeInfo<T> rangeInfo) : this()
+        {
+            if (rangeInfo == null) throw new ArgumentNullException(nameof(rangeInfo));
+
+            this.comparer = Comparer<T>.Create(rangeInfo.Comparison);
+            this.rangeInfo = rangeInfo;
+        }
+
+        #region Add
         public virtual bool Add(T item)
         {
             if (this.Contains(item)) return false;
-            else return this.AddOutOfRange(item);
+            else
+            {
+                this.AddOutOfRange(item);
+                return true;
+            }
         }
 
-        protected abstract bool AddOutOfRange(T item);
+        public virtual void Add(IRange<T> range)
+        {
+            if (range == null) throw new ArgumentNullException(nameof(range));
 
-        public abstract void Clear();
+            var suitRange = this.rangeInfo.Suit(range);
+            this.AddRangeInternal(suitRange.Minimum, suitRange.Maximum, suitRange.CanTakeMinimum, suitRange.CanTakeMaximum);
+        }
+
+        public bool AddRange(T minimum, T maximum, bool canTakeMinimum = true, bool canTakeMaximum = true)
+        {
+            if (this.comparer.Compare(minimum, maximum) > 0)
+                throw new InvalidRangeException<T>(
+                    "最小值大于最大值。",
+                    minimum, maximum, canTakeMinimum, canTakeMaximum, this.rangeInfo.Comparison,
+                    new ArgumentOutOfRangeException(
+                        $"{nameof(minimum)}, {nameof(maximum)}",
+                        $"{minimum}, {maximum}",
+                        "最小值大于最大值。"
+                    )
+                );
+
+            if (!this.rangeInfo.IsValid(minimum, maximum, canTakeMinimum, canTakeMaximum))
+                return false;
+            else
+            {
+                this.AddRangeInternal(minimum, maximum, canTakeMinimum, canTakeMaximum);
+                return true;
+            }
+        }
+
+        protected virtual void AddRangeInternal(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum)
+        {
+            var ranges = new Collection<IRange<T>>();
+
+            (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) newRange = (minimum, maximum, canTakeMinimum, canTakeMaximum);
+            foreach (var range in this.ranges)
+            {
+                if (this.rangeInfo.TryUnion(
+                    range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum,
+                minimum, maximum, canTakeMinimum, canTakeMaximum,
+                    out newRange.minimum, out newRange.maximum, out newRange.canTakeMinimum, out newRange.canTakeMaximum
+                ))
+                    ; // Do nothing.
+                else ranges.Add(range);
+            }
+            ranges.Add(new Range<T>(newRange.minimum, newRange.maximum, newRange.canTakeMinimum, newRange.canTakeMaximum));
+
+            this.ranges = ranges;
+        }
+
+        protected virtual void AddOutOfRange(T item) => this.AddRangeInternal(item, item, true, true);
+        #endregion
+
+        #region Remove
+        public virtual bool Remove(T item)
+        {
+            if (this.Contains(item))
+            {
+                this.RemoveInRange(item);
+                return true;
+            }
+            else return false;
+        }
+
+        public bool Remove(IRange<T> item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RemoveRange(T minimum, T maximum, bool canTakeMinimum = true, bool canTakeMaximum = true)
+        {
+            if (this.comparer.Compare(minimum, maximum) > 0)
+                throw new InvalidRangeException<T>(
+                    "最小值大于最大值。",
+                    minimum, maximum, canTakeMinimum, canTakeMaximum, this.rangeInfo.Comparison,
+                    new ArgumentOutOfRangeException(
+                        $"{nameof(minimum)}, {nameof(maximum)}",
+                        $"{minimum}, {maximum}",
+                        "最小值大于最大值。"
+                    )
+                );
+
+            if (!this.rangeInfo.IsValid(minimum, maximum, canTakeMinimum, canTakeMaximum))
+                return false;
+            else
+            {
+                this.RemoveRangeInternal(minimum, maximum, canTakeMinimum, canTakeMaximum);
+                return true;
+            }
+        }
+
+        protected virtual void RemoveRangeInternal(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual void RemoveInRange(T item) => this.RemoveRangeInternal(item, item, true, true);
+        #endregion
+
+        public virtual void Clear() => this.ranges.Clear();
 
         public virtual bool Contains(T item) =>
-            (this.range.CanTakeMinimum ?
-                this.range.Comparison(this.range.Minimum, item) <= 0 :
-                this.range.Comparison(this.range.Minimum, item) < 0
-            ) &&
-            (this.range.CanTakeMaximum ?
-                this.range.Comparison(item, this.range.Maximum) <= 0 :
-                this.range.Comparison(item, this.range.Maximum) < 0
+            this.ranges.Any(range =>
+                (range.CanTakeMinimum ?
+                    this.comparer.Compare(range.Minimum, item) <= 0 :
+                    this.comparer.Compare(range.Minimum, item) < 0
+                ) &&
+                (range.CanTakeMaximum ?
+                    this.comparer.Compare(item, range.Maximum) <= 0 :
+                    this.comparer.Compare(item, range.Maximum) < 0
+                )
             );
 
-        public abstract void CopyTo(T[] array, int arrayIndex);
+        public virtual void CopyTo(T[] array, int arrayIndex) => ((IEnumerable<T>)this).ToList().CopyTo(array, arrayIndex);
 
-        public virtual void ExceptWith(IEnumerable<T> other)
+        public virtual IEnumerator<T> GetEnumerator()
+        {
+            if (this.ranges.Count == 0) yield break;
+            else
+            {
+                IEnumerable<IRange<T>> sorted;
+                if (this.ranges.Count == 1)
+                    sorted = this.ranges;
+                else
+                {
+                    sorted = this.ranges.OrderBy(
+                        range => range,
+                        Comparer<IRange<T>>.Create(
+                            (range1, range2) =>
+                            {
+                                if (this.comparer.Compare(range1.Minimum, range2.Minimum) == 0)
+                                    return range1.CanTakeMinimum ? 1 : -1;
+                                else
+                                    return this.comparer.Compare(range1.Minimum, range2.Minimum);
+                            }
+                        )
+                    );
+                }
+
+                foreach (var range in sorted)
+                    foreach (var item in this.rangeInfo.GetEnumerable(range.Maximum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum))
+                        yield return item;
+            }
+        }
+
+        #region ExceptWith
+        public void ExceptWith(IEnumerable<T> other)
         {
             if (other == null) throw new ArgumentNullException(nameof(other));
             if (other == this) this.Clear();
 
+            this.ExceptWithInternal(other);
+        }
+
+        protected virtual void ExceptWithInternal(IEnumerable<T> other)
+        {
             foreach (var item in other)
                 this.Remove(item);
         }
 
         public virtual void ExceptWith(IRange<T> range)
         {
-            if (this.range.Comparison == range.Comparison)
-            {
-#warning 未完成。
-            }
-            else throw new NotSupportedException();
+            if (range == null) throw new ArgumentNullException(nameof(range));
+
+            this.ExceptWithInternal(range);
         }
 
-        public abstract IEnumerator<T> GetEnumerator();
+        protected virtual void ExceptWithInternal(IRange<T> range) =>
+            this.RemoveRangeInternal(range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum);
 
-        public abstract void IntersectWith(IEnumerable<T> other);
-
-        public abstract bool IntersectWith(IRange<T> range);
-
-        public abstract bool IsProperSubsetOf(IEnumerable<T> other);
-
-        public abstract bool IsProperSubsetOf(IRange<T> range);
-
-        public abstract bool IsProperSupersetOf(IEnumerable<T> other);
-
-        public abstract bool IsProperSupersetOf(IRange<T> range);
-
-        public abstract bool IsSubsetOf(IEnumerable<T> other);
-
-        public abstract bool IsSubsetOf(IRange<T> range);
-
-        public abstract bool IsSupersetOf(IEnumerable<T> other);
-
-        public abstract bool IsSupersetOf(IRange<T> range);
-
-        public abstract bool Overlaps(IEnumerable<T> other);
-
-        public abstract bool Overlaps(IRange<T> range);
-
-        public virtual bool Remove(T item)
+        public virtual void ExceptWith(IEnumerable<IRange<T>> other)
         {
-            if (this.Contains(item))
-                return this.RemoveInRange(item);
-            else return false;
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) this.Clear();
+
+            this.ExceptWithInternal(other);
         }
 
-        protected abstract bool RemoveInRange(T item);
+        protected virtual void ExceptWithInternal(IEnumerable<IRange<T>> other)
+        {
+            foreach (var range in other)
+                this.ExceptWith(range);
+        }
+        #endregion
 
-        public abstract bool SetEquals(IEnumerable<T> other);
+        #region IntersectWith
+        public void IntersectWith(IEnumerable<T> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return;
 
-        public virtual bool SetEquals(IRange<T> range)
+            this.IntersectWithInternal(other);
+        }
+
+        protected virtual void IntersectWithInternal(IEnumerable<T> other)
+        {
+            var set = new HashSet<T>(other, new EqualityComparisonComparer<T>((x, y) => this.comparer.Compare(x, y) == 0));
+            var intersection = set.Where(item => this.Contains(item)).ToArray();
+
+            this.Clear();
+            foreach (var item in intersection)
+                this.AddRangeInternal(item, item, true, true);
+        }
+
+        public virtual void IntersectWith(IRange<T> range)
         {
             if (range == null) throw new ArgumentNullException(nameof(range));
-            if (range == this) return true;
 
-            if (this.range.Equals(range)) return true;
-            else return false;
+            this.IntersectWithInternal(this.rangeInfo.Suit(range));
         }
 
-        public abstract void SymmetricExceptWith(IEnumerable<T> other);
+        protected virtual void IntersectWithInternal(IRange<T> range)
+        {
+            if (this.ranges.Count == 0) return;
+            else
+            {
+                var intersection = this.ranges
+                    .Where(_range =>
+                        this.rangeInfo.IsOverlap(
+                            _range.Minimum, _range.Maximum, _range.CanTakeMinimum, _range.CanTakeMaximum,
+                            range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
+                        )
+                    )
+                    .Select(_range =>
+                        this.rangeInfo.Intersect(
+                            _range.Minimum, _range.Maximum, _range.CanTakeMinimum, _range.CanTakeMaximum,
+                            range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
+                        )
+                    )
+                    .Where(_range => this.rangeInfo.GetEnumerable(_range).Any());
+                this.ranges = new Collection<IRange<T>>();
+                foreach (var _range in intersection)
+                    this.AddRangeInternal(_range.minimum, _range.maximum, _range.canTakeMinimum, _range.canTakeMaximum);
+            }
+        }
 
-        public abstract bool SymmetricExceptWith(IRange<T> range);
+        public virtual void IntersectWith(IEnumerable<IRange<T>> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return;
 
-        public abstract void UnionWith(IEnumerable<T> other);
+            this.IntersectWithInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+        }
 
-        public abstract bool UnionWith(IRange<T> range);
+        protected virtual void IntersectWithInternal(IEnumerable<IRange<T>> other)
+        {
+            var intersection =
+                from range1 in this.ranges.ToList()
+                from range2 in other
+                where this.rangeInfo.IsOverlap(
+                    range1.Minimum, range1.Maximum, range1.CanTakeMinimum, range1.CanTakeMaximum,
+                    range2.Minimum, range2.Maximum, range2.CanTakeMinimum, range2.CanTakeMaximum
+                )
+                select this.rangeInfo.Intersect(
+                    range1.Minimum, range1.Maximum, range1.CanTakeMinimum, range1.CanTakeMaximum,
+                    range2.Minimum, range2.Maximum, range2.CanTakeMinimum, range2.CanTakeMaximum
+                );
+            this.Clear();
+            foreach (var range in intersection)
+                this.AddRangeInternal(range.minimum, range.maximum, range.canTakeMinimum, range.canTakeMaximum);
+        }
+        #endregion
+
+        #region SymmetricExceptWith
+        public void SymmetricExceptWith(IEnumerable<T> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) this.Clear();
+
+            this.SymmetricExceptWithInternal(other);
+        }
+
+        protected virtual void SymmetricExceptWithInternal(IEnumerable<T> other)
+        {
+            ISet<T> set = new HashSet<T>(other, new EqualityComparisonComparer<T>((x, y) => this.comparer.Compare(x, y) == 0));
+            foreach (var item in set)
+            {
+                if (this.Contains(item))
+                    this.Remove(item);
+                else
+                    this.Add(item);
+            }
+        }
+
+        public virtual void SymmetricExceptWith(IRange<T> range)
+        {
+            if (range == null) throw new ArgumentNullException(nameof(range));
+
+            this.SymmetricExceptWithInternal(range);
+        }
+
+        // 需要优化
+        protected virtual void SymmetricExceptWithInternal(IRange<T> range)
+        {
+            foreach (var item in this.rangeInfo.GetEnumerable(range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum))
+                if (this.Contains(item))
+                    this.Remove(item);
+                else
+                    this.Add(item);
+        }
+
+        public virtual void SymmetricExceptWith(IEnumerable<IRange<T>> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) this.Clear();
+
+            this.SymmetricExceptWithInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+        }
+
+        // 需要优化
+        protected virtual void SymmetricExceptWithInternal(IEnumerable<IRange<T>> other)
+        {
+            var firstItems = this.ranges
+                .SelectMany(range =>
+                    this.rangeInfo.GetEnumerable(range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum)
+                );
+            var secondItems = other
+                .SelectMany(range =>
+                    this.rangeInfo.GetEnumerable(range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum)
+                );
+            IEqualityComparer<T> equalityComparer = new EqualityComparisonComparer<T>((x, y) => this.comparer.Compare(x, y) == 0);
+            var symmetricException =
+                firstItems.Union(secondItems, equalityComparer)
+                .Except(
+                    firstItems.Intersect(secondItems, equalityComparer),
+                    equalityComparer
+                );
+
+            this.ranges = new Collection<IRange<T>>();
+            foreach (var item in symmetricException)
+                this.AddOutOfRange(item);
+        }
+        #endregion
+
+        #region UnionWith
+        public void UnionWith(IEnumerable<T> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return;
+
+            this.UnionWithInternal(other);
+        }
+
+        protected virtual void UnionWithInternal(IEnumerable<T> other)
+        {
+            foreach (var item in other)
+                this.Add(item);
+        }
+
+        public virtual void UnionWith(IRange<T> range)
+        {
+            if (range == null) throw new ArgumentNullException(nameof(range));
+
+            this.UnionWith(this.rangeInfo.Suit(range));
+        }
+        
+        protected virtual void UnionWithInternal(IRange<T> range) =>
+            this.AddRangeInternal(range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum);
+
+        public virtual void UnionWith(IEnumerable<IRange<T>> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return;
+
+            this.UnionWithInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+        }
+
+        // 需要优化
+        protected virtual void UnionWithInternal(IEnumerable<IRange<T>> other)
+        {
+            foreach (var range in other)
+                this.UnionWithInternal(range);
+        }
+        #endregion
+
+        #region IsProperSubsetOf
+        public bool IsProperSubsetOf(IEnumerable<T> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return false;
+
+            return this.IsProperSubsetOfInternal(other);
+        }
+
+        // 需要优化
+        protected virtual bool IsProperSubsetOfInternal(IEnumerable<T> other)
+        {
+            var set = new HashSet<T>(other, new EqualityComparisonComparer<T>((x, y) => this.comparer.Compare(x, y) == 0));
+            foreach (var item in this)
+                if (!set.Remove(item)) return false;
+
+            return set.Count != 0;
+        }
+
+        public virtual bool IsProperSubsetOf(IRange<T> range)
+        {
+            if (range == null) throw new ArgumentNullException(nameof(range));
+
+            return this.IsProperSubsetOfInternal(this.rangeInfo.Suit(range));
+        }
+
+        // 需要优化
+        protected virtual bool IsProperSubsetOfInternal(IRange<T> range) =>
+            this.IsProperSubsetOfInternal(this.rangeInfo.GetEnumerable(range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum));
+
+        public virtual bool IsProperSubsetOf(IEnumerable<IRange<T>> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return false;
+
+            return this.IsProperSubsetOfInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+        }
+
+        // 需要优化
+        protected virtual bool IsProperSubsetOfInternal(IEnumerable<IRange<T>> other) =>
+            this.IsProperSubsetOfInternal(
+                other.SelectMany(range =>
+                    this.rangeInfo.GetEnumerable(
+                        range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
+                    )
+                )
+            );
+        #endregion
+
+        #region IsProperSupersetOf
+        public bool IsProperSupersetOf(IEnumerable<T> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return false;
+
+            return this.IsProperSupersetOfInternal(other);
+        }
+
+        // 需要优化
+        protected virtual bool IsProperSupersetOfInternal(IEnumerable<T> other)
+        {
+            var set = new HashSet<T>(this, new EqualityComparisonComparer<T>((x, y) => this.comparer.Compare(x, y) == 0));
+            foreach (var item in other)
+                if (!set.Remove(item)) return false;
+            return set.Count != 0;
+        }
+
+        public virtual bool IsProperSupersetOf(IRange<T> range)
+        {
+            if (range == null) throw new ArgumentNullException(nameof(range));
+
+            return this.IsProperSupersetOfInternal(range);
+        }
+
+        // 需要优化
+        protected virtual bool IsProperSupersetOfInternal(IRange<T> range) =>
+            this.IsProperSupersetOfInternal(this.rangeInfo.GetEnumerable(range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum));
+
+        public virtual bool IsProperSupersetOf(IEnumerable<IRange<T>> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return false;
+
+            return this.IsProperSupersetOfInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+        }
+
+        // 需要优化
+        protected virtual bool IsProperSupersetOfInternal(IEnumerable<IRange<T>> other) =>
+            this.IsProperSupersetOfInternal(
+                other.SelectMany(range =>
+                    this.rangeInfo.GetEnumerable(
+                        range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
+                    )
+                )
+            );
+        #endregion
+
+        #region IsSubsetOf
+        public bool IsSubsetOf(IEnumerable<T> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return true;
+
+            return this.IsSubsetOfInternal(other);
+        }
+
+        protected virtual bool IsSubsetOfInternal(IEnumerable<T> other)
+        {
+            var set = new HashSet<T>(other, new EqualityComparisonComparer<T>((x, y) => this.comparer.Compare(x, y) == 0));
+
+            return ((IEnumerable<T>)this).All(item => set.Contains(item));
+        }
+
+        public virtual bool IsSubsetOf(IRange<T> range)
+        {
+            if (range == null) throw new ArgumentNullException(nameof(range));
+
+            return this.IsSubsetOfInternal(this.rangeInfo.Suit(range));
+        }
+
+        protected virtual bool IsSubsetOfInternal(IRange<T> range) =>
+            ((IEnumerable<T>)this)
+                .All(item =>
+                    this.rangeInfo.IsOverlap(
+                        range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum,
+                        item, item, true, true
+                    )
+                );
+
+        public virtual bool IsSubsetOf(IEnumerable<IRange<T>> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return true;
+
+            return this.IsSubsetOfInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+        }
+
+        // 需要优化
+        protected virtual bool IsSubsetOfInternal(IEnumerable<IRange<T>> other) =>
+            this.IsSubsetOfInternal(
+                other.SelectMany(range =>
+                    this.rangeInfo.GetEnumerable(
+                        range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
+                    )
+                )
+            );
+        #endregion
+
+        #region IsSupersetOf
+        public bool IsSupersetOf(IEnumerable<T> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return true;
+
+            return this.IsSupersetOfInternal(other);
+        }
+
+        protected virtual bool IsSupersetOfInternal(IEnumerable<T> other)
+        {
+            var set = new HashSet<T>(other, new EqualityComparisonComparer<T>((x, y) => this.comparer.Compare(x, y) == 0));
+
+            return set.All(item => this.Contains(item));
+        }
+
+        public virtual bool IsSupersetOf(IRange<T> range)
+        {
+            if (range == null) throw new ArgumentNullException(nameof(range));
+
+            return this.IsSupersetOfInternal(this.rangeInfo.Suit(range));
+        }
+
+        // 需要优化
+        protected virtual bool IsSupersetOfInternal(IRange<T> range) =>
+            this.IsSupersetOfInternal(this.rangeInfo.GetEnumerable(range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum));
+
+        public virtual bool IsSupersetOf(IEnumerable<IRange<T>> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return true;
+
+            return this.IsSupersetOfInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+        }
+
+        // 需要优化
+        protected virtual bool IsSupersetOfInternal(IEnumerable<IRange<T>> other) =>
+            this.IsSupersetOfInternal(
+                other.SelectMany(range =>
+                    this.rangeInfo.GetEnumerable(
+                        range.Maximum, range.Minimum, range.CanTakeMinimum, range.CanTakeMaximum
+                    )
+                )
+            );
+        #endregion
+
+        #region Overlaps
+        public bool Overlaps(IEnumerable<T> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return this.Count != 0;
+
+            return this.OverlapsInternal(other);
+        }
+
+        protected virtual bool OverlapsInternal(IEnumerable<T> other) =>
+            other.Any(item => this.Contains(item));
+
+        public virtual bool Overlaps(IRange<T> range)
+        {
+            if (range == null) throw new ArgumentNullException(nameof(range));
+
+            return this.OverlapsInternal(this.rangeInfo.Suit(range));
+        }
+
+        // 需要优化
+        protected virtual bool OverlapsInternal(IRange<T> range) =>
+            this.ranges.Any(_range =>
+                this.rangeInfo.IsOverlap(
+                    range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum,
+                    _range.Minimum, _range.Maximum, _range.CanTakeMinimum, _range.CanTakeMaximum
+                )
+            );
+
+        public virtual bool Overlaps(IEnumerable<IRange<T>> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return this.Count != 0;
+
+            return this.OverlapsInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+        }
+
+        protected virtual bool OverlapsInternal(IEnumerable<IRange<T>> other)
+        {
+            return
+                (from range1 in this.ranges
+                 from range2 in other
+                 where this.rangeInfo.IsOverlap(
+                     range1.Minimum, range1.Maximum, range1.CanTakeMinimum, range1.CanTakeMaximum,
+                     range2.Minimum, range2.Maximum, range2.CanTakeMinimum, range2.CanTakeMaximum
+                 )
+                 select true
+            ).Any();
+        }
+        #endregion
+
+        #region SetEquals
+        public virtual bool SetEquals(IEnumerable<T> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return true;
+
+            return this.SetEqualsInternal(other);
+        }
+
+        // 需要优化
+        protected virtual bool SetEqualsInternal(IEnumerable<T> other)
+        {
+            IEqualityComparer<T> equalityComparer = new EqualityComparisonComparer<T>((x, y) => this.comparer.Compare(x, y) == 0);
+            var firstSet = new HashSet<T>(this, equalityComparer);
+            var secondSet = new HashSet<T>(other, equalityComparer);
+            return firstSet.SetEquals(secondSet);
+        }
+
+        public virtual bool SetEquals(IEnumerable<IRange<T>> other)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            if (other == this) return true;
+
+            return this.SetEqualsInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+        }
+
+        // 需要优化
+        protected virtual bool SetEqualsInternal(IEnumerable<IRange<T>> other) =>
+            this.SetEqualsInternal(
+                other.SelectMany(range =>
+                    this.rangeInfo.GetEnumerable(
+                        range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
+                    )
+                )
+            );
+        #endregion
 
         #region ISet{T} Implementations
         void ICollection<T>.Add(T item) => this.Add(item);
 
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+        #endregion
+
+        #region ISet{IRange{T}} Implementations
+        bool ISet<IRange<T>>.Add(IRange<T> item)
+        {
+            this.Add(item);
+            return true;
+        }
+        
+        int ICollection<IRange<T>>.Count => this.ranges.Count;
+
+        bool ICollection<IRange<T>>.Contains(IRange<T> item) => this.IsSupersetOf(item);
+
+        void ICollection<IRange<T>>.CopyTo(IRange<T>[] array, int arrayIndex) => this.ranges.CopyTo(array, arrayIndex);
+
+        IEnumerator<IRange<T>> IEnumerable<IRange<T>>.GetEnumerator() => this.ranges.GetEnumerator();
         #endregion
     }
 }

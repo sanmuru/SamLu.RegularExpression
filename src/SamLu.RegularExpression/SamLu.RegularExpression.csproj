@@ -52,12 +52,17 @@
     <Compile Include="Adapter\RegexConstAdaptor.cs" />
     <Compile Include="Adapter\RegexRangeAdaptor.cs" />
     <Compile Include="Adapter\SetAdaptor.cs" />
+    <Compile Include="Diagnostics\RangeSetDebugInfo.cs" />
     <Compile Include="IRange.cs" />
     <Compile Include="ObjectModel\CharRange.cs" />
+    <Compile Include="ObjectModel\CharRangeInfo.cs" />
     <Compile Include="ObjectModel\CharRangeSet.cs" />
     <Compile Include="ObjectModel\ComparableRange.cs" />
     <Compile Include="ObjectModel\Int32Range.cs" />
+    <Compile Include="ObjectModel\InvalidRangeException.cs" />
     <Compile Include="ObjectModel\Range.cs" />
+    <Compile Include="ObjectModel\RangeInfo.cs" />
+    <Compile Include="ObjectModel\RangeNotOverlapException.cs" />
     <Compile Include="ObjectModel\RangeSet.cs" />
     <Compile Include="System\Collections\Generic\IReadOnlySet.cs" />
     <Compile Include="SamLu\DebugView\CollectionDebugView.cs" />

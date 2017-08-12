@@ -28,9 +28,5 @@ namespace SamLu.RegularExpression.ObjectModel
                 (this.CanTakeMinimum == other.CanTakeMinimum &&
                 this.CanTakeMaximum == other.CanTakeMaximum);
         }
-
-        #region IRange{T} Implementations
-        Comparison<T> IRange<T>.Comparison => ComparableRange<T>.DefaultComparison;
-        #endregion
     }
 }

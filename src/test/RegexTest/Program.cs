@@ -1,4 +1,5 @@
 ﻿using SamLu.Collections.ObjectModel;
+using SamLu.Diagnostics;
 using SamLu.RegularExpression;
 using SamLu.RegularExpression.Adapter;
 using SamLu.RegularExpression.ObjectModel;
@@ -299,7 +300,10 @@ namespace RegexTest
                 if (transition is SetRegexNFATransition set)
                     return set.Set;
                 else if (transition is RangeRegexNFATransition range)
-                    return new CharRangeSet(range.Range.Minimum, range.Range.Maximum, range.Range.CanTakeMinimum, range.Range.CanTakeMaximum);
+                    return new CharRangeSet()
+                    {
+                        new CharRange(range.Range.Minimum,range.Range.Maximum,range.Range.CanTakeMinimum,range.Range.CanTakeMaximum)
+                    };
                 else
                     return new HashSet<char>(this.AccreditedSet.Where(c => transition.Predicate(c)));
             }
