@@ -164,8 +164,10 @@ namespace SamLu.RegularExpression.StateMachine
             var Q = new Queue<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)>();
             // 集合 C 放置的是已经存在的 NFA 状态组（及其对应的 DFA 状态）。
             var C = new Collection<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)>();
+#if false
             // 集合 D 放置的是处理后连接指定两个 DFA 状态的所有转换接受的对象的并集。
             var D = new Dictionary<(RegexDFAState<T>, RegexDFAState<T>), IList<ISet<T>>>();
+#endif
 
             var startTuple = (new RegexFAStateGroup<RegexNFAState<T>>(nfa.StartState), dfa.StartState);
             Q.Enqueue(startTuple);
@@ -263,6 +265,11 @@ namespace SamLu.RegularExpression.StateMachine
                             C.Add(newTuple);
                         }
 
+                        RegexFATransition<T, RegexDFAState<T>> dfaTransition = this.contextInfo.ActivateRegexDFATransitionFromAccreditedSet(set);
+                        dfa.AttachTransition(dfaStateFrom, dfaTransition);
+                        dfa.SetTarget(dfaTransition, dfaStateTo);
+
+#if false
                         var __key = (dfaStateFrom, dfaStateTo);
                         IList<ISet<T>> __list;
                         if (!D.ContainsKey(__key))
@@ -272,10 +279,12 @@ namespace SamLu.RegularExpression.StateMachine
                         }
                         else __list = D[__key];
                         __list.Add(set);
+#endif
                     }
                 }
             }
 
+#if false
             foreach (var pair in D)
             {
                 (RegexDFAState<T> dfaStateFrom, RegexDFAState<T> dfaStateTo) = pair.Key;
@@ -287,6 +296,7 @@ namespace SamLu.RegularExpression.StateMachine
                 dfa.AttachTransition(dfaStateFrom, dfaTransition);
                 dfa.SetTarget(dfaTransition, dfaStateTo);
             }
+#endif
 
             return dfa;
         }

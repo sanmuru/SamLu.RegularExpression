@@ -1,4 +1,5 @@
-﻿using SamLu.StateMachine;
+﻿using SamLu.Diagnostics;
+using SamLu.StateMachine;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -107,6 +108,7 @@ namespace SamLu.RegularExpression.StateMachine
         }
 
 #if DEBUG
+        [Obsolete("实现 SamLu.IDebugInfo 接口或提供自定义的获取调试信息的约束的实现。User SamLu.DebugInfo.GetDebugInfo{T} Instead.", false)]
         public static string GetStringInfo<T>(this RegexNFA<T> nfa)
         {
             var states = nfa.States.ToList();
@@ -122,6 +124,8 @@ namespace SamLu.RegularExpression.StateMachine
 
             return sb.ToString();
         }
+
+        [Obsolete("实现 SamLu.IDebugInfo 接口或提供自定义的获取调试信息的约束的实现。User SamLu.DebugInfo.GetDebugInfo{T} Instead.", false)]
         public static string GetStringInfo<T>(this RegexDFA<T> nfa)
         {
             var states = nfa.States.ToList();
@@ -138,6 +142,7 @@ namespace SamLu.RegularExpression.StateMachine
             return sb.ToString();
         }
 
+        [Obsolete("实现 SamLu.IDebugInfo 接口或提供自定义的获取调试信息的约束的实现。User SamLu.DebugInfo.GetDebugInfo{T} Instead.", false)]
         public static string GetStringInfo<T>(this RegexFATransition<T, RegexNFAState<T>> nfaTransition)
         {
             if (nfaTransition is RegexNFAEpsilonTransition<T> epsilonTransition)
@@ -147,6 +152,7 @@ namespace SamLu.RegularExpression.StateMachine
             else return nfaTransition.ToString();
         }
 
+        [Obsolete("实现 SamLu.IDebugInfo 接口或提供自定义的获取调试信息的约束的实现。User SamLu.DebugInfo.GetDebugInfo{T} Instead.", false)]
         public static string GetStringInfo<T>(this RegexNFAEpsilonTransition<T> epsilonTransition)
         {
             if (epsilonTransition.GetType() == typeof(RegexNFAEpsilonTransition<T>))
@@ -154,6 +160,7 @@ namespace SamLu.RegularExpression.StateMachine
             else return epsilonTransition.ToString();
         }
 
+        [Obsolete("实现 SamLu.IDebugInfo 接口或提供自定义的获取调试信息的约束的实现。User SamLu.DebugInfo.GetDebugInfo{T} Instead.", false)]
         public static string GetStringInfo<T>(this RegexFATransition<T, RegexDFAState<T>> dfaTransition)
         {
             if (dfaTransition.GetType() == typeof(RegexFATransition<T, RegexDFAState<T>>))

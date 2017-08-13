@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.Diagnostics
 {
-    public class RangeSetDebugView<T> : IDebugInfo
+    public class RangeSetDebugInfo<T> : IDebugInfo
     {
         private RangeSet<T> rangeSet;
 
         public string DebugInfo =>
             string.Join("∪", this.rangeSet.Ranges.Select(range => range.GetDebugInfo()));
 
-        public RangeSetDebugView(RangeSet<T> rangeSet, params object[] args) =>
+        public RangeSetDebugInfo(RangeSet<T> rangeSet, params object[] args) =>
             this.rangeSet = rangeSet ?? throw new ArgumentNullException(nameof(rangeSet));
     }
 }

@@ -34,7 +34,9 @@ namespace SamLu.RegularExpression.ObjectModel
         {
             T start = canTakeMinimum ? minimum : this.GetNext(minimum);
             T end = canTakeMaximum ? maximum : this.GetPrev(maximum);
-            for (T current = start; this.comparison(current, end) != 0; current = this.GetNext(current))
+
+            T t = this.GetNext(end);
+            for (T current = start; this.comparison(current, t) != 0; current = this.GetNext(current))
                 yield return current;
         }
 
@@ -46,7 +48,7 @@ namespace SamLu.RegularExpression.ObjectModel
         public IRange<T> Suit(T firstExtremum, T secondExtremum, bool canTakeFirstExtremum, bool canTakeSecondExtremum)
         {
             T minimum = default(T), maximum = default(T);
-            bool canTakeMinimum = true, canTakeMaximum = false;
+            bool canTakeMinimum = false, canTakeMaximum = false;
             if (this.comparison(firstExtremum, secondExtremum) <= 0)
             {
                 minimum = firstExtremum;
@@ -288,13 +290,317 @@ namespace SamLu.RegularExpression.ObjectModel
             else if (compareValue == 0 && !(canTakeMinimum && canTakeMaximum))
                 return false;
             else
-                return !this.IsValidInternal(minimum, maximum, canTakeMinimum, canTakeMaximum);
+                return this.IsValidInternal(minimum, maximum, canTakeMinimum, canTakeMaximum);
         }
 
         public abstract bool IsValidInternal(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum);
 
         public bool IsValid((T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) range) =>
             !this.IsValid(range.minimum, range.maximum, range.canTakeMinimum, range.canTakeMaximum);
+        #endregion
+
+        #region IsSubsetOf
+        /// <summary>
+        /// 对两个范围进行检测，第一个范围是否为第二个范围的子集。
+        /// </summary>
+        /// <param name="firstMinimum">第一个范围的最小值。</param>
+        /// <param name="firstMaximum">第一个范围的最大值。</param>
+        /// <param name="firstCanTakeMinimum">一个值，指示是否能取到第一个范围的最小值。</param>
+        /// <param name="firstCanTakeMaximum">一个值，指示是否能取到第一个范围的最大值。</param>
+        /// <param name="secondMinimum">第二个范围的最小值。</param>
+        /// <param name="secondMaximum">第二个范围的最大值。</param>
+        /// <param name="secondCanTakeMinimum">一个值，指示是否能取到第二个范围的最小值。</param>
+        /// <param name="secondCanTakeMaximum">一个值，指示是否能取到第二个范围的最大值。</param>
+        /// <returns>若第一个范围为第二个范围的子集，则为 true ；否则为 false 。</returns>
+        /// <exception cref="InvalidRangeException{T}">第一个范围为无效范围。</exception>
+        /// <exception cref="InvalidRangeException{T}">第二个范围为无效范围。</exception>
+        /// <seealso cref="IsSubsetOfInternal(T, T, bool, bool, T, T, bool, bool)"/>
+        public bool IsSubsetOf(
+            T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
+            T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
+        )
+        {
+            if (!this.IsValid(firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum))
+                throw new InvalidRangeException<T>(firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum, this.comparison);
+            if (!this.IsValid(secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum))
+                throw new InvalidRangeException<T>(secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum, this.comparison);
+
+            return this.IsSubsetOfInternal(
+                firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum,
+                secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum
+            );
+        }
+
+        /// <summary>
+        /// 子类重写时，提供对两个范围进行检测，第一个范围是否为第二个范围的子集的实现。
+        /// </summary>
+        /// <param name="firstMinimum">第一个范围的最小值。</param>
+        /// <param name="firstMaximum">第一个范围的最大值。</param>
+        /// <param name="firstCanTakeMinimum">一个值，指示是否能取到第一个范围的最小值。</param>
+        /// <param name="firstCanTakeMaximum">一个值，指示是否能取到第一个范围的最大值。</param>
+        /// <param name="secondMinimum">第二个范围的最小值。</param>
+        /// <param name="secondMaximum">第二个范围的最大值。</param>
+        /// <param name="secondCanTakeMinimum">一个值，指示是否能取到第二个范围的最小值。</param>
+        /// <param name="secondCanTakeMaximum">一个值，指示是否能取到第二个范围的最大值。</param>
+        /// <returns>若第一个范围为第二个范围的子集，则为 true ；否则为 false 。</returns>
+        protected abstract bool IsSubsetOfInternal(
+            T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
+            T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
+        );
+
+        /// <summary>
+        /// 对两个范围进行检测，第一个范围是否为第二个范围的子集。
+        /// </summary>
+        /// <param name="firstRange">第一个范围。</param>
+        /// <param name="secondRange">第二个范围。</param>
+        /// <returns>若第一个范围为第二个范围的子集，则为 true ；否则为 false 。</returns>
+        /// <exception cref="InvalidRangeException{T}">第一个范围为无效范围。</exception>
+        /// <exception cref="InvalidRangeException{T}">第二个范围为无效范围。</exception>
+        /// <seealso cref="IsSubsetOf(T, T, bool, bool, T, T, bool, bool)"/>
+        public bool IsSubsetOf(
+            (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) firstRange,
+            (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) secondRange
+        ) =>
+            this.IsSubsetOf(
+                firstRange.minimum, firstRange.maximum, firstRange.canTakeMinimum, firstRange.canTakeMaximum,
+                secondRange.minimum, secondRange.maximum, secondRange.canTakeMinimum, secondRange.canTakeMaximum
+            );
+        #endregion
+
+        #region IsSupersetOf
+        /// <summary>
+        /// 对两个范围进行检测，第一个范围是否为第二个范围的超集。
+        /// </summary>
+        /// <param name="firstMinimum">第一个范围的最小值。</param>
+        /// <param name="firstMaximum">第一个范围的最大值。</param>
+        /// <param name="firstCanTakeMinimum">一个值，指示是否能取到第一个范围的最小值。</param>
+        /// <param name="firstCanTakeMaximum">一个值，指示是否能取到第一个范围的最大值。</param>
+        /// <param name="secondMinimum">第二个范围的最小值。</param>
+        /// <param name="secondMaximum">第二个范围的最大值。</param>
+        /// <param name="secondCanTakeMinimum">一个值，指示是否能取到第二个范围的最小值。</param>
+        /// <param name="secondCanTakeMaximum">一个值，指示是否能取到第二个范围的最大值。</param>
+        /// <returns>若第一个范围为第二个范围的超集，则为 true ；否则为 false 。</returns>
+        /// <exception cref="InvalidRangeException{T}">第一个范围为无效范围。</exception>
+        /// <exception cref="InvalidRangeException{T}">第二个范围为无效范围。</exception>
+        /// <seealso cref="IsSubsetOfInternal(T, T, bool, bool, T, T, bool, bool)"/>
+        public bool IsSupersetOf(
+            T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
+            T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
+        )
+        {
+            if (!this.IsValid(firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum))
+                throw new InvalidRangeException<T>(firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum, this.comparison);
+            if (!this.IsValid(secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum))
+                throw new InvalidRangeException<T>(secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum, this.comparison);
+
+            return this.IsSupersetOfInternal(
+                firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum,
+                secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum
+            );
+        }
+
+        /// <summary>
+        /// 子类重写时，提供对两个范围进行检测，第一个范围是否为第二个范围的超集的实现。
+        /// </summary>
+        /// <param name="firstMinimum">第一个范围的最小值。</param>
+        /// <param name="firstMaximum">第一个范围的最大值。</param>
+        /// <param name="firstCanTakeMinimum">一个值，指示是否能取到第一个范围的最小值。</param>
+        /// <param name="firstCanTakeMaximum">一个值，指示是否能取到第一个范围的最大值。</param>
+        /// <param name="secondMinimum">第二个范围的最小值。</param>
+        /// <param name="secondMaximum">第二个范围的最大值。</param>
+        /// <param name="secondCanTakeMinimum">一个值，指示是否能取到第二个范围的最小值。</param>
+        /// <param name="secondCanTakeMaximum">一个值，指示是否能取到第二个范围的最大值。</param>
+        /// <returns>若第一个范围为第二个范围的超集，则为 true ；否则为 false 。</returns>
+        protected abstract bool IsSupersetOfInternal(
+            T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
+            T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
+        );
+
+        /// <summary>
+        /// 对两个范围进行检测，第一个范围是否为第二个范围的超集。
+        /// </summary>
+        /// <param name="firstRange">第一个范围。</param>
+        /// <param name="secondRange">第二个范围。</param>
+        /// <returns>若第一个范围为第二个范围的超集，则为 true ；否则为 false 。</returns>
+        /// <exception cref="InvalidRangeException{T}">第一个范围为无效范围。</exception>
+        /// <exception cref="InvalidRangeException{T}">第二个范围为无效范围。</exception>
+        /// <seealso cref="IsSubsetOf(T, T, bool, bool, T, T, bool, bool)"/>
+        public bool IsSupersetOf(
+            (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) firstRange,
+            (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) secondRange
+        ) =>
+            this.IsSupersetOf(
+                firstRange.minimum, firstRange.maximum, firstRange.canTakeMinimum, firstRange.canTakeMaximum,
+                secondRange.minimum, secondRange.maximum, secondRange.canTakeMinimum, secondRange.canTakeMaximum
+            );
+        #endregion
+
+        #region IsProperSubsetOf
+        /// <summary>
+        /// 对两个范围进行检测，第一个范围是否为第二个范围的真子集。
+        /// </summary>
+        /// <param name="firstMinimum">第一个范围的最小值。</param>
+        /// <param name="firstMaximum">第一个范围的最大值。</param>
+        /// <param name="firstCanTakeMinimum">一个值，指示是否能取到第一个范围的最小值。</param>
+        /// <param name="firstCanTakeMaximum">一个值，指示是否能取到第一个范围的最大值。</param>
+        /// <param name="secondMinimum">第二个范围的最小值。</param>
+        /// <param name="secondMaximum">第二个范围的最大值。</param>
+        /// <param name="secondCanTakeMinimum">一个值，指示是否能取到第二个范围的最小值。</param>
+        /// <param name="secondCanTakeMaximum">一个值，指示是否能取到第二个范围的最大值。</param>
+        /// <returns>若第一个范围为第二个范围的真子集，则为 true ；否则为 false 。</returns>
+        /// <exception cref="InvalidRangeException{T}">第一个范围为无效范围。</exception>
+        /// <exception cref="InvalidRangeException{T}">第二个范围为无效范围。</exception>
+        /// <seealso cref="IsProperSubsetOfInternal(T, T, bool, bool, T, T, bool, bool)"/>
+        public bool IsProperSubsetOf(
+            T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
+            T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
+        )
+        {
+            if (!this.IsValid(firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum))
+                throw new InvalidRangeException<T>(firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum, this.comparison);
+            if (!this.IsValid(secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum))
+                throw new InvalidRangeException<T>(secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum, this.comparison);
+
+            return this.IsProperSubsetOfInternal(
+                firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum,
+                secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum
+            );
+        }
+
+        /// <summary>
+        /// 子类重写时，提供对两个范围进行检测，第一个范围是否为第二个范围的真子集的实现。
+        /// </summary>
+        /// <param name="firstMinimum">第一个范围的最小值。</param>
+        /// <param name="firstMaximum">第一个范围的最大值。</param>
+        /// <param name="firstCanTakeMinimum">一个值，指示是否能取到第一个范围的最小值。</param>
+        /// <param name="firstCanTakeMaximum">一个值，指示是否能取到第一个范围的最大值。</param>
+        /// <param name="secondMinimum">第二个范围的最小值。</param>
+        /// <param name="secondMaximum">第二个范围的最大值。</param>
+        /// <param name="secondCanTakeMinimum">一个值，指示是否能取到第二个范围的最小值。</param>
+        /// <param name="secondCanTakeMaximum">一个值，指示是否能取到第二个范围的最大值。</param>
+        /// <returns>若第一个范围为第二个范围的真子集，则为 true ；否则为 false 。</returns>
+        protected abstract bool IsProperSubsetOfInternal(
+            T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
+            T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
+        );
+
+        /// <summary>
+        /// 对两个范围进行检测，第一个范围是否为第二个范围的真子集。
+        /// </summary>
+        /// <param name="firstRange">第一个范围。</param>
+        /// <param name="secondRange">第二个范围。</param>
+        /// <returns>若第一个范围为第二个范围的真子集，则为 true ；否则为 false 。</returns>
+        /// <exception cref="InvalidRangeException{T}">第一个范围为无效范围。</exception>
+        /// <exception cref="InvalidRangeException{T}">第二个范围为无效范围。</exception>
+        /// <seealso cref="IsProperSubsetOf(T, T, bool, bool, T, T, bool, bool)"/>
+        public bool IsProperSubsetOf(
+            (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) firstRange,
+            (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) secondRange
+        ) =>
+            this.IsProperSubsetOf(
+                firstRange.minimum, firstRange.maximum, firstRange.canTakeMinimum, firstRange.canTakeMaximum,
+                secondRange.minimum, secondRange.maximum, secondRange.canTakeMinimum, secondRange.canTakeMaximum
+            );
+        #endregion
+
+        #region IsProperSupersetOf
+        /// <summary>
+        /// 对两个范围进行检测，第一个范围是否为第二个范围的真超集。
+        /// </summary>
+        /// <param name="firstMinimum">第一个范围的最小值。</param>
+        /// <param name="firstMaximum">第一个范围的最大值。</param>
+        /// <param name="firstCanTakeMinimum">一个值，指示是否能取到第一个范围的最小值。</param>
+        /// <param name="firstCanTakeMaximum">一个值，指示是否能取到第一个范围的最大值。</param>
+        /// <param name="secondMinimum">第二个范围的最小值。</param>
+        /// <param name="secondMaximum">第二个范围的最大值。</param>
+        /// <param name="secondCanTakeMinimum">一个值，指示是否能取到第二个范围的最小值。</param>
+        /// <param name="secondCanTakeMaximum">一个值，指示是否能取到第二个范围的最大值。</param>
+        /// <returns>若第一个范围为第二个范围的真超集，则为 true ；否则为 false 。</returns>
+        /// <exception cref="InvalidRangeException{T}">第一个范围为无效范围。</exception>
+        /// <exception cref="InvalidRangeException{T}">第二个范围为无效范围。</exception>
+        /// <seealso cref="IsProperSubsetOfInternal(T, T, bool, bool, T, T, bool, bool)"/>
+        public bool IsProperSupersetOf(
+            T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
+            T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
+        )
+        {
+            if (!this.IsValid(firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum))
+                throw new InvalidRangeException<T>(firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum, this.comparison);
+            if (!this.IsValid(secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum))
+                throw new InvalidRangeException<T>(secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum, this.comparison);
+
+            return this.IsProperSupersetOfInternal(
+                firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum,
+                secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum
+            );
+        }
+
+        /// <summary>
+        /// 子类重写时，提供对两个范围进行检测，第一个范围是否为第二个范围的真超集的实现。
+        /// </summary>
+        /// <param name="firstMinimum">第一个范围的最小值。</param>
+        /// <param name="firstMaximum">第一个范围的最大值。</param>
+        /// <param name="firstCanTakeMinimum">一个值，指示是否能取到第一个范围的最小值。</param>
+        /// <param name="firstCanTakeMaximum">一个值，指示是否能取到第一个范围的最大值。</param>
+        /// <param name="secondMinimum">第二个范围的最小值。</param>
+        /// <param name="secondMaximum">第二个范围的最大值。</param>
+        /// <param name="secondCanTakeMinimum">一个值，指示是否能取到第二个范围的最小值。</param>
+        /// <param name="secondCanTakeMaximum">一个值，指示是否能取到第二个范围的最大值。</param>
+        /// <returns>若第一个范围为第二个范围的真超集，则为 true ；否则为 false 。</returns>
+        protected abstract bool IsProperSupersetOfInternal(
+            T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
+            T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
+        );
+
+        /// <summary>
+        /// 对两个范围进行检测，第一个范围是否为第二个范围的真超集。
+        /// </summary>
+        /// <param name="firstRange">第一个范围。</param>
+        /// <param name="secondRange">第二个范围。</param>
+        /// <returns>若第一个范围为第二个范围的真超集，则为 true ；否则为 false 。</returns>
+        /// <exception cref="InvalidRangeException{T}">第一个范围为无效范围。</exception>
+        /// <exception cref="InvalidRangeException{T}">第二个范围为无效范围。</exception>
+        /// <seealso cref="IsProperSubsetOf(T, T, bool, bool, T, T, bool, bool)"/>
+        public bool IsProperSupersetOf(
+            (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) firstRange,
+            (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) secondRange
+        ) =>
+            this.IsProperSupersetOf(
+                firstRange.minimum, firstRange.maximum, firstRange.canTakeMinimum, firstRange.canTakeMaximum,
+                secondRange.minimum, secondRange.maximum, secondRange.canTakeMinimum, secondRange.canTakeMaximum
+            );
+        #endregion
+
+        #region IsNextTo
+        public bool IsNextTo(
+            T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
+            T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
+        )
+        {
+            if (!this.IsValid(firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum))
+                throw new InvalidRangeException<T>(firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum, this.comparison);
+            if (!this.IsValid(secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum))
+                throw new InvalidRangeException<T>(secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum, this.comparison);
+
+            return this.IsNextToInternal(
+                firstMinimum, firstMaximum, firstCanTakeMinimum, firstCanTakeMaximum,
+                secondMinimum, secondMaximum, secondCanTakeMinimum, secondCanTakeMaximum
+            );
+        }
+
+        protected abstract bool IsNextToInternal(
+            T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
+            T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
+        );
+
+        public bool IsNextTo(
+            (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) firstRange,
+            (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) secondRange
+        ) =>
+            this.IsNextTo(
+                firstRange.minimum, firstRange.maximum, firstRange.canTakeMinimum, firstRange.canTakeMaximum,
+                secondRange.minimum, secondRange.maximum, secondRange.canTakeMinimum, secondRange.canTakeMaximum
+            );
         #endregion
 
         #region IsOverlap
@@ -328,10 +634,5 @@ namespace SamLu.RegularExpression.ObjectModel
                 secondRange.minimum, secondRange.maximum, secondRange.canTakeMinimum, secondRange.canTakeMaximum
             );
         #endregion
-    }
-
-    public static class RangeInfo
-    {
-
     }
 }

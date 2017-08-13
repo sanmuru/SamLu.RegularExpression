@@ -18,6 +18,11 @@ namespace RegexTest
     {
         static void Main(string[] args)
         {
+            RangeSet<char> set = new RangeSet<char>(new CharRangeInfo());
+            set.Add('a');
+            set.Add('b');
+            ;
+
             Dictionary<int, int> d = new Dictionary<int, int>();
             var chars = Regex.Range('\0', 'z', true, false);
             var tchars = Regex.Range(new TT<char>('a'), new TT<char>('z'), false, true);
@@ -40,10 +45,10 @@ namespace RegexTest
                     var ___nfa = char_Provider.GenerateNFAFromRegexObject(regexObj);
                     var ___dfa = char_Provider.GenerateDFAFromNFA(___nfa);
                 };
-            action?.Invoke(Regex.Const('a').Optional().Concat(Regex.Const('b').Concat(Regex.Const('c').Optional())));
+            //action?.Invoke(Regex.Const('a').Optional().Concat(Regex.Const('b').Concat(Regex.Const('c').Optional())));
 
             RegexNFA<char> char_nfa = char_Provider.GenerateNFAFromRegexObject(ipAddress);
-            var debuginfo = char_nfa.GetDebugInfo();
+            //var debuginfo = char_nfa.GetDebugInfo();
             RegexDFA<char> char_dfa = char_Provider.GenerateDFAFromNFA(char_nfa);
             ;
 
@@ -154,7 +159,7 @@ namespace RegexTest
             {
                 if (set == null) throw new ArgumentNullException(nameof(set));
 
-                return new RegexFATransition<char, RegexDFAState<char>>(c => set.Contains(c));
+                return new RangeSetRegexDFATransition(set);
             }
 
             public RegexNFA<char> ActivateRegexNFA()
@@ -190,7 +195,7 @@ namespace RegexTest
                     return new SetRegexNFATransition(set.Set);
                 else return new RegexFATransition<char, RegexNFAState<char>>(transition.Predicate);
             }
-
+            
             public class SetRegexNFATransition : RegexFATransition<char, RegexNFAState<char>>
             {
                 private ISet<char> set;
@@ -233,7 +238,7 @@ namespace RegexTest
                     this.range = range;
                 }
 
-                public class _DebugInfo
+                internal class _DebugInfo : IDebugInfo
                 {
                     private RangeRegexNFATransition transition;
 
@@ -282,6 +287,70 @@ namespace RegexTest
                 }
             }
 
+            [DebugInfoProxy(typeof(RangeSetRegexDFATransition._DebugInfo))]
+            public class RangeSetRegexDFATransition : RegexFATransition<char, RegexDFAState<char>>
+            {
+                private ISet<char> set;
+                public ISet<char> Set => this.set;
+
+                public RangeSetRegexDFATransition(ISet<char> set) :
+                    base(
+                        (set ?? throw new ArgumentNullException(nameof(set))).Contains
+                    )
+                {
+                    this.set = set;
+                }
+                
+                internal class _DebugInfo : IDebugInfo
+                {
+                    private RangeSetRegexDFATransition transition;
+
+                    public static string QuoteChar(char c)
+                    {
+                        switch (c)
+                        {
+                            case '\0': return "'\\0'";
+                            case '\\': return "'\\'";
+                            case '\'': return "'\\''";
+                            case '"': return "'\"'";
+                            case '\a': return "'\\a'";
+                            case '\b': return "'\\b'";
+                            case '\t': return "'\\t'";
+                            case '\f': return "'\\f'";
+                            case '\v': return "'\\v'";
+                            case '\r': return "'\\r'";
+                            case '\n': return "'\\n'";
+                            default: return $"'{c}'";
+                        }
+                    }
+
+                    public string DebugInfo
+                    {
+                        get
+                        {
+                            Func<IRange<char>, string> func = range =>
+                             {
+                                 if (
+                                 range.Comparison(range.Minimum, range.Maximum) == 0 &&
+                                     (range.CanTakeMinimum && range.CanTakeMaximum)
+                             )
+                                     return $"{_DebugInfo.QuoteChar(range.Minimum)}";
+                                 else
+                                     return $"{(range.CanTakeMinimum ? '[' : '(')}{_DebugInfo.QuoteChar(range.Minimum)},{_DebugInfo.QuoteChar(range.Maximum)}{(range.CanTakeMaximum ? ']' : ')')}";
+                             };
+                            return $"< {string.Join("∪", ((IEnumerable<IRange<char>>)transition.set).Select(func))} >";
+                        }
+                    }
+
+                    public _DebugInfo(RangeSetRegexDFATransition transition, params object[] args)
+                    {
+                        if (transition == null) throw new ArgumentNullException(nameof(transition));
+
+                        this.transition = transition;
+                    }
+                }
+            }
+
             public RegexFATransition<char, RegexNFAState<char>> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<char> regex)
             {
                 if (regex is IRange<char> range)
@@ -292,7 +361,17 @@ namespace RegexTest
 
             public RegexFATransition<char, RegexDFAState<char>> CombineRegexDFATransitions(IEnumerable<RegexFATransition<char, RegexDFAState<char>>> dfaTransitions)
             {
-                throw new NotImplementedException();
+                if (dfaTransitions == null) throw new ArgumentNullException(nameof(dfaTransitions));
+
+                CharRangeSet set = new CharRangeSet();
+                set.UnionWith(
+                    dfaTransitions
+                        .Where(transition => transition != null)
+                        .SelectMany(transition => 
+                            ((transition as RangeSetRegexDFATransition).Set as CharRangeSet) as IEnumerable<IRange<char>>
+                        )
+                );
+                return this.ActivateRegexDFATransitionFromAccreditedSet(set);
             }
 
             public ISet<char> GetAccreditedSetFromRegexNFATransition(RegexFATransition<char, RegexNFAState<char>> transition)
@@ -310,22 +389,34 @@ namespace RegexTest
 
             public ISet<char> GetAccreditedSetExceptResult(ISet<char> first, ISet<char> second)
             {
-                return new SetGroup<char>(new[] { first, second }, SetGroup<char>.ExceptGroupPredicate);
+                CharRangeSet set = new CharRangeSet();
+                set.UnionWith(first);
+                set.ExceptWith(second);
+                return set;
             }
 
             public ISet<char> GetAccreditedSetIntersectResult(ISet<char> first, ISet<char> second)
             {
-                return new SetGroup<char>(new[] { first, second }, SetGroup<char>.IntersectGroupPredicate);
+                CharRangeSet set = new CharRangeSet();
+                set.UnionWith(first);
+                set.IntersectWith(second);
+                return set;
             }
 
             public ISet<char> GetAccreditedSetSymmetricExceptResult(ISet<char> first, ISet<char> second)
             {
-                return new SetGroup<char>(new[] { first, second }, SetGroup<char>.SymmetricExceptGroupPredicate);
+                CharRangeSet set = new CharRangeSet();
+                set.UnionWith(first);
+                set.SymmetricExceptWith(second);
+                return set;
             }
 
             public ISet<char> GetAccreditedSetUnionResult(ISet<char> first, ISet<char> second)
             {
-                return new SetGroup<char>(new[] { first, second }, SetGroup<char>.UnionGroupPredicate);
+                CharRangeSet set = new CharRangeSet();
+                set.UnionWith(first);
+                set.UnionWith(second);
+                return set;
             }
         }
 
