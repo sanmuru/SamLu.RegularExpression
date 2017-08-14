@@ -1,4 +1,7 @@
-﻿using SamLu.RegularExpression.DebugView;
+﻿using SamLu.Diagnostics;
+using SamLu.RegularExpression.DebugView;
+using SamLu.RegularExpression.Diagnostics;
+using SamLu.Runtime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,6 +13,12 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.ObjectModel
 {
+    /// <summary>
+    /// 内部以范围为元数据组织的集。
+    /// </summary>
+    /// <typeparam name="T">集包含的对象的类型。</typeparam>
+    [DebuggerDisplay("Count = {Count}")]
+    [DebugInfoProxy(typeof(RangeSetDebugInfo<>), new[] { TypeParameterFillin.TypeParameter_0 })]
     public class RangeSet<T> : ISet<T>, ISet<IRange<T>>
     {
         /// <summary>
@@ -30,6 +39,7 @@ namespace SamLu.RegularExpression.ObjectModel
         /// 获取 <see cref="RangeSet{T}"/> 的比较器。
         /// </summary>
         public IComparer<T> Comparer => this.comparer;
+        public RangeInfo<T> RangeInfo => this.rangeInfo;
 
         /// <summary>
         /// 获取 <see cref="RangeSet{T}"/> 中包含的元素数。

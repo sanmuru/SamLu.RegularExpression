@@ -888,8 +888,8 @@ namespace SamLu.RegularExpression.ObjectModel
             int compareValue = this.comparison(minimum, maximum);
             if (compareValue > 0)
                 return false;
-            else if (compareValue == 0 && !(canTakeMinimum && canTakeMaximum))
-                return false;
+            else if (compareValue == 0)
+                return canTakeMinimum && canTakeMaximum;
             else
                 return this.IsValidInternal(minimum, maximum, canTakeMinimum, canTakeMaximum);
         }

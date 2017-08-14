@@ -82,7 +82,8 @@ namespace RegexTest
                 return base.GenerateNFATransitionFromRegexCondition(condition, nfa, state);
             }
         }
-        
+
+        #region char
         public class MyRegexNFATransition<T> : RegexFATransition<T, RegexNFAState<T>>
         {
             private ISet<T> set;
@@ -419,19 +420,75 @@ namespace RegexTest
                 return set;
             }
         }
+        #endregion
 
+        #region string
         public class MyStringRegexRunContextInfo : IRegexRunContextInfo<string>
         {
-            private HashSet<string> set;
+            private RangeSet<string> set;
+            private RangeInfo<string> rangeInfo = new CustomizedRangeInfo<string>(
+                (item =>
+                {
+                    int result;
+                    if (item == ":")
+                        return int.MaxValue.ToString();
+                    else if (int.TryParse(item, out result))
+                    {
+                        if (result == int.MinValue)
+                            return ".";
+                        else
+                            return (result - 1).ToString();
+                    }
+                    else //if (item == ".")
+                        throw new InvalidOperationException();
+                }),
+                (item =>
+                {
+                    int result;
+                    if (item == ".")
+                        return int.MinValue.ToString();
+                    else if (int.TryParse(item, out result))
+                    {
+                        if (result == int.MaxValue)
+                            return ":";
+                        else
+                            return (result + 1).ToString();
+                    }
+                    else //if (item == ":")
+                        throw new InvalidOperationException();
+                }),
+                ((x, y) =>
+                {
+                    int xParse, yParse;
+                    bool canXParse = int.TryParse(x, out xParse);
+                    bool canYParse = int.TryParse(y, out yParse);
+
+                    if (canXParse && canYParse) return xParse.CompareTo(yParse);
+                    else if (!canXParse && !canYParse)
+                    {
+                        if (x == "." || x == ":" || y == "." || y == ":") return x.CompareTo(y);
+                        else throw new InvalidOperationException();
+                    }
+                    else if (canXParse)
+                    {
+                        if (y == ".") return 1;
+                        else if (y == ":") return -1;
+                        else throw new InvalidOperationException();
+                    }
+                    else// if (canYParse)\
+                    {
+                        if (x == ".") return -1;
+                        else if (x == ":") return 1;
+                        else throw new InvalidOperationException();
+                    }
+                })
+            );
 
             public ISet<string> AccreditedSet => this.set;
 
             public MyStringRegexRunContextInfo()
             {
-                this.set = new HashSet<string>();
-                set.Add(".");
-                foreach (var item in Enumerable.Range(0, 256).Select(i => i.ToString()))
-                    set.Add(item);
+                this.set = new RangeSet<string>(this.rangeInfo);
             }
 
             public RegexDFA<string> ActivateRegexDFA()
@@ -448,7 +505,7 @@ namespace RegexTest
             {
                 if (set == null) throw new ArgumentNullException(nameof(set));
 
-                return new RegexFATransition<string, RegexDFAState<string>>(s => set.Contains(s));
+                return new RangeSetRegexFATransition<string, RegexDFAState<string>>(set as RangeSet<string>);
             }
 
             public RegexNFA<string> ActivateRegexNFA()
@@ -484,14 +541,25 @@ namespace RegexTest
             {
                 if (regex == null) throw new ArgumentNullException(nameof(regex));
 
-                return new RegexFATransition<string, RegexNFAState<string>>(s => regex.Condition(s));
+                RangeSet<string> set = new RangeSet<string>(this.rangeInfo);
+                if (regex is RegexConst<string> regexConst)
+                    set.Add(regexConst.ConstValue);
+                else if (regex is RegexRange<string> regexRange)
+                    set.AddRange(regexRange.Minimum, regexRange.Maximum, regexRange.CanTakeMinimum, regexRange.CanTakeMaximum);
+                else if (regex is IRange<string> range)
+                    set.AddRange(range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum);
+                else throw new NotSupportedException();
+                return new RangeSetRegexFATransition<string, RegexNFAState<string>>(set);
             }
 
             public RegexFATransition<string, RegexNFAState<string>> ActivateRegexNFATransitionFromDumplication(RegexFATransition<string, RegexNFAState<string>> transition)
             {
                 if (transition == null) throw new ArgumentNullException(nameof(transition));
 
-                return new RegexFATransition<string, RegexNFAState<string>>(transition.Predicate);
+                var field = typeof(RangeSetRegexFATransition<string, RegexNFAState<string>>).GetField("set", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                return new RangeSetRegexFATransition<string, RegexNFAState<string>>(
+                    field.GetValue(transition) as RangeSet<string>
+                );
             }
 
             public RegexFATransition<string, RegexDFAState<string>> CombineRegexDFATransitions(IEnumerable<RegexFATransition<string, RegexDFAState<string>>> dfaTransitions)
@@ -503,7 +571,8 @@ namespace RegexTest
             {
                 if (transition == null) throw new ArgumentNullException(nameof(transition));
 
-                return new HashSet<string>(this.AccreditedSet.Where(item => transition.Predicate(item)));
+                var field = typeof(RangeSetRegexFATransition<string, RegexNFAState<string>>).GetField("set", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                return field.GetValue(transition) as RangeSet<string>;
             }
 
             public ISet<string> GetAccreditedSetExceptResult(ISet<string> first, ISet<string> second)
@@ -511,10 +580,10 @@ namespace RegexTest
                 if (first == null) throw new ArgumentNullException(nameof(first));
                 if (second == null) throw new ArgumentNullException(nameof(second));
 
-                return new SamLu.Collections.ObjectModel.SetGroup<string>(
-                    new[] { first, second },
-                    (predications => predications.Count() == 2 && (predications.First() && !predications.Last()))
-                );
+                RangeSet<string> set = new RangeSet<string>(this.rangeInfo);
+                set.UnionWith(first);
+                set.ExceptWith(second);
+                return set;
             }
 
             public ISet<string> GetAccreditedSetIntersectResult(ISet<string> first, ISet<string> second)
@@ -522,10 +591,10 @@ namespace RegexTest
                 if (first == null) throw new ArgumentNullException(nameof(first));
                 if (second == null) throw new ArgumentNullException(nameof(second));
 
-                return new SamLu.Collections.ObjectModel.SetGroup<string>(
-                    new[] { first, second },
-                    SamLu.Collections.ObjectModel.SetGroup<string>.IntersectGroupPredicate
-                );
+                RangeSet<string> set = new RangeSet<string>(this.rangeInfo);
+                set.UnionWith(first);
+                set.IntersectWith(second);
+                return set;
             }
 
             public ISet<string> GetAccreditedSetSymmetricExceptResult(ISet<string> first, ISet<string> second)
@@ -533,10 +602,10 @@ namespace RegexTest
                 if (first == null) throw new ArgumentNullException(nameof(first));
                 if (second == null) throw new ArgumentNullException(nameof(second));
 
-                return new SamLu.Collections.ObjectModel.SetGroup<string>(
-                    new[] { first, second },
-                    (predications => predications.Count() == 2 && (predications.First() ^ predications.Last()))
-                );
+                RangeSet<string> set = new RangeSet<string>(this.rangeInfo);
+                set.UnionWith(first);
+                set.SymmetricExceptWith(second);
+                return set;
             }
 
             public ISet<string> GetAccreditedSetUnionResult(ISet<string> first, ISet<string> second)
@@ -544,12 +613,13 @@ namespace RegexTest
                 if (first == null) throw new ArgumentNullException(nameof(first));
                 if (second == null) throw new ArgumentNullException(nameof(second));
 
-                return new SamLu.Collections.ObjectModel.SetGroup<string>(
-                    new[] { first, second },
-                    SamLu.Collections.ObjectModel.SetGroup<string>.UnionGroupPredicate
-                );
+                RangeSet<string> set = new RangeSet<string>(this.rangeInfo);
+                set.UnionWith(first);
+                set.UnionWith(second);
+                return set;
             }
         }
+        #endregion
 
         [System.Diagnostics.DebuggerDisplay("{t}")]
         struct TT<T> : IComparable<TT<T>>, IEquatable<TT<T>>
