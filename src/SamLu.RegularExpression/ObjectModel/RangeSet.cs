@@ -12,13 +12,28 @@ namespace SamLu.RegularExpression.ObjectModel
 {
     public class RangeSet<T> : ISet<T>, ISet<IRange<T>>
     {
+        /// <summary>
+        /// 内部的范围集合。
+        /// </summary>
         protected ICollection<IRange<T>> ranges;
+        /// <summary>
+        /// 内部的比较器。
+        /// </summary>
         protected IComparer<T> comparer;
         protected RangeInfo<T> rangeInfo;
 
+        /// <summary>
+        /// 获取 <see cref="RangeSet{T}"/> 的范围集合表示。
+        /// </summary>
         public ICollection<IRange<T>> Ranges => new ReadOnlyCollection<IRange<T>>(this.ranges.ToList());
+        /// <summary>
+        /// 获取 <see cref="RangeSet{T}"/> 的比较器。
+        /// </summary>
         public IComparer<T> Comparer => this.comparer;
 
+        /// <summary>
+        /// 获取 <see cref="RangeSet{T}"/> 中包含的元素数。
+        /// </summary>
         public virtual int Count
         {
             get
@@ -30,8 +45,6 @@ namespace SamLu.RegularExpression.ObjectModel
                 return count;
             }
         }
-
-        public virtual bool IsReadOnly => false;
 
         protected RangeSet() =>
             this.ranges = new Collection<IRange<T>>();
@@ -67,12 +80,12 @@ namespace SamLu.RegularExpression.ObjectModel
         /// <param name="range">要添加的范围。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
         /// <seealso cref="AddRangeInternal(T, T, bool, bool)"/>
-        /// <seealso cref="RangeInfo{T}.Suit(IRange{T})"/>
+        /// <seealso cref="RangeInfo{T}.Adapt(IRange{T})"/>
         public virtual bool Add(IRange<T> range)
         {
             if (range == null) throw new ArgumentNullException(nameof(range));
 
-            var suitRange = this.rangeInfo.Suit(range);
+            var suitRange = this.rangeInfo.Adapt(range);
             return this.AddRangeInternal(suitRange.Minimum, suitRange.Maximum, suitRange.CanTakeMinimum, suitRange.CanTakeMaximum);
         }
 
@@ -112,7 +125,7 @@ namespace SamLu.RegularExpression.ObjectModel
         }
 
         /// <summary>
-        /// 子类重写时，提供添加一个范围的实现。
+        /// 子类重写时，提供向 <see cref="RangeSet{T}"/> 中添加一个范围的实现。
         /// </summary>
         /// <param name="minimum">范围的最小值。</param>
         /// <param name="maximum">范围的最大值。</param>
@@ -128,22 +141,22 @@ namespace SamLu.RegularExpression.ObjectModel
                      this.rangeInfo.IsOverlap(
                          minimum, maximum, canTakeMinimum, canTakeMaximum,
                          range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
-                     ) ? true // 相交
+                     ) ? 1 // 相交
                          : (this.rangeInfo.IsNextTo(
                              minimum, maximum, canTakeMinimum, canTakeMaximum,
                              range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
-                         ) ? (bool?)null // 相邻
-                             : false // 不相交
+                         ) ? 0 // 相邻
+                             : -1 // 不相交
                          )
                 ).ToDictionary(
                     (group => group.Key),
                     (group => group.ToArray())
                 );
 
-            IRange<T> newRange = null; // 将要添加的范围。
-            if (dic.ContainsKey(true))
+            (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) newRange = (minimum, maximum, canTakeMinimum, canTakeMaximum); // 将要添加的范围。
+            if (dic.ContainsKey(1))
             { // 含有相交的范围。
-                var overlappedRanges = dic[true];
+                var overlappedRanges = dic[1];
                 if (overlappedRanges.Length == 1)
                 { // 如果相交的范围是唯一的。
                     var overlappedRange = overlappedRanges[0];
@@ -157,27 +170,27 @@ namespace SamLu.RegularExpression.ObjectModel
 
                 // 计算指定范围以及所有与其相交的范围的并集。
                 newRange = overlappedRanges.Aggregate(
-                    newRange ?? this.rangeInfo.Create(minimum, maximum, canTakeMinimum, canTakeMaximum),
-                    (seed, range) => this.rangeInfo.Create(this.rangeInfo.Union(
-                        seed.Minimum, seed.Maximum, seed.CanTakeMinimum, seed.CanTakeMaximum,
+                    newRange,
+                    (seed, range) => this.rangeInfo.Union(
+                        seed.minimum, seed.maximum, seed.canTakeMinimum, seed.canTakeMaximum,
                         range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
-                    ))
+                    )
                 );
 
                 // 从内部范围集合中将所有相交的范围删除。
                 foreach (var overlappedRange in overlappedRanges)
                     this.ranges.Remove(overlappedRange);
             }
-            if (dic.ContainsKey(null))
+            if (dic.ContainsKey(0))
             { // 含有相邻的范围。
-                var nearbyRanges = dic[null];
+                var nearbyRanges = dic[0];
                 // 计算指定范围以及所有与其相邻的范围的并集。
                 newRange = nearbyRanges.Aggregate(
-                    newRange ?? this.rangeInfo.Create(minimum, maximum, canTakeMinimum, canTakeMaximum),
-                    (seed, range) => this.rangeInfo.Create(this.rangeInfo.Union(
-                        seed.Minimum, seed.Maximum, seed.CanTakeMinimum, seed.CanTakeMaximum,
+                    newRange,
+                    (seed, range) => this.rangeInfo.Union(
+                        seed.minimum, seed.maximum, seed.canTakeMinimum, seed.canTakeMaximum,
                         range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
-                    ))
+                    )
                 );
 
                 // 从内部范围集合中将所有相邻的范围删除。
@@ -186,7 +199,7 @@ namespace SamLu.RegularExpression.ObjectModel
             }
 
             // 向内部范围集合添加新范围。
-            this.ranges.Add(newRange);
+            this.ranges.Add(this.rangeInfo.Create(newRange));
             return true; // 操作成功。
         }
 
@@ -198,7 +211,13 @@ namespace SamLu.RegularExpression.ObjectModel
         #endregion
 
         #region Remove
-        public virtual bool Remove(T item)
+        /// <summary>
+        /// 从 <see cref="RangeSet{T}"/> 中移除一个对象。
+        /// </summary>
+        /// <param name="item">要移除的对象。</param>
+        /// <returns>一个值，指示操作是否成功。</returns>
+        /// <seealso cref="RemoveInRange(T)"/>
+        public bool Remove(T item)
         {
             if (this.Contains(item))
             {
@@ -207,14 +226,31 @@ namespace SamLu.RegularExpression.ObjectModel
             else return false;
         }
 
-        public bool Remove(IRange<T> range)
+        /// <summary>
+        /// 从 <see cref="RangeSet{T}"/> 中移除一个范围
+        /// </summary>
+        /// <param name="range">要移除的范围。</param>
+        /// <returns>一个值，指示操作是否成功。</returns>
+        public virtual bool Remove(IRange<T> range)
         {
             if (range == null) throw new ArgumentNullException(nameof(range));
 
-            var suitRange = this.rangeInfo.Suit(range);
+            var suitRange = this.rangeInfo.Adapt(range);
             return this.RemoveRangeInternal(suitRange.Minimum, suitRange.Maximum, suitRange.CanTakeMinimum, suitRange.CanTakeMaximum);
         }
 
+        /// <summary>
+        /// 从 <see cref="RangeSet{T}"/> 中移除一个范围
+        /// </summary>
+        /// <param name="minimum">范围的最小值。</param>
+        /// <param name="maximum">范围的最大值。</param>
+        /// <param name="canTakeMinimum">一个值，指示是否能取到范围的最小值。</param>
+        /// <param name="canTakeMaximum">一个值，指示是否能取到范围的最大值。</param>
+        /// <returns>一个值，指示操作是否成功</returns>
+        /// <exception cref="InvalidRangeException{T}"><paramref name="minimum"/> 大于 <paramref name="maximum"/> 。</exception>
+        /// <exception cref="InvalidRangeException{T}">无效的范围。</exception>
+        /// <seealso cref="RemoveRangeInternal(T, T, bool, bool)"/>
+        /// <seealso cref="RangeInfo{T}.IsValid(T, T, bool, bool)"/>
         public bool RemoveRange(T minimum, T maximum, bool canTakeMinimum = true, bool canTakeMaximum = true)
         {
             if (this.comparer.Compare(minimum, maximum) > 0)
@@ -229,46 +265,94 @@ namespace SamLu.RegularExpression.ObjectModel
                 );
 
             if (!this.rangeInfo.IsValid(minimum, maximum, canTakeMinimum, canTakeMaximum))
-                return false;
+                throw new InvalidRangeException<T>(
+                    minimum, maximum, canTakeMinimum, canTakeMaximum, this.comparer.Compare
+                );
             else
                 return this.RemoveRangeInternal(minimum, maximum, canTakeMinimum, canTakeMaximum);
         }
 
+        /// <summary>
+        /// 子类重写时，提供从 <see cref="RangeSet{T}"/> 中移除一个范围的实现。
+        /// </summary>
+        /// <param name="minimum">范围的最小值。</param>
+        /// <param name="maximum">范围的最大值。</param>
+        /// <param name="canTakeMinimum">一个值，指示是否能取到范围的最小值。</param>
+        /// <param name="canTakeMaximum">一个值，指示是否能取到范围的最大值。</param>
+        /// <returns>一个值，指示操作是否成功</returns>
         protected virtual bool RemoveRangeInternal(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum)
         {
-            if (this.rangeInfo.GetEnumerable(minimum, maximum, canTakeMinimum, canTakeMaximum).Any())
-            {
-                var overlapRanges = this.ranges.Where(range =>
-                    this.rangeInfo.IsOverlap(
-                        minimum, maximum, canTakeMinimum, canTakeMaximum,
-                        range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
-                    )
-                ).ToArray();
-                if (overlapRanges.Any())
+            // 计算与指定范围相交的范围。
+            var overlappedRanges = this.ranges.Where(range =>
+                this.rangeInfo.IsOverlap(
+                    minimum, maximum, canTakeMinimum, canTakeMaximum,
+                    range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
+                )
+            ).ToArray();
+
+            if (overlappedRanges.Length == 0)
+                // 不存在相交的范围，则操作失败。
+                return false;
+            else
+            { // 存在相交的范围。
+                foreach (var overlappedRange in overlappedRanges)
                 {
-                    foreach (var range in ranges) this.ranges.Remove(range);
-                    foreach (var item in
-                        overlapRanges.SelectMany(range =>
-                            this.rangeInfo.GetEnumerable(
-                                range.Maximum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum
-                            )
-                            .Except(this.rangeInfo.GetEnumerable(minimum, maximum, canTakeMinimum, canTakeMaximum))
-                        )
-                    )
-                        this.AddOutOfRange(item);
-                    
-                        return true;
+                    // 从内部范围集合中移除相交的范围。
+                    this.ranges.Remove(overlappedRange);
+
+                    if (this.rangeInfo.IsSupersetOf(
+                        minimum, maximum, canTakeMinimum, canTakeMaximum,
+                        overlappedRange.Minimum, overlappedRange.Maximum, overlappedRange.CanTakeMinimum, overlappedRange.CanTakeMaximum
+                    ))
+                        // 指定范围是相交范围的超集。
+                        continue;
+                    else
+                    {
+                        if (this.rangeInfo.TryExcept(
+                            (overlappedRange.Minimum, overlappedRange.Maximum, overlappedRange.CanTakeMinimum, overlappedRange.CanTakeMaximum),
+                            (minimum, maximum, canTakeMinimum, canTakeMaximum),
+                            out (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) newRange
+                        ))
+                            this.ranges.Add(this.rangeInfo.Create(newRange));
+                        else
+                        { // 指定范围是相交范围的真子集且两者最小/大值都不相等。
+                            this.ranges.Add(this.rangeInfo.Create(
+                                overlappedRange.Minimum,
+                                minimum,
+                                overlappedRange.CanTakeMaximum,
+                                !canTakeMinimum
+                            ));
+                            this.ranges.Add(this.rangeInfo.Create(
+                                maximum,
+                                overlappedRange.Maximum,
+                                !canTakeMaximum,
+                                overlappedRange.CanTakeMaximum
+                            ));
+                        }
+                    }
                 }
-                else return false;
+
+                return true;
             }
-            else return false;
         }
 
+        /// <summary>
+        /// 子类重写时，提供从 <see cref="RangeSet{T}"/> 中移除其表示的范围集合之内的项的实现。
+        /// </summary>
+        /// <param name="item">要移除的项。</param>
         protected virtual bool RemoveInRange(T item) => this.RemoveRangeInternal(item, item, true, true);
         #endregion
 
+        /// <summary>
+        /// 从 <see cref="RangeSet{T}"/> 中移除所有项。
+        /// </summary>
         public virtual void Clear() => this.ranges.Clear();
 
+        /// <summary>
+        /// 确定 <see cref="RangeSet{T}"/> 是否包含特定项。
+        /// </summary>
+        /// <param name="item">要确定的项。</param>
+        /// <returns>一个值，指示 <see cref="RangeSet{T}"/> 是否包含特定项。</returns>
         public virtual bool Contains(T item) =>
             this.ranges.Any(range =>
                 (range.CanTakeMinimum ?
@@ -281,8 +365,17 @@ namespace SamLu.RegularExpression.ObjectModel
                 )
             );
 
-        public virtual void CopyTo(T[] array, int arrayIndex) => ((IEnumerable<T>)this).ToList().CopyTo(array, arrayIndex);
+        /// <summary>
+        /// 从目标数组的指定索引处开始，将整个 <see cref="RangeSet{T}"/> 复制到兼容的一维数组。
+        /// </summary>
+        /// <param name="array">一维 <see cref="Array"/> ，它是从 <see cref="RangeSet{T}"/> 复制的元素的目标。 <see cref="Array"/> 必须具有从零开始的索引。</param>
+        /// <param name="arrayIndex"><paramref name="array"/> 中从零开始的索引，从此处开始复制。</param>
+        public virtual void CopyTo(T[] array, int arrayIndex) => ((IEnumerable<T>)this).ToArray().CopyTo(array, arrayIndex);
 
+        /// <summary>
+        /// 获取 <see cref="RangeSet{T}"/> 的枚举数。
+        /// </summary>
+        /// <returns><see cref="RangeSet{T}"/> 的枚举数。</returns>
         public virtual IEnumerator<T> GetEnumerator()
         {
             if (this.ranges.Count == 0) yield break;
@@ -376,7 +469,7 @@ namespace SamLu.RegularExpression.ObjectModel
         {
             if (range == null) throw new ArgumentNullException(nameof(range));
 
-            this.IntersectWithInternal(this.rangeInfo.Suit(range));
+            this.IntersectWithInternal(this.rangeInfo.Adapt(range));
         }
 
         protected virtual void IntersectWithInternal(IRange<T> range)
@@ -409,7 +502,7 @@ namespace SamLu.RegularExpression.ObjectModel
             if (other == null) throw new ArgumentNullException(nameof(other));
             if (other == this) return;
 
-            this.IntersectWithInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+            this.IntersectWithInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Adapt(item)));
         }
 
         protected virtual void IntersectWithInternal(IEnumerable<IRange<T>> other)
@@ -474,7 +567,7 @@ namespace SamLu.RegularExpression.ObjectModel
             if (other == null) throw new ArgumentNullException(nameof(other));
             if (other == this) this.Clear();
 
-            this.SymmetricExceptWithInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+            this.SymmetricExceptWithInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Adapt(item)));
         }
 
         // 需要优化
@@ -521,7 +614,7 @@ namespace SamLu.RegularExpression.ObjectModel
         {
             if (range == null) throw new ArgumentNullException(nameof(range));
 
-            this.UnionWith(this.rangeInfo.Suit(range));
+            this.UnionWith(this.rangeInfo.Adapt(range));
         }
         
         protected virtual void UnionWithInternal(IRange<T> range) =>
@@ -532,7 +625,7 @@ namespace SamLu.RegularExpression.ObjectModel
             if (other == null) throw new ArgumentNullException(nameof(other));
             if (other == this) return;
 
-            this.UnionWithInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+            this.UnionWithInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Adapt(item)));
         }
 
         // 需要优化
@@ -566,7 +659,7 @@ namespace SamLu.RegularExpression.ObjectModel
         {
             if (range == null) throw new ArgumentNullException(nameof(range));
 
-            return this.IsProperSubsetOfInternal(this.rangeInfo.Suit(range));
+            return this.IsProperSubsetOfInternal(this.rangeInfo.Adapt(range));
         }
 
         // 需要优化
@@ -578,7 +671,7 @@ namespace SamLu.RegularExpression.ObjectModel
             if (other == null) throw new ArgumentNullException(nameof(other));
             if (other == this) return false;
 
-            return this.IsProperSubsetOfInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+            return this.IsProperSubsetOfInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Adapt(item)));
         }
 
         // 需要优化
@@ -626,7 +719,7 @@ namespace SamLu.RegularExpression.ObjectModel
             if (other == null) throw new ArgumentNullException(nameof(other));
             if (other == this) return false;
 
-            return this.IsProperSupersetOfInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+            return this.IsProperSupersetOfInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Adapt(item)));
         }
 
         // 需要优化
@@ -660,7 +753,7 @@ namespace SamLu.RegularExpression.ObjectModel
         {
             if (range == null) throw new ArgumentNullException(nameof(range));
 
-            return this.IsSubsetOfInternal(this.rangeInfo.Suit(range));
+            return this.IsSubsetOfInternal(this.rangeInfo.Adapt(range));
         }
 
         protected virtual bool IsSubsetOfInternal(IRange<T> range) =>
@@ -677,7 +770,7 @@ namespace SamLu.RegularExpression.ObjectModel
             if (other == null) throw new ArgumentNullException(nameof(other));
             if (other == this) return true;
 
-            return this.IsSubsetOfInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+            return this.IsSubsetOfInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Adapt(item)));
         }
 
         // 需要优化
@@ -711,7 +804,7 @@ namespace SamLu.RegularExpression.ObjectModel
         {
             if (range == null) throw new ArgumentNullException(nameof(range));
 
-            return this.IsSupersetOfInternal(this.rangeInfo.Suit(range));
+            return this.IsSupersetOfInternal(this.rangeInfo.Adapt(range));
         }
 
         // 需要优化
@@ -723,7 +816,7 @@ namespace SamLu.RegularExpression.ObjectModel
             if (other == null) throw new ArgumentNullException(nameof(other));
             if (other == this) return true;
 
-            return this.IsSupersetOfInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+            return this.IsSupersetOfInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Adapt(item)));
         }
 
         // 需要优化
@@ -753,7 +846,7 @@ namespace SamLu.RegularExpression.ObjectModel
         {
             if (range == null) throw new ArgumentNullException(nameof(range));
 
-            return this.OverlapsInternal(this.rangeInfo.Suit(range));
+            return this.OverlapsInternal(this.rangeInfo.Adapt(range));
         }
 
         // 需要优化
@@ -770,7 +863,7 @@ namespace SamLu.RegularExpression.ObjectModel
             if (other == null) throw new ArgumentNullException(nameof(other));
             if (other == this) return this.Count != 0;
 
-            return this.OverlapsInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+            return this.OverlapsInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Adapt(item)));
         }
 
         protected virtual bool OverlapsInternal(IEnumerable<IRange<T>> other)
@@ -810,7 +903,7 @@ namespace SamLu.RegularExpression.ObjectModel
             if (other == null) throw new ArgumentNullException(nameof(other));
             if (other == this) return true;
 
-            return this.SetEqualsInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Suit(item)));
+            return this.SetEqualsInternal(other.Where(item => item != null).Select(item => this.rangeInfo.Adapt(item)));
         }
 
         // 需要优化
@@ -825,16 +918,20 @@ namespace SamLu.RegularExpression.ObjectModel
         #endregion
 
         #region ISet{T} Implementations
+        bool ICollection<T>.IsReadOnly => false;
+
         void ICollection<T>.Add(T item) => this.Add(item);
 
         IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
         #endregion
 
         #region ISet{IRange{T}} Implementations
-        void ICollection<IRange<T>>.Add(IRange<T> item) => this.Add(item);
-        
         int ICollection<IRange<T>>.Count => this.ranges.Count;
 
+        bool ICollection<IRange<T>>.IsReadOnly => false;
+
+        void ICollection<IRange<T>>.Add(IRange<T> item) => this.Add(item);
+        
         bool ICollection<IRange<T>>.Contains(IRange<T> item) => this.IsSupersetOf(item);
 
         void ICollection<IRange<T>>.CopyTo(IRange<T>[] array, int arrayIndex) => this.ranges.CopyTo(array, arrayIndex);

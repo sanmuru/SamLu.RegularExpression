@@ -20,7 +20,7 @@ namespace RegexTest
         {
             RangeSet<char> set = new RangeSet<char>(new CharRangeInfo());
             set.Add('a');
-            set.Add('b');
+            set.Add('c');
             ;
 
             Dictionary<int, int> d = new Dictionary<int, int>();
@@ -45,7 +45,7 @@ namespace RegexTest
                     var ___nfa = char_Provider.GenerateNFAFromRegexObject(regexObj);
                     var ___dfa = char_Provider.GenerateDFAFromNFA(___nfa);
                 };
-            //action?.Invoke(Regex.Const('a').Optional().Concat(Regex.Const('b').Concat(Regex.Const('c').Optional())));
+            action?.Invoke(Regex.Const('a').Optional().Concat(Regex.Const('b').Concat(Regex.Const('c').Optional())));
 
             RegexNFA<char> char_nfa = char_Provider.GenerateNFAFromRegexObject(ipAddress);
             //var debuginfo = char_nfa.GetDebugInfo();

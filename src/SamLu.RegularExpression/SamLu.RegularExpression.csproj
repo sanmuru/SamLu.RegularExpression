@@ -58,10 +58,15 @@
     <Compile Include="ObjectModel\CharRangeInfo.cs" />
     <Compile Include="ObjectModel\CharRangeSet.cs" />
     <Compile Include="ObjectModel\ComparableRange.cs" />
+    <Compile Include="ObjectModel\CustomizedRangeInfo.cs" />
     <Compile Include="ObjectModel\Int32Range.cs" />
     <Compile Include="ObjectModel\InvalidRangeException.cs" />
     <Compile Include="ObjectModel\Range.cs" />
     <Compile Include="ObjectModel\RangeInfo.cs" />
+    <Compile Include="ObjectModel\RangeInvalidExceptOperationException.cs" />
+    <Compile Include="ObjectModel\RangeInvalidIntersectOperationException.cs" />
+    <Compile Include="ObjectModel\RangeInvalidOperationException.cs" />
+    <Compile Include="ObjectModel\RangeInvalidUnionOperationException.cs" />
     <Compile Include="ObjectModel\RangeNotOverlapException.cs" />
     <Compile Include="ObjectModel\RangeSet.cs" />
     <Compile Include="System\Collections\Generic\IReadOnlySet.cs" />
