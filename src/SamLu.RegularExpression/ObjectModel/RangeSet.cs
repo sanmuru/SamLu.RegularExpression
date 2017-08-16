@@ -56,6 +56,9 @@ namespace SamLu.RegularExpression.ObjectModel
             }
         }
 
+        /// <summary>
+        /// 子类继承的默认构造函数，初始化通用字段。
+        /// </summary>
         protected RangeSet() =>
             this.ranges = new Collection<IRange<T>>();
 

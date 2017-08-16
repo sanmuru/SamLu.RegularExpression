@@ -18,6 +18,10 @@ namespace SamLu.RegularExpression.ObjectModel
             base(minimum, maximum, canTakeMinimum, canTakeMaximum)
         { }
 
+        protected internal ComparableRange(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum, Comparison<T> comparison) :
+            base(minimum, maximum, canTakeMinimum, canTakeMaximum, comparison)
+        { }
+
         public bool Equals(ComparableRange<T> other)
         {
             if (other == null) throw new ArgumentNullException(nameof(other));

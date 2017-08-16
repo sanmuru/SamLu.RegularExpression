@@ -13,7 +13,7 @@ namespace SamLu.RegularExpression.ObjectModel
         protected CharRangeInfo(Comparison<char> comparison) : base(comparison) { }
 
         protected override IRange<char> CreateInternal(char minimum, char maximum, bool canTakeMinimum, bool canTakeMaximum) =>
-            new CharRange(minimum, maximum, canTakeMinimum, canTakeMaximum);
+            new CharRange(minimum, maximum, canTakeMinimum, canTakeMaximum, base.comparison);
 
         public override char GetPrev(char value)
         {

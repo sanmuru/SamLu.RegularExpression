@@ -13,7 +13,7 @@ namespace SamLu.RegularExpression.ObjectModel
 
         protected CustomizedRangeInfo() : base() { }
 
-        public CustomizedRangeInfo(Func<T,T> getPrevFunc, Func<T,T> getNextFunc, Comparison<T> comparison):base(comparison)
+        public CustomizedRangeInfo(Func<T, T> getPrevFunc, Func<T, T> getNextFunc, Comparison<T> comparison) : base(comparison)
         {
             if (getPrevFunc == null) throw new ArgumentNullException(nameof(getPrevFunc));
             if (getNextFunc == null) throw new ArgumentNullException(nameof(getNextFunc));
@@ -21,7 +21,7 @@ namespace SamLu.RegularExpression.ObjectModel
             this.getPrevFunc = getPrevFunc;
             this.getNextFunc = getNextFunc;
         }
-
+        
         public override T GetPrev(T value) => this.getPrevFunc(value);
 
         public override T GetNext(T value) => this.getNextFunc(value);

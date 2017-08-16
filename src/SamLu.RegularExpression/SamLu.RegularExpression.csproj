@@ -61,6 +61,8 @@
     <Compile Include="ObjectModel\ComparableRange.cs" />
     <Compile Include="ObjectModel\CustomizedRangeInfo.cs" />
     <Compile Include="ObjectModel\Int32Range.cs" />
+    <Compile Include="ObjectModel\Int32RangeInfo.cs" />
+    <Compile Include="ObjectModel\Int32RangeSet.cs" />
     <Compile Include="ObjectModel\InvalidRangeException.cs" />
     <Compile Include="ObjectModel\Range.cs" />
     <Compile Include="ObjectModel\RangeInfo.cs" />

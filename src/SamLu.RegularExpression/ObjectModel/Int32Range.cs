@@ -14,5 +14,9 @@ namespace SamLu.RegularExpression.ObjectModel
         public Int32Range() : this(int.MinValue, int.MaxValue) { }
         
         public Int32Range(int minValue, int maxValue, bool canTakeMinValue = true, bool canTakeMaxValue = true) : base(minValue, maxValue, canTakeMinValue, canTakeMaxValue) { }
+
+        protected internal Int32Range(int minValue, int maxValue, bool canTakeMinValue, bool canTakeMaxValue, Comparison<int> comparison) :
+            base(minValue, maxValue, canTakeMinValue, canTakeMaxValue, comparison)
+        { }
     }
 }

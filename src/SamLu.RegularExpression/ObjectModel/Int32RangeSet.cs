@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 namespace SamLu.RegularExpression.ObjectModel
 {
     /// <summary>
-    /// 内部以字符范围为元数据组织的集。
+    /// 内部以 32 位有符号整数范围为元数据组织的集。
     /// </summary>
     [DebuggerDisplay("Count = {Count}")]
-    public class CharRangeSet : RangeSet<char>
+    public class Int32RangeSet : RangeSet<int>
     {
         /// <summary>
-        /// 获取 <see cref="CharRangeSet"/> 中包含的元素数。
+        /// 获取 <see cref="Int32RangeSet"/> 中包含的元素数。
         /// </summary>
         public override int Count =>
             base.ranges.Count == 0 ?
@@ -25,8 +25,8 @@ namespace SamLu.RegularExpression.ObjectModel
                 );
 
         /// <summary>
-        /// 初始化 <see cref="CharRangeSet"/> 的新实例。
+        /// 初始化 <see cref="Int32RangeSet"/> 的新实例。
         /// </summary>
-        public CharRangeSet() : base(new CharRangeInfo()) { }
+        public Int32RangeSet() : base(new Int32RangeInfo()) { }
     }
 }

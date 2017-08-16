@@ -14,5 +14,9 @@ namespace SamLu.RegularExpression.ObjectModel
         public CharRange() : this(char.MinValue, char.MaxValue) { }
 
         public CharRange(char minValue, char maxValue, bool canTakeMinValue = true, bool canTakeMaxValue = true) : base(minValue, maxValue, canTakeMinValue, canTakeMaxValue) { }
+
+        protected internal CharRange(char minValue, char maxValue, bool canTakeMinValue, bool canTakeMaxValue, Comparison<char> comparison) :
+            base(minValue, maxValue, canTakeMinValue, canTakeMaxValue, comparison)
+        { }
     }
 }
