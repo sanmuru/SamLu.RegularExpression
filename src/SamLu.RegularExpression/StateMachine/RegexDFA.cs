@@ -25,8 +25,7 @@ namespace SamLu.RegularExpression.StateMachine
                 // 若有转换接受输入，则进行转换操作。
                 if (transition.Predicate(input))
                 {
-                    this.Transit(transition);
-                    return true;
+                    return this.Transit(transition);
                 }
 
             // 无转换接受输入，操作不成功。

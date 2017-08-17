@@ -25,8 +25,22 @@ namespace SamLu.RegularExpression.ObjectModel
                 );
 
         /// <summary>
-        /// 初始化 <see cref="CharRangeSet"/> 的新实例。
+        /// 初始化 <see cref="CharRangeSet"/> 类的新实例。
         /// </summary>
         public CharRangeSet() : base(new CharRangeInfo()) { }
+
+        /// <summary>
+        /// 初始化 <see cref="CharRangeSet"/> 类的新实例，该实例包含从指定的集合复制的元素。
+        /// </summary>
+        /// <param name="collection">其元素被复制到 <see cref="CharRangeSet"/> 的集合。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="collection"/> 的值为 null 。</exception>
+        public CharRangeSet(ICollection<char> collection) : base(collection, new CharRangeInfo()) { }
+
+        /// <summary>
+        /// 初始化 <see cref="CharRangeSet"/> 类的新实例，该实例包含从指定的范围集合复制的元素。
+        /// </summary>
+        /// <param name="collection">其元素被复制到 <see cref="CharRangeSet"/> 的范围集合。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="collection"/> 的值为 null 。</exception>
+        public CharRangeSet(ICollection<IRange<char>> collection) : base(collection, new CharRangeInfo()) { }
     }
 }

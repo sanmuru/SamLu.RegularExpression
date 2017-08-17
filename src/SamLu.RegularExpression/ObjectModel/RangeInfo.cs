@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.ObjectModel
 {
+    /// <summary>
+    /// 提供用于创建、合并、求差和检测等操作范围的属性和实例方法的类型的虚基类，并且帮助创建 <see cref="IRange{T}"/> 对象。
+    /// </summary>
+    /// <typeparam name="T">范围的内容的类型。</typeparam>
     public abstract class RangeInfo<T> :
         IEqualityComparer<(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum)>
     {
@@ -28,6 +32,7 @@ namespace SamLu.RegularExpression.ObjectModel
         /// 子类调用的构造函数，使用指定的比较方法初始化子类的新实例。
         /// </summary>
         /// <param name="comparison">指定的比较方法。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="comparison"/> 的值为 null 。</exception>
         protected RangeInfo(Comparison<T> comparison) =>
             this.comparison = comparison ?? throw new ArgumentNullException(nameof(comparison));
 
@@ -883,6 +888,14 @@ namespace SamLu.RegularExpression.ObjectModel
         #endregion
 
         #region IsValid
+        /// <summary>
+        /// 检测范围是否合法。
+        /// </summary>
+        /// <param name="minimum">范围的最小值。</param>
+        /// <param name="maximum">范围的最大值。</param>
+        /// <param name="canTakeMinimum">一个值，指示是否能取到范围的最小值。</param>
+        /// <param name="canTakeMaximum">一个值，指示是否能取到范围的最大值。</param>
+        /// <returns>当范围合法时，则为 true ；否则为 false 。</returns>
         public bool IsValid(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum)
         {
             int compareValue = this.comparison(minimum, maximum);
@@ -894,9 +907,22 @@ namespace SamLu.RegularExpression.ObjectModel
                 return this.IsValidInternal(minimum, maximum, canTakeMinimum, canTakeMaximum);
         }
 
-        public virtual bool IsValidInternal(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) =>
+        /// <summary>
+        /// 子类重写时，提供检测范围是否合法的实现。
+        /// </summary>
+        /// <param name="minimum">范围的最小值。</param>
+        /// <param name="maximum">范围的最大值。</param>
+        /// <param name="canTakeMinimum">一个值，指示是否能取到范围的最小值。</param>
+        /// <param name="canTakeMaximum">一个值，指示是否能取到范围的最大值。</param>
+        /// <returns>当范围合法时，则为 true ；否则为 false 。</returns>
+        protected virtual bool IsValidInternal(T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) =>
             (this.comparison(this.GetPrev(maximum), this.GetNext(minimum)) >= 0 || (canTakeMinimum || canTakeMaximum));
 
+        /// <summary>
+        /// 检测范围是否合法。
+        /// </summary>
+        /// <param name="range">要检测的范围。</param>
+        /// <returns>当范围合法时，则为 true ；否则为 false 。</returns>
         public bool IsValid((T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) range) =>
             this.IsValid(range.minimum, range.maximum, range.canTakeMinimum, range.canTakeMaximum);
         #endregion
@@ -1226,6 +1252,18 @@ namespace SamLu.RegularExpression.ObjectModel
         #endregion
 
         #region IsNextTo
+        /// <summary>
+        /// 检测两个范围是否相邻。
+        /// </summary>
+        /// <param name="firstMinimum">第一个范围的最小值。</param>
+        /// <param name="firstMaximum">第一个范围的最大值。</param>
+        /// <param name="firstCanTakeMinimum">一个值，指示是否能取到第一个范围的最小值。</param>
+        /// <param name="firstCanTakeMaximum">一个值，指示是否能取到第一个范围的最大值。</param>
+        /// <param name="secondMinimum">第二个范围的最小值。</param>
+        /// <param name="secondMaximum">第二个范围的最大值。</param>
+        /// <param name="secondCanTakeMinimum">一个值，指示是否能取到第二个范围的最小值。</param>
+        /// <param name="secondCanTakeMaximum">一个值，指示是否能取到第二个范围的最大值。</param>
+        /// <returns>如果两个范围相邻，则为 true ；否则为 false 。</returns>
         public bool IsNextTo(
             T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
             T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
@@ -1242,6 +1280,18 @@ namespace SamLu.RegularExpression.ObjectModel
             );
         }
 
+        /// <summary>
+        /// 子类重写时，提供检测两个范围是否相邻的实现。
+        /// </summary>
+        /// <param name="firstMinimum">第一个范围的最小值。</param>
+        /// <param name="firstMaximum">第一个范围的最大值。</param>
+        /// <param name="firstCanTakeMinimum">一个值，指示是否能取到第一个范围的最小值。</param>
+        /// <param name="firstCanTakeMaximum">一个值，指示是否能取到第一个范围的最大值。</param>
+        /// <param name="secondMinimum">第二个范围的最小值。</param>
+        /// <param name="secondMaximum">第二个范围的最大值。</param>
+        /// <param name="secondCanTakeMinimum">一个值，指示是否能取到第二个范围的最小值。</param>
+        /// <param name="secondCanTakeMaximum">一个值，指示是否能取到第二个范围的最大值。</param>
+        /// <returns>如果两个范围相邻，则为 true ；否则为 false 。</returns>
         protected virtual bool IsNextToInternal(
             T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
             T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
@@ -1263,6 +1313,12 @@ namespace SamLu.RegularExpression.ObjectModel
             else return false;
         }
 
+        /// <summary>
+        /// 检测两个范围是否相邻。
+        /// </summary>
+        /// <param name="firstRange">第一个范围。</param>
+        /// <param name="secondRange">第二个范围。</param>
+        /// <returns>如果两个范围相邻，则为 true ；否则为 false 。</returns>
         public bool IsNextTo(
             (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) firstRange,
             (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) secondRange
@@ -1274,6 +1330,18 @@ namespace SamLu.RegularExpression.ObjectModel
         #endregion
 
         #region IsOverlap
+        /// <summary>
+        /// 检测两个范围是否相交。
+        /// </summary>
+        /// <param name="firstMinimum">第一个范围的最小值。</param>
+        /// <param name="firstMaximum">第一个范围的最大值。</param>
+        /// <param name="firstCanTakeMinimum">一个值，指示是否能取到第一个范围的最小值。</param>
+        /// <param name="firstCanTakeMaximum">一个值，指示是否能取到第一个范围的最大值。</param>
+        /// <param name="secondMinimum">第二个范围的最小值。</param>
+        /// <param name="secondMaximum">第二个范围的最大值。</param>
+        /// <param name="secondCanTakeMinimum">一个值，指示是否能取到第二个范围的最小值。</param>
+        /// <param name="secondCanTakeMaximum">一个值，指示是否能取到第二个范围的最大值。</param>
+        /// <returns>如果两个范围相交，则为 true ；否则为 false 。</returns>
         public bool IsOverlap(
             T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
             T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
@@ -1290,6 +1358,18 @@ namespace SamLu.RegularExpression.ObjectModel
             );
         }
 
+        /// <summary>
+        /// 子类重写时，提供检测两个范围是否相交的实现。
+        /// </summary>
+        /// <param name="firstMinimum">第一个范围的最小值。</param>
+        /// <param name="firstMaximum">第一个范围的最大值。</param>
+        /// <param name="firstCanTakeMinimum">一个值，指示是否能取到第一个范围的最小值。</param>
+        /// <param name="firstCanTakeMaximum">一个值，指示是否能取到第一个范围的最大值。</param>
+        /// <param name="secondMinimum">第二个范围的最小值。</param>
+        /// <param name="secondMaximum">第二个范围的最大值。</param>
+        /// <param name="secondCanTakeMinimum">一个值，指示是否能取到第二个范围的最小值。</param>
+        /// <param name="secondCanTakeMaximum">一个值，指示是否能取到第二个范围的最大值。</param>
+        /// <returns>如果两个范围相交，则为 true ；否则为 false 。</returns>
         protected virtual bool IsOverlapInternal(
             T firstMinimum, T firstMaximum, bool firstCanTakeMinimum, bool firstCanTakeMaximum,
             T secondMinimum, T secondMaximum, bool secondCanTakeMinimum, bool secondCanTakeMaximum
@@ -1320,6 +1400,12 @@ namespace SamLu.RegularExpression.ObjectModel
             return false;
         }
 
+        /// <summary>
+        /// 检测两个范围是否相交。
+        /// </summary>
+        /// <param name="firstRange">第一个范围。</param>
+        /// <param name="secondRange">第二个范围。</param>
+        /// <returns>如果两个范围相交，则为 true ；否则为 false 。</returns>
         public bool IsOverlap(
             (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) firstRange,
             (T minimum, T maximum, bool canTakeMinimum, bool canTakeMaximum) secondRange
