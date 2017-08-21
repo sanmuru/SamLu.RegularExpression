@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 namespace SamLu.RegularExpression
 {
     /// <summary>
-    /// 提供了一套 static 的用于快速创建正则对象的方法。
+    /// 提供了一套 static 的用于快速创建正则对象、使用正则对象进行匹配的方法。
     /// </summary>
     public static class Regex
     {
+        #region 创建正则对象
         /// <summary>
         /// 创建常量正则，指定内部常量对象。
         /// </summary>
@@ -332,6 +333,41 @@ namespace SamLu.RegularExpression
         public static RegexParallels<T> UnionMany<T, TRegexObject>(params TRegexObject[] parallels)
             where TRegexObject : RegexObject<T> =>
                 ((parallels ?? throw new ArgumentNullException(nameof(parallels))).AsEnumerable() as IEnumerable<RegexObject<T>>).UnionMany();
+        #endregion
+        #endregion
+
+        #region 使用正则对象进行匹配
+        #region Match
+        public static Match<T> Match<T>(IEnumerable<T> input, RegexObject<T> pattern) =>
+            Regex.Match(input, pattern, RegexOptions.None);
+
+        public static Match<T> Match<T>(IEnumerable<T> input, RegexObject<T> pattern, RegexOptions options) =>
+            new RegexProvider<T>(pattern, options).Match(input);
+
+        public static Match<T> Match<T, TRegex>(IEnumerable<T> input, RegexObject<T> pattern, RegexOptions options, Func<RegexObject<T>, RegexOptions, TRegex> activator)
+            where TRegex : RegexProvider<T>
+        {
+            if (activator == null) throw new ArgumentNullException(nameof(activator));
+
+            return activator(pattern, options).Match(input);
+        }
+        #endregion
+
+        #region Matches
+        public static ICollection<Match<T>> Matches<T>(IEnumerable<T> input, RegexObject<T> pattern) =>
+            Regex.Matches(input, pattern, RegexOptions.None);
+
+        public static ICollection<Match<T>> Matches<T>(IEnumerable<T> input, RegexObject<T> pattern, RegexOptions options) =>
+            new RegexProvider<T>(pattern, options).Matches(input);
+
+        public static ICollection<Match<T>> Matches<T, TRegexProvider>(IEnumerable<T> input, RegexObject<T> pattern, RegexOptions options, Func<RegexObject<T>, RegexOptions, TRegexProvider> activator)
+            where TRegexProvider : RegexProvider<T>
+        {
+            if (activator == null) throw new ArgumentNullException(nameof(activator));
+
+            return activator(pattern, options).Matches(input);
+        }
+        #endregion
         #endregion
     }
 }

@@ -8,9 +8,9 @@ namespace SamLu.RegularExpression.Adapter
 {
     public class AdaptContextInfo<TSource, TTarget>
     {
-        public Func<TSource, TTarget> SourceAdaptor { get; protected set; }
+        public AdaptDelegate<TSource, TTarget> SourceAdaptor { get; protected set; }
 
-        public Func<TTarget, TSource> TargetAdaptor { get; protected set; }
+        public AdaptDelegate<TTarget, TSource> TargetAdaptor { get; protected set; }
 
         public AdaptOption AdaptOption { get; protected set; }
 
@@ -69,7 +69,7 @@ namespace SamLu.RegularExpression.Adapter
 
         public bool AlwaysAdaptSource => !this.OnlyAdaptConstSourceWhenInitialization;
 
-        public AdaptContextInfo(Func<TSource, TTarget> sourceAdaptor, Func<TTarget, TSource> targetAdaptor)
+        public AdaptContextInfo(AdaptDelegate<TSource, TTarget> sourceAdaptor, AdaptDelegate<TTarget, TSource> targetAdaptor)
         {
             this.SourceAdaptor = sourceAdaptor ?? (source => default(TTarget));
             this.TargetAdaptor = targetAdaptor ?? (target => default(TSource));

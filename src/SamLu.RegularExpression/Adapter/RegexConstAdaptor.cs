@@ -18,7 +18,7 @@ namespace SamLu.RegularExpression.Adapter
         protected EqualityComparison<TSource> sourceEqualityComparison;
 
         protected AdaptContextInfo<TSource, TTarget> contextInfo;
-        
+
         public override TTarget ConstValue
         {
             get
@@ -37,9 +37,16 @@ namespace SamLu.RegularExpression.Adapter
 
         public AdaptContextInfo<TSource, TTarget> ContextInfo => this.contextInfo;
 
-        public RegexConstAdaptor(TSource constValue, Func<TSource, TTarget> sourceAdaptor, Func<TTarget, TSource> targetAdaptor) : this(constValue, sourceAdaptor, targetAdaptor, RegexConstAdaptor<TSource, TTarget>.DefaultSourceEqualityComparison) { }
+        public RegexConstAdaptor(
+            TSource constValue,
+            AdaptDelegate<TSource, TTarget> sourceAdaptor, AdaptDelegate<TTarget, TSource> targetAdaptor
+        ) : this(constValue, sourceAdaptor, targetAdaptor, RegexConstAdaptor<TSource, TTarget>.DefaultSourceEqualityComparison) { }
 
-        public RegexConstAdaptor(TSource constValue, Func<TSource, TTarget> sourceAdaptor, Func<TTarget, TSource> targetAdaptor, EqualityComparison<TSource> equalityComparison) :
+        public RegexConstAdaptor(
+            TSource constValue,
+            AdaptDelegate<TSource, TTarget> sourceAdaptor, AdaptDelegate<TTarget, TSource> targetAdaptor,
+            EqualityComparison<TSource> equalityComparison
+        ) :
             this(
                 constValue,
                 equalityComparison,
@@ -50,7 +57,7 @@ namespace SamLu.RegularExpression.Adapter
             )
         { }
 
-        public RegexConstAdaptor(TSource constValue, EqualityComparison<TSource> equalityComparison, AdaptContextInfo<TSource,TTarget> contextInfo)
+        public RegexConstAdaptor(TSource constValue, EqualityComparison<TSource> equalityComparison, AdaptContextInfo<TSource, TTarget> contextInfo)
         {
             if (equalityComparison == null) throw new ArgumentNullException(nameof(equalityComparison));
             if (contextInfo == null) throw new ArgumentNullException(nameof(contextInfo));
@@ -86,7 +93,7 @@ namespace SamLu.RegularExpression.Adapter
         private Comparison<TSource> comparison;
         Comparison<TSource> IRange<TSource>.Comparison =>
             this.comparison ??
-                ((x, y) => 
+                ((x, y) =>
                     this.sourceEqualityComparison(x, y) ? 0 :
                         RegexRangeAdaptor<TSource, TTarget>.DefaultSourceComparison(x, y)
                 );

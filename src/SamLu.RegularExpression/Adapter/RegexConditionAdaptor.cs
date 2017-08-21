@@ -14,7 +14,7 @@ namespace SamLu.RegularExpression.Adapter
         
         public AdaptContextInfo<TSource, TTarget> ContextInfo => this.contextInfo;
 
-        public RegexConditionAdaptor(Predicate<TSource> condition, Func<TTarget, TSource> targetAdaptor) :
+        public RegexConditionAdaptor(Predicate<TSource> condition, AdaptDelegate<TTarget, TSource> targetAdaptor) :
             this(
                 condition,
                 new AdaptContextInfo<TSource, TTarget>(

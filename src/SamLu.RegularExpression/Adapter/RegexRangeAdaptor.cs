@@ -56,7 +56,7 @@ namespace SamLu.RegularExpression.Adapter
 
         public RegexRangeAdaptor(
             TSource minimum, TSource maximum,
-            Func<TSource, TTarget> sourceAdaptor, Func<TTarget, TSource> targetAdaptor,
+            AdaptDelegate<TSource, TTarget> sourceAdaptor, AdaptDelegate<TTarget, TSource> targetAdaptor,
             bool canTakeMinimum = true, bool canTakeMaximum = true
         ) : this(
             minimum, maximum,
@@ -68,7 +68,7 @@ namespace SamLu.RegularExpression.Adapter
 
         public RegexRangeAdaptor(
             TSource minimum, TSource maximum,
-            Func<TSource, TTarget> sourceAdaptor, Func<TTarget, TSource> targetAdaptor,
+            AdaptDelegate<TSource, TTarget> sourceAdaptor, AdaptDelegate<TTarget, TSource> targetAdaptor,
             bool canTakeMinimum, bool canTakeMaximum,
             Comparison<TSource> comparison) :
             this(
