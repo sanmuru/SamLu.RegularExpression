@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.Extend
 {
-    public abstract class RegexGroup<T> : RegexObject<T>
+    public class RegexGroup<T> : RegexObject<T>
     {
         private static int nextID = 0;
         public static int NextID => RegexGroup<T>.nextID++;
@@ -18,8 +18,9 @@ namespace SamLu.RegularExpression.Extend
         public RegexObject<T> InnerRegex => this.innerRegex;
         public object ID => this.id;
         public virtual bool IsCaptive => this.isCaptive;
+        public bool IsAnonymous => this.id == null;
 
-        public RegexGroup(RegexObject<T> regex, bool isCaptive = true) : this(regex, RegexGroup<T>.NextID, isCaptive) { }
+        public RegexGroup(RegexObject<T> regex, bool isCaptive = true) : this(regex, null, isCaptive) { }
 
         public RegexGroup(RegexObject<T> regex, object id, bool isCaptive)
         {
@@ -28,5 +29,9 @@ namespace SamLu.RegularExpression.Extend
             this.isCaptive = isCaptive;
         }
 
+        protected internal override RegexObject<T> Clone()
+        {
+            return new RegexGroup<T>(this.innerRegex, this.id, this.isCaptive);
+        }
     }
 }

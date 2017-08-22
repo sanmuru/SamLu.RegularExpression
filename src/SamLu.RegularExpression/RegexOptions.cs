@@ -16,7 +16,7 @@ namespace SamLu.RegularExpression
         public bool Compiled { get; protected set; }
         [OptionBitOffset(2)]
         public bool RightToLeft { get; protected set; }
-
+        
         protected RegexOptions() : this(false, false, false) { }
 
         public RegexOptions(bool explicitCapture, bool compiled, bool rightToLeft)

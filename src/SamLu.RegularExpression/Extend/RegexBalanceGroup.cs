@@ -23,11 +23,11 @@ namespace SamLu.RegularExpression.Extend
                 openItemInnerRegex,
                 Enumerable.Empty<RegexObject<T>>(),
                 closeItemInnerRegex,
-                id ?? RegexGroup<T>.NextID
+                id
             )
         { }
 
-        public RegexBalanceGroup(RegexObject<T> regex, RegexObject<T> openItemInnerRegex, IEnumerable<RegexObject<T>> subItemInnerRegexs, RegexObject<T> closeItemInnerRegex, object id = null) : base(regex, id ?? RegexGroup<T>.NextID, true)
+        public RegexBalanceGroup(RegexObject<T> regex, RegexObject<T> openItemInnerRegex, IEnumerable<RegexObject<T>> subItemInnerRegexs, RegexObject<T> closeItemInnerRegex, object id = null) : base(regex, id, true)
         {
             if (openItemInnerRegex == null) throw new ArgumentNullException(nameof(openItemInnerRegex));
             if (subItemInnerRegexs == null) throw new ArgumentNullException(nameof(subItemInnerRegexs));
@@ -42,7 +42,7 @@ namespace SamLu.RegularExpression.Extend
             );
             foreach (var subItem in
                 subItemInnerRegexs.Select(subItemInnerRegex =>
-                      new RegexBalanceSetGroupItem<T, int>(
+                      new RegexBalanceGroupSubItem<T, int>(
                           subItemInnerRegex,
                           (seed => seed--),
                           (seed => seed <= 0)
@@ -57,7 +57,7 @@ namespace SamLu.RegularExpression.Extend
             );
         }
 
-        public RegexBalanceGroup(RegexObject<T> regex, RegexBalanceGroupItem<T> openItem, IEnumerable<RegexBalanceGroupItem<T>> subItems, RegexBalanceGroupItem<T> closeItem, object id = null) : base(regex, id ?? RegexGroup<T>.NextID, true)
+        public RegexBalanceGroup(RegexObject<T> regex, RegexBalanceGroupItem<T> openItem, IEnumerable<RegexBalanceGroupItem<T>> subItems, RegexBalanceGroupItem<T> closeItem, object id = null) : base(regex, id, true)
         {
             if (openItem == null) throw new ArgumentNullException(nameof(openItem));
             if (subItems == null) throw new ArgumentNullException(nameof(subItems));

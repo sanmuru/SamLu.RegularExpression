@@ -67,7 +67,7 @@
     <Compile Include="Extend\RegexGroupReference.cs" />
     <Compile Include="Extend\RegexNamedGroup.cs" />
     <Compile Include="Extend\RegexMultiBranch.cs" />
-    <Compile Include="Extend\RegexNegativeCapture.cs" />
+    <Compile Include="Extend\RegexNegativeCaptureGroup.cs" />
     <Compile Include="Extend\RegexNonGreedyRepeat.cs" />
     <Compile Include="Extend\RegexPreviousMatch.cs" />
     <Compile Include="Extend\RegexStartBorder.cs" />

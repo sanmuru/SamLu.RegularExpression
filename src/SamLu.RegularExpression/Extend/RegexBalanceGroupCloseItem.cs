@@ -10,7 +10,7 @@ namespace SamLu.RegularExpression.Extend
     {
         protected Predicate<TSeed> method;
 
-        public override Delegate Method => this.method;
+        public sealed override Delegate Method => this.method;
 
         public RegexBalanceGroupCloseItem(RegexObject<T> regex, Predicate<TSeed> method) : base(regex) =>
             this.method = method ?? throw new ArgumentNullException(nameof(method));
