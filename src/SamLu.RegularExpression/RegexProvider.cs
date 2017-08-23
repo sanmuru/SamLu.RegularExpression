@@ -1,5 +1,6 @@
 ﻿using SamLu.IO;
 using SamLu.RegularExpression.Extend;
+using SamLu.RegularExpression.ObjectModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -131,8 +132,113 @@ namespace SamLu.RegularExpression
                 return this.RegexGroupReferenceMatchesInternal(groupReference, reader, out isEnd);
             else if (regex is RegexMultiBranch<T> multiBranch)
                 return this.RegexMultiBranchMatchesInternal(multiBranch, reader, out isEnd);
+            else if (regex is RegexCondition<T> condition)
+                return this.RegexConditionMatchesInternal(condition, reader, out isEnd);
+            else if (regex is RegexRepeat<T> repeat)
+                return this.RegexRepeatMatchesInternal(repeat, reader, out isEnd);
+            else if (regex is RegexNonGreedyRepeat<T> nonGreedyRepeat)
+                return this.RegexNonGreedyRepeatMatchesInternal(nonGreedyRepeat, reader, out isEnd);
+            else if (regex is RegexParallels<T> parallels)
+                return this.RegexParallelsMatchesInternal(parallels, reader, out isEnd);
+            else if (regex is RegexSeries<T> series)
+                return this.RegexSeriesMatchInternal(series, reader, out isEnd);
             else
                 throw new NotSupportedException();
+        }
+
+        protected virtual bool RegexConditionMatchesInternal(RegexCondition<T> condition, NodeReader<IEnumerable<T>, T> reader, out bool isEnd)
+        {
+            if (reader.IsEnd())
+            {
+                isEnd = true;
+                return false;
+            }
+            else
+            {
+                var t = reader.Read();
+                isEnd = reader.IsEnd();
+                return condition.Condition(t);
+            }
+        }
+
+        private bool Regex__RepeatMatchesInternal(RegexRepeat<T> repeat, NodeReader<IEnumerable<T>,T>reader, bool isGreedy, out bool isEnd)
+        {
+            int prePosition = reader.Position;
+            uint repeatCount = 0;
+            if (isGreedy)
+            {
+                if (repeat.IsInfinte)
+                {
+                    while (this.RegexObjectMatchesInternal(repeat.InnerRegex, reader, out isEnd))
+                        repeatCount++;
+                }
+                else
+                {
+                    while (repeatCount < repeat.MinimumCount && this.RegexObjectMatchesInternal(repeat.InnerRegex, reader, out isEnd))
+                        repeatCount++;
+                }
+            }
+            else
+            {
+                while (repeatCount < repeat.MaximumCount && this.RegexObjectMatchesInternal(repeat.InnerRegex, reader, out isEnd))
+                {
+                    repeatCount++;
+
+                    if (repeatCount >= (repeat.MinimumCount ?? uint.MinValue)) break;
+                }
+            }
+
+            if (repeatCount < (repeat.MinimumCount ?? uint.MinValue))
+            {
+                reader.Position = prePosition;
+                isEnd = reader.IsEnd();
+
+                return false;
+            }
+            else
+            {
+                isEnd = reader.IsEnd();
+                return true;
+            }
+        }
+
+        protected virtual bool RegexRepeatMatchesInternal(RegexRepeat<T> repeat, NodeReader<IEnumerable<T>, T> reader, out bool isEnd)
+        {
+            return this.Regex__RepeatMatchesInternal(repeat, reader, true, out isEnd);
+        }
+
+        protected virtual bool RegexNonGreedyRepeatMatchesInternal(RegexNonGreedyRepeat<T> nonGreedyRepeat, NodeReader<IEnumerable<T>, T> reader, out bool isEnd)
+        {
+            return this.Regex__RepeatMatchesInternal(nonGreedyRepeat.InnerRepeat, reader, false, out isEnd);
+        }
+
+        protected virtual bool RegexParallelsMatchesInternal(RegexParallels<T> parallels, NodeReader<IEnumerable<T>, T> reader, out bool isEnd)
+        {
+            foreach (var item in parallels.Parallels)
+            {
+                if (this.RegexObjectMatchesInternal(item, reader, out isEnd))
+                    return true;
+            }
+
+            isEnd = reader.IsEnd();
+            return false;
+        }
+
+        protected virtual bool RegexSeriesMatchInternal(RegexSeries<T> series, NodeReader<IEnumerable<T>, T> reader, out bool isEnd)
+        {
+            int prePosition = reader.Position;
+            foreach (var item in series.Series)
+            {
+                if (!this.RegexObjectMatchesInternal(item,reader,out isEnd))
+                {
+                    reader.Position = prePosition;
+                    isEnd = reader.IsEnd();
+                    return false;
+                }
+            }
+
+            isEnd = reader.IsEnd();
+            return true;
         }
 
         protected virtual bool MatchesInternal(IRegexAnchorPoint<T> anchorPoint, NodeReader<IEnumerable<T>, T> reader, out bool isEnd)
