@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace SamLu.RegularExpression.StateMachine
 {
     /// <summary>
-    /// 定义了运行正则表达式的上下文信息应遵循的基本约束。
+    /// 定义了构造激活正则表达式状态机的上下文信息应遵循的基本约束。
     /// </summary>
     /// <typeparam name="T">自动机接受处理的对象的类型。</typeparam>
-    public interface IRegexRunContextInfo<T>
+    public interface IRegexStateMachineActivationContextInfo<T>
     {
         /// <summary>
         /// 可接受的对象集。

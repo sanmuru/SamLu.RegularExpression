@@ -6,7 +6,7 @@ using System.Text;
 namespace SamLu.IO
 {
 	/// <summary>
-	/// 表示借点读取器。
+	/// 表示节点读取器。
 	/// </summary>
 	/// <typeparam name="TReader">内部读取器的类型。</typeparam>
 	/// <typeparam name="TNode">节点的类型。</typeparam>

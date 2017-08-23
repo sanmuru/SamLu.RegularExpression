@@ -75,7 +75,7 @@ namespace RegexTest
 
         public class MyRegexFAProvider<T> : RegexFAProvider<T>
         {
-            public MyRegexFAProvider(IRegexRunContextInfo<T> contextInfo) : base(contextInfo) { }
+            public MyRegexFAProvider(IRegexStateMachineActivationContextInfo<T> contextInfo) : base(contextInfo) { }
 
             protected override RegexFATransition<T, RegexNFAState<T>> GenerateNFATransitionFromRegexCondition(RegexCondition<T> condition, RegexNFA<T> nfa, RegexNFAState<T> state)
             {
@@ -135,7 +135,7 @@ namespace RegexTest
             }
         }
 
-        public class MyCharRegexRunContextInfo : IRegexRunContextInfo<char>
+        public class MyCharRegexRunContextInfo : IRegexStateMachineActivationContextInfo<char>
         {
             private ISet<char> set;
 
@@ -423,7 +423,7 @@ namespace RegexTest
         #endregion
 
         #region string
-        public class MyStringRegexRunContextInfo : IRegexRunContextInfo<string>
+        public class MyStringRegexRunContextInfo : IRegexStateMachineActivationContextInfo<string>
         {
             private RangeSet<string> set;
             private RangeInfo<string> rangeInfo = new CustomizedRangeInfo<string>(

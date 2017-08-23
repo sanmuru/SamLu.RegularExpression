@@ -118,7 +118,7 @@
     <Compile Include="SamLu\Combination.cs" />
     <Compile Include="SamLu\Math.cs" />
     <Compile Include="StateMachine\IRegexFAProvider.cs" />
-    <Compile Include="StateMachine\IRegexRunContextInfo.cs" />
+    <Compile Include="StateMachine\IRegexStateMachineActivationContextInfo.cs" />
     <Compile Include="StateMachine\RegexDFA.cs" />
     <Compile Include="StateMachine\RegexDFAState.cs" />
     <Compile Include="StateMachine\RegexNFAEpsilonTransition.cs" />

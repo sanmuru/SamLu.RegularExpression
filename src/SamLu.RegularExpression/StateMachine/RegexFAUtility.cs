@@ -12,7 +12,7 @@ namespace SamLu.RegularExpression.StateMachine
     public static class RegexFAUtility
     {
         [Obsolete("Use IRegexFAProvider{T}.GenerateDFAFromNFA Instead.", true)]
-        public static RegexDFA<T> ToDFA<T>(this RegexNFA<T> nfa, IRegexRunContextInfo<T> contextInfo)
+        public static RegexDFA<T> ToDFA<T>(this RegexNFA<T> nfa, IRegexStateMachineActivationContextInfo<T> contextInfo)
         {
             if (nfa == null) throw new ArgumentNullException(nameof(nfa));
 

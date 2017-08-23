@@ -10,10 +10,10 @@ namespace SamLu.RegularExpression.StateMachine
 {
     public class RegexFAProvider<T> : IRegexFAProvider<T>
     {
-        private IRegexRunContextInfo<T> contextInfo;
-        public IRegexRunContextInfo<T> ContextInfo => this.contextInfo;
+        private IRegexStateMachineActivationContextInfo<T> contextInfo;
+        public IRegexStateMachineActivationContextInfo<T> ContextInfo => this.contextInfo;
 
-        public RegexFAProvider(IRegexRunContextInfo<T> contextInfo)
+        public RegexFAProvider(IRegexStateMachineActivationContextInfo<T> contextInfo)
         {
             if (contextInfo == null) throw new ArgumentNullException(nameof(contextInfo));
 
