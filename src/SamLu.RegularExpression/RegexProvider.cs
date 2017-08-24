@@ -20,10 +20,18 @@ namespace SamLu.RegularExpression
         public RegexOptions Options => this.options;
         public bool RightToLeft => this.Options.RightToLeft;
 
-        private Dictionary<object, object> globalCacheDic = new Dictionary<object, object>();
+        /// <summary>
+        /// 全局缓存字典。
+        /// </summary>
+        private Dictionary<object, object> globalCacheDic = new Dictionary<object, object>()
+        {
+            { Cache.CAPTURES_CACHE_KEY, new List<(Capture<T>,object)>() },
+            { Cache.PREVIEW_MATCH_CACHE_KEY, null },
+            { Cache.BALANCE_GROUP_CACHE_KEY, new Dictionary<RegexBalanceGroup<T>, Stack<object>>() },
+            { Cache.REGEX_GROUPS_CACHE_KEY, new Stack<RegexGroup<T>>() }
+        };
 
         private List<(Capture<T> capture, object id)> captures = new List<(Capture<T> capture, object id)>();
-        private Stack<RegexGroup<T>> regexGroups = new Stack<RegexGroup<T>>();
 
         public RegexProvider(RegexObject<T> pattern) : this(pattern, RegexOptions.None) { }
 
@@ -73,7 +81,6 @@ namespace SamLu.RegularExpression
         #endregion
 
         #region MatchesInternal
-        private Match<T> previewMatchCache;
         protected virtual IEnumerable<Match<T>> MatchesInternal(NodeReader<IEnumerable<T>, T> reader)
         {
             while (!reader.IsEnd())
@@ -118,7 +125,7 @@ namespace SamLu.RegularExpression
                             )
                         );
                     var match = new Match<T>(reader.Reader, prePosition, curPositon, groups);
-                    this.previewMatchCache = match;
+                    this.globalCacheDic[Cache.PREVIEW_MATCH_CACHE_KEY] = match;
                     yield return match;
                     continue;
                 }
@@ -258,7 +265,7 @@ namespace SamLu.RegularExpression
                 return false;
         }
         #endregion
-        
+
         protected virtual bool RegexObjectMatchesInternal(RegexObject<T> regex, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
             bool result;
@@ -384,14 +391,14 @@ namespace SamLu.RegularExpression
                             repeatCount < repeat.MaximumCount.Value &&
                             !(repeatCount >= preRepeatCountCache.Value)
                         ) &&
-                        this.MatchesInternal(repeat.InnerRegex,reader,
+                        this.MatchesInternal(repeat.InnerRegex, reader,
                             new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
                             out isEnd
                         )
                     )
                         repeatCount++;
                 }
-                
+
                 if ((repeatCount >= (repeat.MinimumCount ?? uint.MinValue)) && !(repeatCount >= preRepeatCountCache))
                 {
                     cache[REPEATCOUNT_CACHE_KEY] = repeatCount;
@@ -405,7 +412,7 @@ namespace SamLu.RegularExpression
             {
                 while (
                     !(repeatCount >= repeat.MaximumCount) &&
-                    this.MatchesInternal(repeat.InnerRegex,reader,
+                    this.MatchesInternal(repeat.InnerRegex, reader,
                         new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
                         out isEnd
                     )
@@ -414,12 +421,12 @@ namespace SamLu.RegularExpression
                     repeatCount++;
 
                     if (
-                        repeatCount >= (repeat.MinimumCount ?? uint.MinValue)&&
-                        !(repeatCount<=preRepeatCountCache)
+                        repeatCount >= (repeat.MinimumCount ?? uint.MinValue) &&
+                        !(repeatCount <= preRepeatCountCache)
                     )
                         break;
                 }
-                
+
                 if ((repeatCount >= (repeat.MinimumCount ?? uint.MinValue)) && !(repeatCount <= preRepeatCountCache))
                 {
                     cache[REPEATCOUNT_CACHE_KEY] = repeatCount;
@@ -489,7 +496,7 @@ namespace SamLu.RegularExpression
             return result;
         }
 
-        private IEnumerable<bool> GetRegexSeriesResultEnumerable(RegexObject<T>[] series, int index, NodeReader<IEnumerable<T>,T> reader, Cache cache)
+        private IEnumerable<bool> GetRegexSeriesResultEnumerable(RegexObject<T>[] series, int index, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
             if (index < series.Length)
             {
@@ -515,32 +522,62 @@ namespace SamLu.RegularExpression
         {
             int prePosition = reader.Position;
 
+            bool isEnd;
             bool result;
             if (anchorPoint is RegexZeroLengthObject<T> zeroLength)
-                result = this.RegexZeroLengthObjectMatchesInternal(zeroLength, reader, out isEnd);
+                result = this.MatchesInternal(
+                    zeroLength,
+                    reader,
+                    new RegexMatchesHandler<RegexZeroLengthObject<T>>(this.RegexZeroLengthObjectMatchesInternal),
+                    out isEnd);
             else if (anchorPoint is RegexStartBorder<T> startBorder)
-                result = this.RegexStartBorderMatchesInternal(startBorder, reader, out isEnd);
+                result = this.MatchesInternal(
+                    startBorder,
+                    reader,
+                    new RegexMatchesHandler<RegexStartBorder<T>>(this.RegexStartBorderMatchesInternal),
+                    out isEnd
+                );
             else if (anchorPoint is RegexEndBorder<T> endBorder)
-                result = this.RegexEndBorderMatchesInternal(endBorder, reader, out isEnd);
+                result = this.MatchesInternal(
+                    endBorder,
+                    reader,
+                    new RegexMatchesHandler<RegexEndBorder<T>>(this.RegexEndBorderMatchesInternal),
+                    out isEnd
+                );
             else if (anchorPoint is RegexPreviousMatch<T> preMatch)
-                result = this.RegexPreviewMatchMatchesInternal(preMatch, reader, out isEnd);
+                result = this.MatchesInternal(
+                    preMatch,
+                    reader,
+                    new RegexMatchesHandler<RegexPreviousMatch<T>>(this.RegexPreviewMatchMatchesInternal),
+                    out isEnd
+                );
             else
                 throw new NotSupportedException();
 
             if (reader.Position != prePosition)
                 reader.Position = prePosition;
 
+            cache.IsEnd = isEnd;
             return result;
         }
 
         protected virtual bool RegexZeroLengthObjectMatchesInternal(RegexZeroLengthObject<T> zeroLength, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
-            return this.RegexObjectMatchesInternal(zeroLength.InnerRegex, reader, out isEnd);
+            bool result = this.MatchesInternal(
+                zeroLength.InnerRegex, reader,
+                new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                out bool isEnd
+            );
+            cache.Handled = true;
+            cache.IsEnd = isEnd;
+
+            return result;
         }
 
         protected virtual bool RegexStartBorderMatchesInternal(RegexStartBorder<T> startBorder, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
-            isEnd = reader.IsEnd();
+            cache.IsEnd = reader.IsEnd();
+            cache.Handled = true;
             return reader.Position == 0;
         }
 
@@ -551,87 +588,137 @@ namespace SamLu.RegularExpression
                 reader.Position++;
                 if (reader.IsEnd())
                 {
-                    isEnd = true;
+                    cache.IsEnd = true;
+                    cache.Handled = true;
                     return true;
                 }
                 else
                 {
-                    isEnd = false;
+                    cache.IsEnd = false;
+                    cache.Handled = true;
                     reader.Rollback(1);
                     return false;
                 }
             }
             else
             {
-                isEnd = true;
+                cache.IsEnd = true;
+                cache.Handled = true;
                 return false;
             }
         }
 
         protected virtual bool RegexPreviewMatchMatchesInternal(RegexPreviousMatch<T> preMatch, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
-            isEnd = false;
-
-            if (this.previewMatchCache == null)
-                return true;
+            Match<T> previewMatchCache;
+            if (cache.ContainsKey(Cache.PREVIEW_MATCH_CACHE_KEY))
+                previewMatchCache = (Match<T>)cache[Cache.PREVIEW_MATCH_CACHE_KEY];
             else
-                return reader.Position == this.previewMatchCache.Index + this.previewMatchCache.Length;
+                previewMatchCache = null;
+
+            bool result;
+            if (previewMatchCache == null)
+                result = true;
+            else
+                result = reader.Position == previewMatchCache.Index + previewMatchCache.Length;
+
+            cache.IsEnd = reader.IsEnd();
+            cache.Handled = true;
+            return result;
         }
 
         protected virtual bool RegexGroupMatchesInternal(RegexGroup<T> group, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
-            if (group.IsCaptive) this.regexGroups.Push(group);
+            var regexGroups = (Stack<RegexGroup<T>>)cache[Cache.REGEX_GROUPS_CACHE_KEY];
+
+            if (group.IsCaptive) regexGroups.Push(group);
 
             int prePosition = reader.Position;
-            bool f;
+            bool isEnd;
+            bool result;
             if (group is RegexBalanceGroup<T> balanceGroup)
-                f = this.RegexBalanceGroupMatchesInternal(balanceGroup, reader, out isEnd);
+                result = this.MatchesInternal(
+                    balanceGroup,
+                    reader,
+                    new RegexMatchesHandler<RegexBalanceGroup<T>>(this.RegexBalanceGroupMatchesInternal),
+                    out isEnd
+                );
             else if (group is RegexBalanceGroupItem<T> balanceGroupItem)
-                f = this.RegexBalanceGroupItemMatchesInternal(balanceGroupItem, reader, out isEnd);
+                result = this.MatchesInternal(
+                    balanceGroupItem,
+                    reader,
+                    new RegexMatchesHandler<RegexBalanceGroupItem<T>>(this.RegexBalanceGroupItemMatchesInternal),
+                    out isEnd
+                );
             else
-                f = this.RegexObjectMatchesInternal(group.InnerRegex, reader, out isEnd);
-            if (f && group.IsCaptive)
+                result = this.MatchesInternal(
+                    group.InnerRegex,
+                    reader,
+                    new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                    out isEnd
+                );
+
+            if (result && group.IsCaptive)
             {
-                this.captures.Add((new Capture<T>(reader.Reader, prePosition, reader.Position - prePosition + 1), group.ID));
+                cache.Capture(new Capture<T>(reader.Reader, prePosition, reader.Position - prePosition + 1), group.ID);
             }
 
-            if (group.IsCaptive) this.regexGroups.Pop();
-
-            return f;
-        }
-
-        private Dictionary<RegexBalanceGroup<T>, Stack<object>> balanceGroupCache = new Dictionary<RegexBalanceGroup<T>, Stack<object>>();
-
-        protected virtual bool RegexBalanceGroupMatchesInternal(RegexBalanceGroup<T> balanceGroup, NodeReader<IEnumerable<T>, T> reader, Cache cache)
-        {
-            bool f;
-            if (f = !this.balanceGroupCache.ContainsKey(balanceGroup))
-                this.balanceGroupCache.Add(balanceGroup, new Stack<object>());
-
-            bool result = this.RegexObjectMatchesInternal(balanceGroup.InnerRegex, reader, out isEnd);
-
-            if (f)
-                this.balanceGroupCache.Remove(balanceGroup);
-
+            if (group.IsCaptive) regexGroups.Pop();
+            
             return result;
         }
 
-        private bool RegexBalanceGroup__ItemMatchesInternal(Type __itemTypeDefinition, string handlerName, RegexBalanceGroupItem<T> item, NodeReader<IEnumerable<T>, T> reader, out bool result, out bool isEnd)
+        protected virtual bool RegexBalanceGroupMatchesInternal(RegexBalanceGroup<T> balanceGroup, NodeReader<IEnumerable<T>, T> reader, Cache cache)
+        {
+            var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)cache[Cache.BALANCE_GROUP_CACHE_KEY];
+
+            bool f;
+            if (f = !balanceGroupCache.ContainsKey(balanceGroup))
+                balanceGroupCache.Add(balanceGroup, new Stack<object>());
+
+            bool result = this.MatchesInternal(
+                balanceGroup.InnerRegex,
+                reader,
+                new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                out bool isEnd
+            );
+
+            if (f)
+                balanceGroupCache.Remove(balanceGroup);
+
+            cache.Handled = true;
+            cache.IsEnd = isEnd;
+            return result;
+        }
+
+        private bool RegexBalanceGroup__ItemMatchesInternal(Type __itemTypeDefinition, string handlerName, RegexBalanceGroupItem<T> item, NodeReader<IEnumerable<T>, T> reader, Cache cache, out bool result)
         {
             Type itemType = item.GetType();
-            if (itemType.IsGenericType && itemType.GetGenericTypeDefinition() == __itemTypeDefinition)
+            IEnumerable<Type> sourceTypes;
+            if (__itemTypeDefinition.IsInterface)
+                sourceTypes = itemType.GetInterfaces();
+            else
             {
+                List<Type> baseTypes = new List<Type> { itemType };
+                for (Type type = itemType; type.BaseType != typeof(object); type = type.BaseType) baseTypes.Add(itemType);
+                sourceTypes = baseTypes;
+            }
+            Type supportedType = sourceTypes.FirstOrDefault(type => type.IsGenericType && type.GetGenericTypeDefinition() == __itemTypeDefinition);
+            if (supportedType != null)
+            { // 存在指定的类型。
                 var method = itemType.GetMethod(handlerName, BindingFlags.IgnoreCase | BindingFlags.NonPublic).MakeGenericMethod(itemType.GetGenericArguments());
-                object[] parameters = new object[] { item, reader, null };
-                result = (bool)method.Invoke(item, parameters);
-                isEnd = (bool)parameters[2];
+                var handler = method.CreateDelegate(typeof(RegexMatchesHandler<>).MakeGenericType(supportedType), method.IsStatic ? null : this);
+                result = this.MatchesInternal(item, reader, handler, out bool isEnd);
 
+                cache.IsEnd = isEnd;
+                cache.Handled = true;
                 return true;
             }
             else
-            {
+            { // 存在指定的类型。
                 result = false;
-                isEnd = false;
+                cache.IsEnd = reader.IsEnd();
+                cache.Handled = true;
 
                 return false;
             }
@@ -639,16 +726,34 @@ namespace SamLu.RegularExpression
 
         protected virtual bool RegexBalanceGroupItemMatchesInternal(RegexBalanceGroupItem<T> balanceGroupItem, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
+            cache.Handled = true;
+
             bool result;
             if (
-                this.RegexBalanceGroup__ItemMatchesInternal(typeof(RegexBalanceGroupOpenItem<,>), nameof(this.RegexBalanceGroupOpenItemMatchesInternal), balanceGroupItem, reader, out result, out isEnd) ||
-                this.RegexBalanceGroup__ItemMatchesInternal(typeof(RegexBalanceGroupSubItem<,>), nameof(this.RegexBalanceGroupSubItemMatchesInternal), balanceGroupItem, reader, out result, out isEnd) ||
-                this.RegexBalanceGroup__ItemMatchesInternal(typeof(RegexBalanceGroupCloseItem<,>), nameof(this.RegexBalanceGroupCloseItemMatchesInternal), balanceGroupItem, reader, out result, out isEnd)
+                this.RegexBalanceGroup__ItemMatchesInternal(
+                    typeof(RegexBalanceGroupOpenItem<,>),
+                    nameof(this.RegexBalanceGroupOpenItemMatchesInternal),
+                    balanceGroupItem, reader, cache, out result
+                ) ||
+                this.RegexBalanceGroup__ItemMatchesInternal(
+                    typeof(RegexBalanceGroupSubItem<,>),
+                    nameof(this.RegexBalanceGroupSubItemMatchesInternal),
+                    balanceGroupItem, reader, cache, out result
+                ) ||
+                this.RegexBalanceGroup__ItemMatchesInternal(
+                    typeof(RegexBalanceGroupCloseItem<,>),
+                    nameof(this.RegexBalanceGroupCloseItemMatchesInternal),
+                    balanceGroupItem, reader, cache, out result
+                )
             )
-                return result;
+                cache.IsEnd = reader.IsEnd();
             else
             {
-                if (this.RegexObjectMatchesInternal(balanceGroupItem.InnerRegex, reader, out isEnd))
+                bool isEnd;
+                if (this.MatchesInternal(balanceGroupItem.InnerRegex,reader,
+                    new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                    out isEnd
+                ))
                 {
                     if (balanceGroupItem.Method.Method.ReturnType == typeof(bool))
                     {
@@ -659,37 +764,55 @@ namespace SamLu.RegularExpression
                             )
                             .ToArray()
                         );
-
-                        return result;
                     }
-                    else return false;
+                    else result = false;
                 }
-                return false;
+                else result = false;
+
+                cache.IsEnd = isEnd;
             }
+            
+            return result;
         }
 
         protected virtual bool RegexBalanceGroupOpenItemMatchesInternal<TSeed>(RegexBalanceGroupOpenItem<T, TSeed> openItem, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
-            if (this.RegexObjectMatchesInternal(openItem.InnerRegex, reader, out isEnd))
+            var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)cache[Cache.BALANCE_GROUP_CACHE_KEY];
+            
+            bool result;
+            if (this.MatchesInternal(openItem.InnerRegex ,reader,
+                new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                out bool isEnd
+            ))
             {
-                if (this.balanceGroupCache.ContainsKey(openItem.___balanceGroup))
+                if (balanceGroupCache.ContainsKey(openItem.___balanceGroup))
                 {
-                    this.balanceGroupCache[openItem.___balanceGroup].Push(openItem.Method.DynamicInvoke(null));
+                    balanceGroupCache[openItem.___balanceGroup].Push(openItem.Method.DynamicInvoke(null));
 
-                    return true;
+                    result = true;
                 }
-                else return false;
+                else result = false;
             }
-            else return false;
+            else result = false;
+
+            cache.IsEnd = isEnd;
+            cache.Handled = true;
+
+            return result;
         }
 
         protected virtual bool RegexBalanceGroupSubItemMatchesInternal<TSeed>(RegexBalanceGroupOpenItem<T, TSeed> subItem, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
-            if (this.RegexObjectMatchesInternal(subItem.InnerRegex, reader, out isEnd))
+            var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)cache[Cache.BALANCE_GROUP_CACHE_KEY];
+
+            if (this.MatchesInternal(subItem.InnerRegex, reader,
+                new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                out bool isEnd
+            ))
             {
-                if (this.balanceGroupCache.ContainsKey(subItem.___balanceGroup))
+                if (balanceGroupCache.ContainsKey(subItem.___balanceGroup))
                 {
-                    var stack = this.balanceGroupCache[subItem.___balanceGroup];
+                    var stack = balanceGroupCache[subItem.___balanceGroup];
                     stack.Push(subItem.Method.DynamicInvoke(stack.Pop()));
 
                     return true;
@@ -701,11 +824,16 @@ namespace SamLu.RegularExpression
 
         protected virtual bool RegexBalanceGroupCloseItemMatchesInternal<TSeed>(RegexBalanceGroupOpenItem<T, TSeed> closeItem, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
-            if (this.RegexObjectMatchesInternal(closeItem.InnerRegex, reader, out isEnd))
+            var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)cache[Cache.BALANCE_GROUP_CACHE_KEY];
+
+            if (this.MatchesInternal(closeItem.InnerRegex, reader,
+                new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                out bool isEnd
+            ))
             {
-                if (this.balanceGroupCache.ContainsKey(closeItem.___balanceGroup))
+                if (balanceGroupCache.ContainsKey(closeItem.___balanceGroup))
                 {
-                    return (bool)closeItem.Method.DynamicInvoke(this.balanceGroupCache[closeItem.___balanceGroup].Pop());
+                    return (bool)closeItem.Method.DynamicInvoke(balanceGroupCache[closeItem.___balanceGroup].Pop());
                 }
                 else return false;
             }
@@ -714,17 +842,20 @@ namespace SamLu.RegularExpression
 
         protected virtual bool RegexGroupReferenceMatchesInternal(RegexGroupReference<T> groupReference, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
+            var regexGroups = (Stack<RegexGroup<T>>)cache[Cache.REGEX_GROUPS_CACHE_KEY];
+
             RegexGroup<T> group;
             if (groupReference.IsDetermined)
                 group = groupReference.Group;
             else
             {
-                var groups = this.regexGroups.Where(_group => _group.ID == groupReference.GroupID).ToArray();
+                var groups = regexGroups.Where(_group => _group.ID == groupReference.GroupID).ToArray();
                 switch (groups.Length)
                 {
                     case 0:
                         //throw new InvalidOperationException("未找到引用的正则组。");
-                        isEnd = reader.IsEnd();
+                        cache.IsEnd = reader.IsEnd();
+                        cache.Handled = true;
                         return false;
                     case 1:
                         group = groups[0];
@@ -740,17 +871,53 @@ namespace SamLu.RegularExpression
                 }
             }
 
-            return this.RegexGroupMatchesInternal(group, reader, out isEnd);
+            bool result = this.MatchesInternal(group.InnerRegex, reader,
+                new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                out bool isEnd
+            );
+            cache.IsEnd = isEnd;
+            cache.Handled = true;
+
+            return result;
         }
 
         protected virtual bool RegexMultiBranchMatchesInternal(RegexMultiBranch<T> multiBranch, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
+            bool result = this.MatchesInternal((_cache => this.GetRegexMultiBranchResultEnumerable(multiBranch, reader, _cache)), out bool isEnd);
+            cache.IsEnd = isEnd;
+            cache.Handled = true;
+
+            return result;
+        }
+
+        private IEnumerable<bool> GetRegexMultiBranchResultEnumerable(RegexMultiBranch<T> multiBranch, NodeReader<IEnumerable<T>,T>reader, Cache cache)
+        {
+            bool result;
+            bool isEnd;
             foreach (var pair in multiBranch.Branches)
             {
-                if (this.RegexObjectMatchesInternal(pair.Key, reader, out isEnd))
-                    return this.RegexObjectMatchesInternal(pair.Value, reader, out isEnd);
+                if (this.MatchesInternal(pair.Key, reader,
+                    new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                    out isEnd
+                ))
+                {
+                    result = this.MatchesInternal(pair.Value, reader,
+                        new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                        out isEnd
+                    );
+                    cache.IsEnd = isEnd;
+                    cache.Handled = result;
+                    yield return result;
+                }
             }
-            return this.RegexObjectMatchesInternal(multiBranch.OtherwisePattern, reader, out isEnd);
+
+            result = this.MatchesInternal(multiBranch.OtherwisePattern, reader,
+                new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                out isEnd
+            );
+            cache.IsEnd = isEnd;
+            cache.Handled = true;
+            yield return result;
         }
         #endregion
 
@@ -760,7 +927,10 @@ namespace SamLu.RegularExpression
         public sealed class Cache : IDictionary<object, object>
         {
             private RegexProvider<T> provider;
-            private Dictionary<object, object> localCacheDic = new Dictionary<object, object>();
+            /// <summary>
+            /// 本地缓存字典。
+            /// </summary>
+            private Dictionary<object, object> localCacheDic;
 
             /// <summary>
             /// 获取或设置一个值，指示该栈项是否已处理。若值为 true ，则弹出顶部栈项回到上一个栈项处理；若值为 false ，则继续调用处理方法直到值为 true 。
@@ -795,9 +965,23 @@ namespace SamLu.RegularExpression
                 this.provider = provider ?? throw new ArgumentNullException(nameof(provider));
 
             /// <summary>
-            /// 捕获集合的缓存的键。
+            /// 捕获集合的缓存的键。其在 <see cref="RegexProvider{T}.globalCacheDic"/> 中的值的类型为项是 <see cref="ValueTuple{T1, T2}"/> （其中 T1 为 <see cref="Capture{T}"/> ； T2 为 <see cref="object"/> 。）的 <see cref="List{T}"/> 。
             /// </summary>
             internal const string CAPTURES_CACHE_KEY = "CAPTURES";
+            /// <summary>
+            /// 前一个匹配的缓存的键。其在 <see cref="RegexProvider{T}.globalCacheDic"/> 中的值的类型为 <see cref="Match{T}"/> 。
+            /// </summary>
+            internal const string PREVIEW_MATCH_CACHE_KEY = "PREVIEW_MATCH";
+            
+            /// <summary>
+            /// 对匹配 <see cref="RegexBalanceGroup{T}"/> 时预留的缓存的键。其在 <see cref="RegexProvider{T}.globalCacheDic"/> 中的值的类型为 <see cref="Dictionary{TKey, TValue}"/> （其中 TKey 为 <see cref="RegexBalanceGroup{T}"/> ； TValue 为项为 <see cref="object"/> 的 <see cref="Stack{T}"/> ） 。
+            /// </summary>
+            internal const string BALANCE_GROUP_CACHE_KEY = "BALANCE_GROUP";
+
+            /// <summary>
+            /// 对匹配 <see cref="RegexGroup{T}"/> 时预留的缓存的键。其在 <see cref="RegexProvider{T}.globalCacheDic"/> 中的值的类型为项为 <see cref="RegexGroup{T}"/> 的 <see cref="Stack{T}"/> 。
+            /// </summary>
+            internal const string REGEX_GROUPS_CACHE_KEY = "REGEX_GROUPS";
 
             public void Capture(Capture<T> capture, object id)
             {
