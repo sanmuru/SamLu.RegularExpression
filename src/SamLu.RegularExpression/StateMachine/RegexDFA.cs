@@ -11,39 +11,48 @@ namespace SamLu.RegularExpression.StateMachine
     /// 表示正则表达式构造的确定的有限自动机。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
-    public class RegexDFA<T> : DFA<RegexDFAState<T>, RegexFATransition<T, RegexDFAState<T>>>
+    public class RegexDFA<T> : RegexFSM<T, RegexDFAState<T>, RegexFATransition<T, RegexDFAState<T>>>, IDFA<RegexDFAState<T>, RegexFATransition<T, RegexDFAState<T>>>
     {
         /// <summary>
-        /// 接受一个指定输入并进行转换。返回一个值，指示操作是否成功。
+        /// 为 <see cref="DFA{TState, TTransition}"/> 的一个指定状态添加指定转换。
         /// </summary>
-        /// <param name="input">指定的输入。</param>
+        /// <param name="state">指定的状态。</param>
+        /// <param name="transition">要添加的转换。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
-        public virtual bool Transit(T input)
+        /// <exception cref="ArgumentNullException"><paramref name="state"/> 的值为 null 。</exception>
+        /// <exception cref="InvalidOperationException">在 <paramref name="transition"/> 为 <see cref="IEpsilonTransition"/> 接口的实例时抛出。试图向确定的有限自动机模型的状态中添加一个 ε 转换。</exception>
+        public override bool AttachTransition(RegexDFAState<T> state, RegexFATransition<T, RegexDFAState<T>> transition)
         {
-            // 遍历当前状态的所有转换。
-            foreach (var transition in this.CurrentState.Transitions)
-                // 若有转换接受输入，则进行转换操作。
-                if (transition.Predicate(input))
-                {
-                    return this.Transit(transition);
-                }
+            if (state == null) throw new ArgumentNullException(nameof(state));
 
-            // 无转换接受输入，操作不成功。
-            return false;
+            if (transition is IEpsilonTransition)
+                throw new InvalidOperationException(
+                    "试图向确定的有限自动机模型中添加一个 ε 转换。",
+                    new ArgumentException("无法接受的 ε 转换。", nameof(transition))
+                );
+
+            return base.AttachTransition(state, transition);
         }
 
         /// <summary>
-        /// 接受一个指定输入并进行转换。返回一个值，指示操作是否成功。
+        /// 从 <see cref="DFA{TState, TTransition}"/> 的一个指定状态移除指定转换。
         /// </summary>
-        /// <typeparam name="TInput">输入的类型。</typeparam>
-        /// <param name="input">指定的输入。</param>
+        /// <param name="state">指定的状态。</param>
+        /// <param name="transition">要添加的转换。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
-        public override bool Transit<TInput>(TInput input)
+        /// <exception cref="ArgumentNullException"><paramref name="state"/> 的值为 null 。</exception>
+        /// <exception cref="InvalidOperationException">在 <paramref name="transition"/> 为 <see cref="IEpsilonTransition"/> 接口的实例时抛出。试图从确定的有限自动机模型的状态中移除一个 ε 转换。</exception>
+        public override bool RemoveTransition(RegexDFAState<T> state, RegexFATransition<T, RegexDFAState<T>> transition)
         {
-            if (input is T)
-                return this.Transit((T)(object)input);
-            else
-                return base.Transit(input);
+            if (state == null) throw new ArgumentNullException(nameof(state));
+
+            if (transition is IEpsilonTransition)
+                throw new InvalidOperationException(
+                    "试图从确定的有限自动机模型中移除一个 ε 转换。",
+                    new ArgumentException("无法接受的 ε 转换。", nameof(transition))
+                );
+
+            return base.RemoveTransition(state, transition);
         }
     }
 }
