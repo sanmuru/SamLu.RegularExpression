@@ -8,8 +8,8 @@ namespace SamLu.RegularExpression.StateMachine
 {
     public interface IRegexFAProvider<T>
     {
-        RegexNFA<T> GenerateNFAFromRegexObject(RegexObject<T> regex);
+        BasicRegexNFA<T> GenerateNFAFromRegexObject(RegexObject<T> regex);
 
-        RegexDFA<T> GenerateDFAFromNFA(RegexNFA<T> nfa);
+        BasicRegexDFA<T> GenerateDFAFromNFA(BasicRegexNFA<T> nfa);
     }
 }

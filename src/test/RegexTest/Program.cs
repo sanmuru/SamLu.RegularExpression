@@ -47,9 +47,9 @@ namespace RegexTest
                 };
             action?.Invoke(Regex.Const('a').Optional().Concat(Regex.Const('b').Concat(Regex.Const('c').Optional())));
 
-            RegexNFA<char> char_nfa = char_Provider.GenerateNFAFromRegexObject(ipAddress);
+            BasicRegexNFA<char> char_nfa = char_Provider.GenerateNFAFromRegexObject(ipAddress);
             //var debuginfo = char_nfa.GetDebugInfo();
-            RegexDFA<char> char_dfa = char_Provider.GenerateDFAFromNFA(char_nfa);
+            BasicRegexDFA<char> char_dfa = char_Provider.GenerateDFAFromNFA(char_nfa);
             ;
 
             Func<int, int, RegexRange<string>> func_adpator = (min, max) =>
@@ -68,8 +68,8 @@ namespace RegexTest
 
             IRegexFAProvider<string> string_Provider = new RegexFAProvider<string>(new MyStringRegexRunContextInfo());
             
-            RegexNFA<string> string_nfa = string_Provider.GenerateNFAFromRegexObject(ipAddress_adaptor);
-            RegexDFA<string> string_dfa = string_Provider.GenerateDFAFromNFA(string_nfa);
+            BasicRegexNFA<string> string_nfa = string_Provider.GenerateNFAFromRegexObject(ipAddress_adaptor);
+            BasicRegexDFA<string> string_dfa = string_Provider.GenerateDFAFromNFA(string_nfa);
             ;
         }
 
@@ -77,14 +77,14 @@ namespace RegexTest
         {
             public MyRegexFAProvider(IRegexStateMachineActivationContextInfo<T> contextInfo) : base(contextInfo) { }
 
-            protected override RegexFATransition<T, RegexNFAState<T>> GenerateNFATransitionFromRegexCondition(RegexCondition<T> condition, RegexNFA<T> nfa, RegexNFAState<T> state)
+            protected override BasicRegexFATransition<T, BasicRegexNFAState<T>> GenerateNFATransitionFromRegexCondition(RegexCondition<T> condition, BasicRegexNFA<T> nfa, BasicRegexNFAState<T> state)
             {
                 return base.GenerateNFATransitionFromRegexCondition(condition, nfa, state);
             }
         }
 
         #region char
-        public class MyRegexNFATransition<T> : RegexFATransition<T, RegexNFAState<T>>
+        public class MyRegexNFATransition<T> : BasicRegexFATransition<T, BasicRegexNFAState<T>>
         {
             private ISet<T> set;
             protected Predicate<T> predicate;
@@ -146,58 +146,58 @@ namespace RegexTest
                 this.set = new CharRangeSet();
             }
 
-            public RegexDFA<char> ActivateRegexDFA()
+            public BasicRegexDFA<char> ActivateRegexDFA()
             {
-                return new RegexDFA<char>();
+                return new BasicRegexDFA<char>();
             }
 
-            public RegexDFAState<char> ActivateRegexDFAState(bool isTerminal = false)
+            public BasicRegexDFAState<char> ActivateRegexDFAState(bool isTerminal = false)
             {
-                return new RegexDFAState<char>(isTerminal);
+                return new BasicRegexDFAState<char>(isTerminal);
             }
 
-            public RegexFATransition<char, RegexDFAState<char>> ActivateRegexDFATransitionFromAccreditedSet(ISet<char> set)
+            public BasicRegexFATransition<char, BasicRegexDFAState<char>> ActivateRegexDFATransitionFromAccreditedSet(ISet<char> set)
             {
                 if (set == null) throw new ArgumentNullException(nameof(set));
 
                 return new RangeSetRegexDFATransition(set);
             }
 
-            public RegexNFA<char> ActivateRegexNFA()
+            public BasicRegexNFA<char> ActivateRegexNFA()
             {
-                return new RegexNFA<char>();
+                return new BasicRegexNFA<char>();
             }
 
-            public RegexNFAEpsilonTransition<char> ActivateRegexNFAEpsilonTransition()
+            public BasicRegexNFAEpsilonTransition<char> ActivateRegexNFAEpsilonTransition()
             {
-                return new RegexNFAEpsilonTransition<char>();
+                return new BasicRegexNFAEpsilonTransition<char>();
             }
 
-            public RegexNFA<char> ActivateRegexNFAFromDumplication(RegexNFA<char> nfa)
+            public BasicRegexNFA<char> ActivateRegexNFAFromDumplication(BasicRegexNFA<char> nfa)
             {
-                return new RegexNFA<char>();
+                return new BasicRegexNFA<char>();
             }
 
-            public RegexNFAState<char> ActivateRegexNFAState(bool isTerminal = false)
+            public BasicRegexNFAState<char> ActivateRegexNFAState(bool isTerminal = false)
             {
-                return new RegexNFAState<char>(isTerminal);
+                return new BasicRegexNFAState<char>(isTerminal);
             }
 
-            public RegexNFAState<char> ActivateRegexNFAStateFromDumplication(RegexNFAState<char> state)
+            public BasicRegexNFAState<char> ActivateRegexNFAStateFromDumplication(BasicRegexNFAState<char> state)
             {
-                return new RegexNFAState<char>(state.IsTerminal);
+                return new BasicRegexNFAState<char>(state.IsTerminal);
             }
 
-            public RegexFATransition<char, RegexNFAState<char>> ActivateRegexNFATransitionFromDumplication(RegexFATransition<char, RegexNFAState<char>> transition)
+            public BasicRegexFATransition<char, BasicRegexNFAState<char>> ActivateRegexNFATransitionFromDumplication(BasicRegexFATransition<char, BasicRegexNFAState<char>> transition)
             {
                 if (transition is RangeRegexNFATransition range)
                     return new RangeRegexNFATransition(range.Range);
                 else if (transition is SetRegexNFATransition set)
                     return new SetRegexNFATransition(set.Set);
-                else return new RegexFATransition<char, RegexNFAState<char>>(transition.Predicate);
+                else return new BasicRegexFATransition<char, BasicRegexNFAState<char>>(transition.Predicate);
             }
             
-            public class SetRegexNFATransition : RegexFATransition<char, RegexNFAState<char>>
+            public class SetRegexNFATransition : BasicRegexFATransition<char, BasicRegexNFAState<char>>
             {
                 private ISet<char> set;
                 public ISet<char> Set => this.set;
@@ -217,7 +217,7 @@ namespace RegexTest
             }
 
             [DebugInfoProxy(typeof(RangeRegexNFATransition._DebugInfo))]
-            public class RangeRegexNFATransition : RegexFATransition<char, RegexNFAState<char>>
+            public class RangeRegexNFATransition : BasicRegexFATransition<char, BasicRegexNFAState<char>>
             {
                 private IRange<char> range;
                 public IRange<char> Range => this.range;
@@ -289,7 +289,7 @@ namespace RegexTest
             }
 
             [DebugInfoProxy(typeof(RangeSetRegexDFATransition._DebugInfo))]
-            public class RangeSetRegexDFATransition : RegexFATransition<char, RegexDFAState<char>>
+            public class RangeSetRegexDFATransition : BasicRegexFATransition<char, BasicRegexDFAState<char>>
             {
                 private ISet<char> set;
                 public ISet<char> Set => this.set;
@@ -352,15 +352,15 @@ namespace RegexTest
                 }
             }
 
-            public RegexFATransition<char, RegexNFAState<char>> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<char> regex)
+            public BasicRegexFATransition<char, BasicRegexNFAState<char>> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<char> regex)
             {
                 if (regex is IRange<char> range)
                     return new RangeRegexNFATransition(range);
                 else
-                    return new RegexFATransition<char, RegexNFAState<char>>(regex.Condition);
+                    return new BasicRegexFATransition<char, BasicRegexNFAState<char>>(regex.Condition);
             }
 
-            public RegexFATransition<char, RegexDFAState<char>> CombineRegexDFATransitions(IEnumerable<RegexFATransition<char, RegexDFAState<char>>> dfaTransitions)
+            public BasicRegexFATransition<char, BasicRegexDFAState<char>> CombineRegexDFATransitions(IEnumerable<BasicRegexFATransition<char, BasicRegexDFAState<char>>> dfaTransitions)
             {
                 if (dfaTransitions == null) throw new ArgumentNullException(nameof(dfaTransitions));
 
@@ -375,7 +375,7 @@ namespace RegexTest
                 return this.ActivateRegexDFATransitionFromAccreditedSet(set);
             }
 
-            public ISet<char> GetAccreditedSetFromRegexNFATransition(RegexFATransition<char, RegexNFAState<char>> transition)
+            public ISet<char> GetAccreditedSetFromRegexNFATransition(BasicRegexFATransition<char, BasicRegexNFAState<char>> transition)
             {
                 if (transition is SetRegexNFATransition set)
                     return set.Set;
@@ -491,53 +491,53 @@ namespace RegexTest
                 this.set = new RangeSet<string>(this.rangeInfo);
             }
 
-            public RegexDFA<string> ActivateRegexDFA()
+            public BasicRegexDFA<string> ActivateRegexDFA()
             {
-                return new RegexDFA<string>();
+                return new BasicRegexDFA<string>();
             }
 
-            public RegexDFAState<string> ActivateRegexDFAState(bool isTerminal = false)
+            public BasicRegexDFAState<string> ActivateRegexDFAState(bool isTerminal = false)
             {
-                return new RegexDFAState<string>(isTerminal);
+                return new BasicRegexDFAState<string>(isTerminal);
             }
 
-            public RegexFATransition<string, RegexDFAState<string>> ActivateRegexDFATransitionFromAccreditedSet(ISet<string> set)
+            public BasicRegexFATransition<string, BasicRegexDFAState<string>> ActivateRegexDFATransitionFromAccreditedSet(ISet<string> set)
             {
                 if (set == null) throw new ArgumentNullException(nameof(set));
 
-                return new RangeSetRegexFATransition<string, RegexDFAState<string>>(set as RangeSet<string>);
+                return new RangeSetRegexFATransition<string, BasicRegexDFAState<string>>(set as RangeSet<string>);
             }
 
-            public RegexNFA<string> ActivateRegexNFA()
+            public BasicRegexNFA<string> ActivateRegexNFA()
             {
-                return new RegexNFA<string>();
+                return new BasicRegexNFA<string>();
             }
 
-            public RegexNFA<string> ActivateRegexNFAFromDumplication(RegexNFA<string> nfa)
+            public BasicRegexNFA<string> ActivateRegexNFAFromDumplication(BasicRegexNFA<string> nfa)
             {
                 if (nfa == null) throw new ArgumentNullException(nameof(nfa));
 
                 return this.ActivateRegexNFA();
             }
 
-            public RegexNFAEpsilonTransition<string> ActivateRegexNFAEpsilonTransition()
+            public BasicRegexNFAEpsilonTransition<string> ActivateRegexNFAEpsilonTransition()
             {
-                return new RegexNFAEpsilonTransition<string>();
+                return new BasicRegexNFAEpsilonTransition<string>();
             }
 
-            public RegexNFAState<string> ActivateRegexNFAState(bool isTerminal = false)
+            public BasicRegexNFAState<string> ActivateRegexNFAState(bool isTerminal = false)
             {
-                return new RegexNFAState<string>(isTerminal);
+                return new BasicRegexNFAState<string>(isTerminal);
             }
 
-            public RegexNFAState<string> ActivateRegexNFAStateFromDumplication(RegexNFAState<string> state)
+            public BasicRegexNFAState<string> ActivateRegexNFAStateFromDumplication(BasicRegexNFAState<string> state)
             {
                 if (state == null) throw new ArgumentNullException(nameof(state));
 
                 return this.ActivateRegexNFAState(state.IsTerminal);
             }
 
-            public RegexFATransition<string, RegexNFAState<string>> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<string> regex)
+            public BasicRegexFATransition<string, BasicRegexNFAState<string>> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<string> regex)
             {
                 if (regex == null) throw new ArgumentNullException(nameof(regex));
 
@@ -549,29 +549,29 @@ namespace RegexTest
                 else if (regex is IRange<string> range)
                     set.AddRange(range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum);
                 else throw new NotSupportedException();
-                return new RangeSetRegexFATransition<string, RegexNFAState<string>>(set);
+                return new RangeSetRegexFATransition<string, BasicRegexNFAState<string>>(set);
             }
 
-            public RegexFATransition<string, RegexNFAState<string>> ActivateRegexNFATransitionFromDumplication(RegexFATransition<string, RegexNFAState<string>> transition)
+            public BasicRegexFATransition<string, BasicRegexNFAState<string>> ActivateRegexNFATransitionFromDumplication(BasicRegexFATransition<string, BasicRegexNFAState<string>> transition)
             {
                 if (transition == null) throw new ArgumentNullException(nameof(transition));
 
-                var field = typeof(RangeSetRegexFATransition<string, RegexNFAState<string>>).GetField("set", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-                return new RangeSetRegexFATransition<string, RegexNFAState<string>>(
+                var field = typeof(RangeSetRegexFATransition<string, BasicRegexNFAState<string>>).GetField("set", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                return new RangeSetRegexFATransition<string, BasicRegexNFAState<string>>(
                     field.GetValue(transition) as RangeSet<string>
                 );
             }
 
-            public RegexFATransition<string, RegexDFAState<string>> CombineRegexDFATransitions(IEnumerable<RegexFATransition<string, RegexDFAState<string>>> dfaTransitions)
+            public BasicRegexFATransition<string, BasicRegexDFAState<string>> CombineRegexDFATransitions(IEnumerable<BasicRegexFATransition<string, BasicRegexDFAState<string>>> dfaTransitions)
             {
                 throw new NotImplementedException();
             }
 
-            public ISet<string> GetAccreditedSetFromRegexNFATransition(RegexFATransition<string, RegexNFAState<string>> transition)
+            public ISet<string> GetAccreditedSetFromRegexNFATransition(BasicRegexFATransition<string, BasicRegexNFAState<string>> transition)
             {
                 if (transition == null) throw new ArgumentNullException(nameof(transition));
 
-                var field = typeof(RangeSetRegexFATransition<string, RegexNFAState<string>>).GetField("set", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var field = typeof(RangeSetRegexFATransition<string, BasicRegexNFAState<string>>).GetField("set", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 return field.GetValue(transition) as RangeSet<string>;
             }
 

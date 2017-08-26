@@ -20,26 +20,26 @@ namespace SamLu.RegularExpression.StateMachine
             this.contextInfo = contextInfo;
         }
 
-        public RegexNFA<T> GenerateNFAFromRegexObject(RegexObject<T> regex)
+        public BasicRegexNFA<T> GenerateNFAFromRegexObject(RegexObject<T> regex)
         {
             if (regex == null) throw new ArgumentNullException(nameof(regex));
 
-            RegexNFA<T> nfa = this.contextInfo.ActivateRegexNFA();
-            RegexNFAState<T> startState = this.contextInfo.ActivateRegexNFAState();
+            BasicRegexNFA<T> nfa = this.contextInfo.ActivateRegexNFA();
+            BasicRegexNFAState<T> startState = this.contextInfo.ActivateRegexNFAState();
             nfa.StartState = startState;
 
-            RegexFATransition<T, RegexNFAState<T>> transition = this.GenerateNFATransitionFromRegexObject(regex, nfa, startState);
-            RegexNFAState<T> endState = this.contextInfo.ActivateRegexNFAState(true);
+            BasicRegexFATransition<T, BasicRegexNFAState<T>> transition = this.GenerateNFATransitionFromRegexObject(regex, nfa, startState);
+            BasicRegexNFAState<T> endState = this.contextInfo.ActivateRegexNFAState(true);
 
             nfa.SetTarget(transition, endState);
 
             return nfa;
         }
 
-        protected virtual RegexFATransition<T, RegexNFAState<T>> GenerateNFATransitionFromRegexObject(
+        protected virtual BasicRegexFATransition<T, BasicRegexNFAState<T>> GenerateNFATransitionFromRegexObject(
             RegexObject<T> regex,
-            RegexNFA<T> nfa,
-            RegexNFAState<T> state
+            BasicRegexNFA<T> nfa,
+            BasicRegexNFAState<T> state
         )
         {
             if (regex is RegexCondition<T> condition)
@@ -48,7 +48,7 @@ namespace SamLu.RegularExpression.StateMachine
                 return this.GenerateNFATransitionFromRegexRepeat(repeat, nfa, state);
             else if (regex is RegexSeries<T> series)
             {
-                RegexNFAState<T> nextState = state;
+                BasicRegexNFAState<T> nextState = state;
                 foreach (var item in series.Series)
                 {
                     var transition = this.GenerateNFATransitionFromRegexObject(item, nfa, nextState);
@@ -56,22 +56,22 @@ namespace SamLu.RegularExpression.StateMachine
                     nfa.SetTarget(transition, nextState);
                 }
 
-                RegexNFAEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+                BasicRegexNFAEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
                 nfa.AttachTransition(nextState, epsilonTransition);
 
                 return epsilonTransition;
             }
             else if (regex is RegexParallels<T> parallels)
             {
-                RegexNFAState<T> endState = this.contextInfo.ActivateRegexNFAState();
+                BasicRegexNFAState<T> endState = this.contextInfo.ActivateRegexNFAState();
 
                 foreach (var item in parallels.Parallels)
                 {
-                    RegexFATransition<T, RegexNFAState<T>> transition = this.GenerateNFATransitionFromRegexObject(item, nfa, state);
+                    BasicRegexFATransition<T, BasicRegexNFAState<T>> transition = this.GenerateNFATransitionFromRegexObject(item, nfa, state);
                     nfa.AttachTransition(state, transition);
                 }
 
-                RegexNFAEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+                BasicRegexNFAEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
                 nfa.AttachTransition(endState, epsilonTransition);
 
                 return epsilonTransition;
@@ -79,22 +79,22 @@ namespace SamLu.RegularExpression.StateMachine
             else throw new NotSupportedException(string.Format("不支持的正则类型：{0}", regex.GetType()));
         }
         
-        protected virtual RegexFATransition<T, RegexNFAState<T>> GenerateNFATransitionFromRegexCondition(
+        protected virtual BasicRegexFATransition<T, BasicRegexNFAState<T>> GenerateNFATransitionFromRegexCondition(
             RegexCondition<T> condition,
-            RegexNFA<T> nfa,
-            RegexNFAState<T> state
+            BasicRegexNFA<T> nfa,
+            BasicRegexNFAState<T> state
         )
         {
-            RegexFATransition<T, RegexNFAState<T>> transition = this.contextInfo.ActivateRegexNFATransitionFromRegexCondition(condition);
+            BasicRegexFATransition<T, BasicRegexNFAState<T>> transition = this.contextInfo.ActivateRegexNFATransitionFromRegexCondition(condition);
             nfa.AttachTransition(state, transition);
 
             return transition;
         }
 
-        protected virtual RegexFATransition<T, RegexNFAState<T>> GenerateNFATransitionFromRegexRepeat(
+        protected virtual BasicRegexFATransition<T, BasicRegexNFAState<T>> GenerateNFATransitionFromRegexRepeat(
             RegexRepeat<T> repeat,
-            RegexNFA<T> nfa,
-            RegexNFAState<T> state
+            BasicRegexNFA<T> nfa,
+            BasicRegexNFAState<T> state
         )
         {
             ulong count;
@@ -103,11 +103,11 @@ namespace SamLu.RegularExpression.StateMachine
             else
                 count = repeat.MaximumCount.Value;
 
-            var transition = this.GenerateNFATransitionFromRegexRepeatInternal(repeat.InnerRegex, nfa, state, count, out IList<RegexNFAState<T>> nodes);
+            var transition = this.GenerateNFATransitionFromRegexRepeatInternal(repeat.InnerRegex, nfa, state, count, out IList<BasicRegexNFAState<T>> nodes);
 
             if (repeat.IsInfinte)
             {
-                RegexNFAEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+                BasicRegexNFAEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
                 var reversedNodes = nodes.Reverse();
                 nfa.AttachTransition(reversedNodes.First(), epsilonTransition);
                 nfa.SetTarget(epsilonTransition, reversedNodes.Skip(1).First());
@@ -116,7 +116,7 @@ namespace SamLu.RegularExpression.StateMachine
             {
                 if (count > 0)
                 {
-                    RegexNFAEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+                    BasicRegexNFAEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
                     foreach (var _state in nodes.Take((int)(repeat.MaximumCount.Value - (repeat.MinimumCount ?? ulong.MinValue))))
                         nfa.AttachTransition(_state, epsilonTransition);
 
@@ -127,49 +127,49 @@ namespace SamLu.RegularExpression.StateMachine
             return transition;
         }
 
-        private RegexFATransition<T, RegexNFAState<T>> GenerateNFATransitionFromRegexRepeatInternal(
+        private BasicRegexFATransition<T, BasicRegexNFAState<T>> GenerateNFATransitionFromRegexRepeatInternal(
             RegexObject<T> innerRegex,
-            RegexNFA<T> nfa,
-            RegexNFAState<T> state,
+            BasicRegexNFA<T> nfa,
+            BasicRegexNFAState<T> state,
             ulong count,
-            out IList<RegexNFAState<T>> nodes)
+            out IList<BasicRegexNFAState<T>> nodes)
         {
-            nodes = new List<RegexNFAState<T>> { state };
+            nodes = new List<BasicRegexNFAState<T>> { state };
 
-            RegexNFAState<T> nextState = state;
+            BasicRegexNFAState<T> nextState = state;
             for (ulong index = ulong.MinValue; index < count; index++)
             {
-                RegexFATransition<T, RegexNFAState<T>> transition = this.GenerateNFATransitionFromRegexObject(innerRegex, nfa, nextState);
+                BasicRegexFATransition<T, BasicRegexNFAState<T>> transition = this.GenerateNFATransitionFromRegexObject(innerRegex, nfa, nextState);
                 nextState = this.contextInfo.ActivateRegexNFAState();
                 nfa.SetTarget(transition, nextState);
 
                 nodes.Add(nextState);
             }
 
-            RegexNFAEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+            BasicRegexNFAEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
             nfa.AttachTransition(nextState, epsilonTransition);
 
             return epsilonTransition;
         }
         
-        public RegexDFA<T> GenerateDFAFromNFA(RegexNFA<T> nfa)
+        public BasicRegexDFA<T> GenerateDFAFromNFA(BasicRegexNFA<T> nfa)
         {
             if (nfa == null) throw new ArgumentNullException(nameof(nfa));
 
             nfa.Optimize();
 
-            RegexDFA<T> dfa = new RegexDFA<T>() { StartState = new RegexDFAState<T>() };
+            BasicRegexDFA<T> dfa = new BasicRegexDFA<T>() { StartState = new BasicRegexDFAState<T>() };
 
             // 队列 Q 放置的是未被处理的已经创建了的 NFA 状态组（及其对应的 DFA 状态）。
-            var Q = new Queue<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)>();
+            var Q = new Queue<(RegexFAStateGroup<T, BasicRegexNFAState<T>>, BasicRegexDFAState<T>)>();
             // 集合 C 放置的是已经存在的 NFA 状态组（及其对应的 DFA 状态）。
-            var C = new Collection<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)>();
+            var C = new Collection<(RegexFAStateGroup<T, BasicRegexNFAState<T>>, BasicRegexDFAState<T>)>();
 #if false
             // 集合 D 放置的是处理后连接指定两个 DFA 状态的所有转换接受的对象的并集。
             var D = new Dictionary<(RegexDFAState<T>, RegexDFAState<T>), IList<ISet<T>>>();
 #endif
 
-            var startTuple = (new RegexFAStateGroup<RegexNFAState<T>>(nfa.StartState), dfa.StartState);
+            var startTuple = (new RegexFAStateGroup<T, BasicRegexNFAState<T>>(nfa.StartState), dfa.StartState);
             Q.Enqueue(startTuple);
             C.Add(startTuple);
 
@@ -180,7 +180,7 @@ namespace SamLu.RegularExpression.StateMachine
 
                 /* 计算从这个状态输出的所有转换及其所接受的对象集的并集。 */
                 // 计算所有输出转换。
-                var transitions = new HashSet<RegexFATransition<T, RegexNFAState<T>>>(
+                var transitions = new HashSet<BasicRegexFATransition<T, BasicRegexNFAState<T>>>(
                         group.SelectMany(__state => __state.Transitions)
                     );
                 /* 优化：构建转换/可接受对象集字典。 */
@@ -232,7 +232,7 @@ namespace SamLu.RegularExpression.StateMachine
                 /* 然后对这个并集中的每一个对象集寻找接受其的转换，把这些转换的目标状态的并集 newGroup 计算出来。 */
                 foreach (var set in sets)
                 {
-                    var newGroup = new RegexFAStateGroup<RegexNFAState<T>>(new HashSet<RegexNFAState<T>>(
+                    var newGroup = new RegexFAStateGroup<T, BasicRegexNFAState<T>>(new HashSet<BasicRegexNFAState<T>>(
                         accreditedSetsDic
                             .Where(pair => pair.Value.IsSupersetOf(set))
                             .Select(pair => pair.Key.Target)
@@ -241,15 +241,15 @@ namespace SamLu.RegularExpression.StateMachine
                     if (newGroup.Count == 0) continue;
                     else
                     {
-                        (RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T> dfaState)? tuple =
+                        (RegexFAStateGroup<T, BasicRegexNFAState<T>>, BasicRegexDFAState<T> dfaState)? tuple =
                             C
-                                .Cast<(RegexFAStateGroup<RegexNFAState<T>>, RegexDFAState<T>)?>()
+                                .Cast<(RegexFAStateGroup<T, BasicRegexNFAState<T>>, BasicRegexDFAState<T>)?>()
                                 .FirstOrDefault(_tuple =>
                                 {
-                                    (RegexFAStateGroup<RegexNFAState<T>> __nfaStateGroup, RegexDFAState<T>) t = _tuple.Value;
+                                    (RegexFAStateGroup<T, BasicRegexNFAState<T>> __nfaStateGroup, BasicRegexDFAState<T>) t = _tuple.Value;
                                     return t.__nfaStateGroup.Equals(newGroup);
                                 });
-                        RegexDFAState<T> dfaStateTo;
+                        BasicRegexDFAState<T> dfaStateTo;
                         if (tuple.HasValue)
                             // 如果 C 中含有获得接受了指定输入的 NFA 状态集。
                             dfaStateTo = tuple.Value.dfaState;
@@ -265,7 +265,7 @@ namespace SamLu.RegularExpression.StateMachine
                             C.Add(newTuple);
                         }
 
-                        RegexFATransition<T, RegexDFAState<T>> dfaTransition = this.contextInfo.ActivateRegexDFATransitionFromAccreditedSet(set);
+                        BasicRegexFATransition<T, BasicRegexDFAState<T>> dfaTransition = this.contextInfo.ActivateRegexDFATransitionFromAccreditedSet(set);
                         dfa.AttachTransition(dfaStateFrom, dfaTransition);
                         dfa.SetTarget(dfaTransition, dfaStateTo);
 

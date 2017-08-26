@@ -15,8 +15,8 @@ namespace SamLu.RegularExpression.StateMachine
     [DebuggerDisplay("Count = {Count}")]
     [DebuggerTypeProxy(typeof(CollectionDebugView<>))]
     [DefaultMember("Item")]
-    internal sealed class RegexFAStateGroup<TRegexFAState> : ICollection<TRegexFAState>, IEquatable<RegexFAStateGroup<TRegexFAState>>
-        where TRegexFAState : IState
+    internal sealed class RegexFAStateGroup<T, TRegexFAState> : ICollection<TRegexFAState>, IEquatable<RegexFAStateGroup<T, TRegexFAState>>
+        where TRegexFAState : IRegexFSMState<T>
     {
         private HashSet<TRegexFAState> states;
         //public ICollection<TRegexFAState> States => new ReadOnlyCollection<TRegexFAState>(this.states);
@@ -54,10 +54,10 @@ namespace SamLu.RegularExpression.StateMachine
 
         public override bool Equals(object obj)
         {
-            return (obj != null && obj is RegexFAStateGroup<TRegexFAState> group && this.Equals(group));
+            return (obj != null && obj is RegexFAStateGroup<T, TRegexFAState> group && this.Equals(group));
         }
 
-        public bool Equals(RegexFAStateGroup<TRegexFAState> group)
+        public bool Equals(RegexFAStateGroup<T, TRegexFAState> group)
         {
             if (this.Count == 0)
             {

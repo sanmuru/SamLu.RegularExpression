@@ -76,6 +76,7 @@
     <Compile Include="Extend\RegexTernary.cs" />
     <Compile Include="Extend\RegexUncaptiveGroup.cs" />
     <Compile Include="Extend\RegexZeroLengthObject.cs" />
+    <Compile Include="IAcceptInputTransition.cs" />
     <Compile Include="IRange.cs" />
     <Compile Include="Match.cs" />
     <Compile Include="ObjectModel\CharRange.cs" />
@@ -101,10 +102,20 @@
     <Compile Include="SamLu\IO\IReaderSource.cs" />
     <Compile Include="SamLu\IO\NodeReader.cs" />
     <Compile Include="SamLu\IO\StringLineReader.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexCaptureEndTransition.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexCaptureIDCheckTransition.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexCaptureIDStorageTransition.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexCaptureStartTransition.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexGreedyRepeatTransition.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexNegativeCaptureTransition.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexNonGreedyRepeatTransition.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexPositiveCaptureTransition.cs" />
+    <Compile Include="StateMachine\IRegexFSM.cs" />
     <Compile Include="StateMachine\IRegexFSMTransition.cs" />
     <Compile Include="StateMachine\RangeSetRegexFATransition.cs" />
     <Compile Include="StateMachine\RegexFSM.cs" />
     <Compile Include="StateMachine\IRegexFSMState.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexFunctionalTransition.cs" />
     <Compile Include="System\Collections\Generic\IReadOnlySet.cs" />
     <Compile Include="SamLu\DebugView\CollectionDebugView.cs" />
     <Compile Include="DebugView\RangeDebugView.cs" />
@@ -122,14 +133,14 @@
     <Compile Include="SamLu\Math.cs" />
     <Compile Include="StateMachine\IRegexFAProvider.cs" />
     <Compile Include="StateMachine\IRegexStateMachineActivationContextInfo.cs" />
-    <Compile Include="StateMachine\RegexDFA.cs" />
-    <Compile Include="StateMachine\RegexDFAState.cs" />
-    <Compile Include="StateMachine\RegexNFAEpsilonTransition.cs" />
+    <Compile Include="StateMachine\BasicRegexDFA.cs" />
+    <Compile Include="StateMachine\BasicRegexDFAState.cs" />
+    <Compile Include="StateMachine\BasicRegexNFAEpsilonTransition.cs" />
     <Compile Include="StateMachine\RegexFAProvider.cs" />
     <Compile Include="StateMachine\RegexFAStateGroup.cs" />
-    <Compile Include="StateMachine\RegexNFA.cs" />
-    <Compile Include="StateMachine\RegexNFAState.cs" />
-    <Compile Include="StateMachine\RegexFATransition.cs" />
+    <Compile Include="StateMachine\BasicRegexNFA.cs" />
+    <Compile Include="StateMachine\BasicRegexNFAState.cs" />
+    <Compile Include="StateMachine\BasicRegexFATransition.cs" />
     <Compile Include="System\Collections\ObjectModel\ReadOnlySet.cs" />
   </ItemGroup>
   <ItemGroup>

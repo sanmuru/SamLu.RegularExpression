@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace SamLu.RegularExpression.StateMachine
 {
     [DebugInfoProxy(typeof(RangeSetRegexFATransition<,>._DebugInfo), new[] { TypeParameterFillin.TypeParameter_0, TypeParameterFillin.TypeParameter_1 })]
-    public class RangeSetRegexFATransition<T, TRegexFAState> : RegexFATransition<T, TRegexFAState>
+    public class RangeSetRegexFATransition<T, TRegexFAState> : BasicRegexFATransition<T, TRegexFAState>
         where TRegexFAState : IRegexFSMState<T>
     {
         protected RangeSet<T> set;
