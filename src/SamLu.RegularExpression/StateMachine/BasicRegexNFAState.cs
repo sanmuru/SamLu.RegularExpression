@@ -56,7 +56,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// </summary>
         /// <param name="input">指定的输入。</param>
         /// <returns>可以接受指定输入并进行转换的转换。</returns>
-        public BasicRegexFATransition<T, BasicRegexNFAState<T>> GetTransitTransition(T input)
+        public virtual BasicRegexFATransition<T, BasicRegexNFAState<T>> GetTransitTransition(T input)
         {
             throw new NotSupportedException();
         }
@@ -75,6 +75,20 @@ namespace SamLu.RegularExpression.StateMachine
 
         bool IRegexFSMState<T>.RemoveTransition(IRegexFSMTransition<T> transition) =>
             base.RemoveTransition((BasicRegexFATransition<T, BasicRegexNFAState<T>>)transition);
+
+        IEnumerable<IRegexFSMTransition<T>> IRegexFSMState<T>.GetOrderedTransitions() =>
+            this.Transitions.OrderBy(
+                (transition => transition),
+                Comparer<BasicRegexFATransition<T, BasicRegexNFAState<T>>>.Create((x, y) =>
+                {
+                    bool f1 = x is BasicRegexNFAEpsilonTransition<T>;
+                    bool f2 = y is BasicRegexNFAEpsilonTransition<T>;
+                    if (f1 ^ f2)
+                        return f1 ? -1 : 1;
+                    else
+                        return 0;
+                })
+            );
         #endregion
     }
 }

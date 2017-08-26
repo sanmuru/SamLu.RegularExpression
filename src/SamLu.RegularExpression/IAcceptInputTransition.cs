@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SamLu.RegularExpression
+namespace SamLu.RegularExpression.StateMachine
 {
-    public interface IAcceptInputTransition<in T>
+    public interface IAcceptInputTransition<T> : IRegexFSMTransition<T>
     {
     }
 }

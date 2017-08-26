@@ -96,6 +96,9 @@ namespace SamLu.RegularExpression.StateMachine
 
         bool IRegexFSMState<T>.RemoveTransition(IRegexFSMTransition<T> transition) =>
             base.RemoveTransition((BasicRegexFATransition<T, BasicRegexDFAState<T>>)transition);
+
+        IEnumerable<IRegexFSMTransition<T>> IRegexFSMState<T>.GetOrderedTransitions() =>
+            this.Transitions.AsEnumerable();
         #endregion
     }
 }

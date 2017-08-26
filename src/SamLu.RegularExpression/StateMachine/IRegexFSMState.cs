@@ -40,6 +40,8 @@ namespace SamLu.RegularExpression.StateMachine
         /// <param name="input">指定的输入。</param>
         /// <returns>可以接受指定输入并进行转换的转换。</returns>
         IRegexFSMTransition<T> GetTransitTransition(T input);
+
+        IEnumerable<IRegexFSMTransition<T>> GetOrderedTransitions();
     }
 
     /// <summary>
