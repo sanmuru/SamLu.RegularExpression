@@ -1,4 +1,5 @@
-﻿using SamLu.StateMachine;
+﻿using SamLu.RegularExpression.StateMachine.FunctionalTransitions;
+using SamLu.StateMachine;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -40,6 +41,80 @@ namespace SamLu.RegularExpression.StateMachine
                     new List<IRegexFSMState<T>>() :
                     this.StartState.RecurGetStates().Cast<IRegexFSMState<T>>().ToList()
             );
+
+        protected IList<Match<T>> matches = new List<Match<T>>();
+        public ICollection<Match<T>> MatchCollection =>
+            new ReadOnlyCollection<Match<T>>(this.matches);
+
+        #region Match
+        public event RegexFSMMatchEventHandler<T> Match;
+
+        #pragma warning disable 1591
+        protected virtual void this_Match(object sender, RegexFSMMatchEventArgs<T> e)
+        {
+            this.matches.Add(e.Match);
+        }
+        #pragma warning restore 1591
+
+        protected virtual void OnMatch(RegexFSMMatchEventArgs<T> e)
+        {
+            if (e == null) throw new ArgumentNullException(nameof(e));
+
+            this.Match(this, e);
+        }
+        #endregion
+
+        /// <summary>
+        /// 初始化 <see cref="RegexFSM{T}"/> 类的新实例。
+        /// </summary>
+        public RegexFSM() : base()
+        {
+            this.Match += this.this_Match;
+        }
+
+        protected Stack<(object id, int stateStackCount, int captureStart, int captureLength)> captureStack = new Stack<(object id, int stateStackCount, int captureStart, int captureLength)>();
+        protected Stack<(IRegexFSMTransition<T> functionalTransition, object arg, int preCommandStackCount, int thisStart)> commandStack = new Stack<(IRegexFSMTransition<T> functionalTransition, object arg, int preCommandStackCount, int thisStart)>();
+        protected Stack<(IRegexFSMState<T> nfaState, int curTransitinoCount, int commandStackCount, int start)> stateStack = new Stack<(IRegexFSMState<T> nfaState, int curTransitinoCount, int commandStackCount, int start)>();
+
+        public void EndMatch()
+        {
+            while (this.stateStack.Count != 0 && !this.stateStack.Peek().nfaState.IsTerminal)
+                this.stateStack.Pop();
+            if (this.stateStack.Count == 0)
+            {
+                this.captureStack.Clear();
+                this.commandStack.Clear();
+                this.stateStack.Clear();
+            }
+            else
+            {
+                while (this.captureStack.Count != 0 && !(this.captureStack.Peek().stateStackCount < this.stateStack.Count))
+                    this.captureStack.Pop();
+                if (this.captureStack.Count == 0) return;
+                else
+                {
+                    this.OnMatch(this, new RegexFSMMatchEventArgs<T>(
+                        new Match<T>(this.input, this.index, this.length,
+                            this.captureStack.Reverse()
+                                .GroupBy(
+                                    (captureInfo => captureInfo.id),
+                                    (captureInfo => (captureInfo.captureStart, captureInfo.captureLength)),
+                                    new EqualityComparisonComparer<object>((x, y) =>
+                                    {
+                                        if (x == null && y == null) return false;
+                                        else return object.Equals(x, y);
+                                    })
+                                )
+                                .Select(group =>
+                                {
+                                    (int index, int length)[] captures = group.ToArray();
+                                    return new Extend.Group<T>(this.input, captures);
+                                })
+                        )
+                    ));
+                }
+            }
+        }
 
         #region AttachTransition
         /// <summary>

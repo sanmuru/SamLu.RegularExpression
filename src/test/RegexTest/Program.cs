@@ -42,14 +42,14 @@ namespace RegexTest
             Action<RegexObject<char>> action =
                 regexObj =>
                 {
-                    var ___nfa = char_Provider.GenerateNFAFromRegexObject(regexObj);
-                    var ___dfa = char_Provider.GenerateDFAFromNFA(___nfa);
+                    var ___nfa = char_Provider.GenerateRegexFSMFromRegexObject(regexObj, RegexOptions.None) as BasicRegexNFA<char>;
+                    var ___dfa = char_Provider.GenerateBasicRegexDFAFromBasicRegexNFA(___nfa);
                 };
             action?.Invoke(Regex.Const('a').Optional().Concat(Regex.Const('b').Concat(Regex.Const('c').Optional())));
 
-            BasicRegexNFA<char> char_nfa = char_Provider.GenerateNFAFromRegexObject(ipAddress);
+            BasicRegexNFA<char> char_nfa = char_Provider.GenerateRegexFSMFromRegexObject(ipAddress, RegexOptions.None) as BasicRegexNFA<char>;
             //var debuginfo = char_nfa.GetDebugInfo();
-            BasicRegexDFA<char> char_dfa = char_Provider.GenerateDFAFromNFA(char_nfa);
+            BasicRegexDFA<char> char_dfa = char_Provider.GenerateBasicRegexDFAFromBasicRegexNFA(char_nfa);
             ;
 
             Func<int, int, RegexRange<string>> func_adpator = (min, max) =>
@@ -68,8 +68,8 @@ namespace RegexTest
 
             IRegexFAProvider<string> string_Provider = new RegexFAProvider<string>(new MyStringRegexRunContextInfo());
             
-            BasicRegexNFA<string> string_nfa = string_Provider.GenerateNFAFromRegexObject(ipAddress_adaptor);
-            BasicRegexDFA<string> string_dfa = string_Provider.GenerateDFAFromNFA(string_nfa);
+            BasicRegexNFA<string> string_nfa = string_Provider.GenerateRegexFSMFromRegexObject(ipAddress_adaptor, RegexOptions.None) as BasicRegexNFA<string>;
+            BasicRegexDFA<string> string_dfa = string_Provider.GenerateBasicRegexDFAFromBasicRegexNFA(string_nfa);
             ;
         }
 

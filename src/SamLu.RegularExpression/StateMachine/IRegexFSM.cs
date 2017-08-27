@@ -17,7 +17,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// 获取 <see cref="IRegexFSM{T}"/> 的当前状态。
         /// </summary>
         new IRegexFSMState<T> CurrentState { get; }
-
+        
         /// <summary>
         /// 获取 <see cref="IRegexFSM{T}"/> 的起始状态。
         /// </summary>
@@ -27,6 +27,10 @@ namespace SamLu.RegularExpression.StateMachine
         /// 获取 <see cref="IRegexFSM{T}"/> 的状态集。
         /// </summary>
         new ICollection<IRegexFSMState<T>> States { get; }
+        
+        event RegexFSMMatchEventHandler<T> Match;
+
+        void EndMatch();
 
         /// <summary>
         /// 向 <see cref="IRegexFSM{T}"/> 的一个指定状态添加指定转换。
@@ -39,7 +43,7 @@ namespace SamLu.RegularExpression.StateMachine
         bool AttachTransition(IRegexFSMState<T> state, IRegexFSMTransition<T> transition);
 
         /// <summary>
-        /// 从 <see cref="IFSMIRegexFSM{T}/> 的一个指定状态移除指定转换。
+        /// 从 <see cref="IRegexFSM{T}"/> 的一个指定状态移除指定转换。
         /// </summary>
         /// <param name="state">指定的状态。</param>
         /// <param name="transition">要添加的转换。</param>

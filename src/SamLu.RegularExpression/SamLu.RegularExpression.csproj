@@ -116,6 +116,7 @@
     <Compile Include="StateMachine\RegexFSM.cs" />
     <Compile Include="StateMachine\IRegexFSMState.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexFunctionalTransition.cs" />
+    <Compile Include="StateMachine\RegexFSMMatchEvent.cs" />
     <Compile Include="StateMachine\RegexFSMUtility.cs" />
     <Compile Include="System\Collections\Generic\IReadOnlySet.cs" />
     <Compile Include="SamLu\DebugView\CollectionDebugView.cs" />

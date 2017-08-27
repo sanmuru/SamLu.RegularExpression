@@ -20,7 +20,7 @@ namespace SamLu.RegularExpression.StateMachine
             this.contextInfo = contextInfo;
         }
 
-        public BasicRegexNFA<T> GenerateNFAFromRegexObject(RegexObject<T> regex)
+        public IRegexFSM<T> GenerateRegexFSMFromRegexObject(RegexObject<T> regex, RegexOptions options)
         {
             if (regex == null) throw new ArgumentNullException(nameof(regex));
 
@@ -152,7 +152,7 @@ namespace SamLu.RegularExpression.StateMachine
             return epsilonTransition;
         }
         
-        public BasicRegexDFA<T> GenerateDFAFromNFA(BasicRegexNFA<T> nfa)
+        public BasicRegexDFA<T> GenerateBasicRegexDFAFromBasicRegexNFA(BasicRegexNFA<T> nfa)
         {
             if (nfa == null) throw new ArgumentNullException(nameof(nfa));
 
