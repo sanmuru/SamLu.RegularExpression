@@ -152,7 +152,7 @@ namespace SamLu.RegularExpression.StateMachine
             return epsilonTransition;
         }
         
-        public BasicRegexDFA<T> GenerateBasicRegexDFAFromBasicRegexNFA(BasicRegexNFA<T> nfa)
+        public IRegexDFA<T> GenerateRegexDFAFromRegexFSM(IRegexFSM<T> nfa)
         {
             if (nfa == null) throw new ArgumentNullException(nameof(nfa));
 
@@ -161,15 +161,15 @@ namespace SamLu.RegularExpression.StateMachine
             BasicRegexDFA<T> dfa = new BasicRegexDFA<T>() { StartState = new BasicRegexDFAState<T>() };
 
             // 队列 Q 放置的是未被处理的已经创建了的 NFA 状态组（及其对应的 DFA 状态）。
-            var Q = new Queue<(RegexFAStateGroup<T, BasicRegexNFAState<T>>, BasicRegexDFAState<T>)>();
+            var Q = new Queue<(RegexFAStateGroup<T, IRegexFSMState<T>>, BasicRegexDFAState<T>)>();
             // 集合 C 放置的是已经存在的 NFA 状态组（及其对应的 DFA 状态）。
-            var C = new Collection<(RegexFAStateGroup<T, BasicRegexNFAState<T>>, BasicRegexDFAState<T>)>();
+            var C = new Collection<(RegexFAStateGroup<T, IRegexFSMState<T>>, BasicRegexDFAState<T>)>();
 #if false
             // 集合 D 放置的是处理后连接指定两个 DFA 状态的所有转换接受的对象的并集。
             var D = new Dictionary<(RegexDFAState<T>, RegexDFAState<T>), IList<ISet<T>>>();
 #endif
 
-            var startTuple = (new RegexFAStateGroup<T, BasicRegexNFAState<T>>(nfa.StartState), dfa.StartState);
+            var startTuple = (new RegexFAStateGroup<T, IRegexFSMState<T>>(nfa.StartState), dfa.StartState);
             Q.Enqueue(startTuple);
             C.Add(startTuple);
 
@@ -180,14 +180,14 @@ namespace SamLu.RegularExpression.StateMachine
 
                 /* 计算从这个状态输出的所有转换及其所接受的对象集的并集。 */
                 // 计算所有输出转换。
-                var transitions = new HashSet<BasicRegexFATransition<T, BasicRegexNFAState<T>>>(
+                var transitions = new HashSet<IRegexFSMTransition<T>>(
                         group.SelectMany(__state => __state.Transitions)
                     );
                 /* 优化：构建转换/可接受对象集字典。 */
                 var accreditedSetsDic = transitions
                     .ToDictionary(
                         (transition => transition),
-                        (transition => this.contextInfo.GetAccreditedSetFromRegexNFATransition(transition))
+                        (transition => this.contextInfo.GetAccreditedSetFromRegexNFATransition((BasicRegexFATransition<T,BasicRegexNFAState<T>>)transition))
                     );
                 // 计算接受的对象集的并集。
                 var sets = accreditedSetsDic.Values.ToArray();
@@ -232,7 +232,7 @@ namespace SamLu.RegularExpression.StateMachine
                 /* 然后对这个并集中的每一个对象集寻找接受其的转换，把这些转换的目标状态的并集 newGroup 计算出来。 */
                 foreach (var set in sets)
                 {
-                    var newGroup = new RegexFAStateGroup<T, BasicRegexNFAState<T>>(new HashSet<BasicRegexNFAState<T>>(
+                    var newGroup = new RegexFAStateGroup<T, IRegexFSMState<T>>(new HashSet<IRegexFSMState<T>>(
                         accreditedSetsDic
                             .Where(pair => pair.Value.IsSupersetOf(set))
                             .Select(pair => pair.Key.Target)
@@ -241,12 +241,12 @@ namespace SamLu.RegularExpression.StateMachine
                     if (newGroup.Count == 0) continue;
                     else
                     {
-                        (RegexFAStateGroup<T, BasicRegexNFAState<T>>, BasicRegexDFAState<T> dfaState)? tuple =
+                        (RegexFAStateGroup<T, IRegexFSMState<T>>, BasicRegexDFAState<T> dfaState)? tuple =
                             C
-                                .Cast<(RegexFAStateGroup<T, BasicRegexNFAState<T>>, BasicRegexDFAState<T>)?>()
+                                .Cast<(RegexFAStateGroup<T, IRegexFSMState<T>>, BasicRegexDFAState<T>)?>()
                                 .FirstOrDefault(_tuple =>
                                 {
-                                    (RegexFAStateGroup<T, BasicRegexNFAState<T>> __nfaStateGroup, BasicRegexDFAState<T>) t = _tuple.Value;
+                                    (RegexFAStateGroup<T, IRegexFSMState<T>> __nfaStateGroup, BasicRegexDFAState<T>) t = _tuple.Value;
                                     return t.__nfaStateGroup.Equals(newGroup);
                                 });
                         BasicRegexDFAState<T> dfaStateTo;

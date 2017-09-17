@@ -8,5 +8,6 @@ namespace SamLu.RegularExpression.StateMachine
 {
     public interface IAcceptInputTransition<T> : IRegexFSMTransition<T>
     {
+        bool CanAccept(T input);
     }
 }

@@ -10,6 +10,6 @@ namespace SamLu.RegularExpression.StateMachine
     {
         IRegexFSM<T> GenerateRegexFSMFromRegexObject(RegexObject<T> regex, RegexOptions options);
 
-        BasicRegexDFA<T> GenerateBasicRegexDFAFromBasicRegexNFA(BasicRegexNFA<T> nfa);
+        IRegexDFA<T> GenerateRegexDFAFromRegexFSM(IRegexFSM<T> nfa);
     }
 }

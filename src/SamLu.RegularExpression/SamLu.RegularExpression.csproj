@@ -78,6 +78,8 @@
     <Compile Include="Extend\RegexZeroLengthObject.cs" />
     <Compile Include="IAcceptInputTransition.cs" />
     <Compile Include="IRange.cs" />
+    <Compile Include="MatchCollection.cs" />
+    <Compile Include="StateMachine\IRegexDFA.cs" />
     <Compile Include="Match.cs" />
     <Compile Include="ObjectModel\CharRange.cs" />
     <Compile Include="ObjectModel\CharRangeInfo.cs" />
@@ -110,8 +112,11 @@
     <Compile Include="StateMachine\FunctionalTransitions\RegexNegativeCaptureTransition.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexNonGreedyRepeatTransition.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexPositiveCaptureTransition.cs" />
+    <Compile Include="StateMachine\IRegexFSMEpsilonTransition.cs" />
     <Compile Include="StateMachine\IRegexFSM.cs" />
     <Compile Include="StateMachine\IRegexFSMTransition.cs" />
+    <Compile Include="StateMachine\IRegexNFA.cs" />
+    <Compile Include="StateMachine\IRegexNFAState.cs" />
     <Compile Include="StateMachine\RangeSetRegexFATransition.cs" />
     <Compile Include="StateMachine\RegexFSM.cs" />
     <Compile Include="StateMachine\IRegexFSMState.cs" />

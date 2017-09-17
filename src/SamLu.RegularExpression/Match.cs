@@ -31,7 +31,7 @@ namespace SamLu.RegularExpression
             base.input = input;
 
             base.captures = new List<Capture<T>> { new Capture<T>(input, index, length) };
-            this.groups = new List<Group<T>>(new[] { new Group<T>(input, (index, length)) }.Concat(groups));
+            this.groups = new List<Group<T>>(new[] { new Group<T>(input, new[] { (index, length) }) }.Concat(groups));
         }
     }
 }

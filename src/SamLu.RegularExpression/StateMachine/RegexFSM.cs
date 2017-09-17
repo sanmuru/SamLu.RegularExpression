@@ -49,12 +49,12 @@ namespace SamLu.RegularExpression.StateMachine
         #region Match
         public event RegexFSMMatchEventHandler<T> Match;
 
-        #pragma warning disable 1591
+#pragma warning disable 1591
         protected virtual void this_Match(object sender, RegexFSMMatchEventArgs<T> e)
         {
             this.matches.Add(e.Match);
         }
-        #pragma warning restore 1591
+#pragma warning restore 1591
 
         protected virtual void OnMatch(RegexFSMMatchEventArgs<T> e)
         {
@@ -71,12 +71,39 @@ namespace SamLu.RegularExpression.StateMachine
         {
             this.Match += this.this_Match;
         }
-
+        
         protected Stack<(object id, int stateStackCount, int captureStart, int captureLength)> captureStack = new Stack<(object id, int stateStackCount, int captureStart, int captureLength)>();
         protected Stack<(IRegexFSMTransition<T> functionalTransition, object arg, int preCommandStackCount, int thisStart)> commandStack = new Stack<(IRegexFSMTransition<T> functionalTransition, object arg, int preCommandStackCount, int thisStart)>();
         protected Stack<(IRegexFSMState<T> nfaState, int curTransitinoCount, int commandStackCount, int start)> stateStack = new Stack<(IRegexFSMState<T> nfaState, int curTransitinoCount, int commandStackCount, int start)>();
 
-        public void EndMatch()
+        /// <summary>
+        /// 初始化状态机实例必要字段，进行匹配前准备工作。
+        /// </summary>
+        protected virtual void BeginMatch(IEnumerable<T> inputs)
+        {
+            this.inputs = inputs;
+
+            if (this.captureStack == null)
+                this.captureStack = new Stack<(object id, int stateStackCount, int captureStart, int captureLength)>();
+            else if (this.captureStack.Count != 0)
+                this.captureStack.Clear();
+
+            if (this.commandStack == null)
+                this.commandStack = new Stack<(IRegexFSMTransition<T> functionalTransition, object arg, int preCommandStackCount, int thisStart)>();
+            else if (this.commandStack.Count != 0)
+                this.commandStack.Clear();
+
+            if (this.stateStack == null)
+                this.stateStack = new Stack<(IRegexFSMState<T> nfaState, int curTransitinoCount, int commandStackCount, int start)>();
+            else if (this.stateStack.Count != 0)
+                this.stateStack.Clear();
+        }
+
+#warning
+        protected IEnumerable<T> inputs;
+        private int start;
+        private int top;
+        public virtual void EndMatch()
         {
             while (this.stateStack.Count != 0 && !this.stateStack.Peek().nfaState.IsTerminal)
                 this.stateStack.Pop();
@@ -93,8 +120,8 @@ namespace SamLu.RegularExpression.StateMachine
                 if (this.captureStack.Count == 0) return;
                 else
                 {
-                    this.OnMatch(this, new RegexFSMMatchEventArgs<T>(
-                        new Match<T>(this.input, this.index, this.length,
+                    this.OnMatch(new RegexFSMMatchEventArgs<T>(
+                        new Match<T>(this.inputs, this.start, this.top - this.start + 1,
                             this.captureStack.Reverse()
                                 .GroupBy(
                                     (captureInfo => captureInfo.id),
@@ -107,8 +134,8 @@ namespace SamLu.RegularExpression.StateMachine
                                 )
                                 .Select(group =>
                                 {
-                                    (int index, int length)[] captures = group.ToArray();
-                                    return new Extend.Group<T>(this.input, captures);
+                                    var captures = group.ToArray();
+                                    return new Extend.Group<T>(this.inputs, captures);
                                 })
                         )
                     ));
@@ -181,7 +208,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// </summary>
         /// <param name="input">指定的输入。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
-        public virtual bool Transit(T input)
+        protected internal virtual bool Transit(T input)
         {
             // 获取可以接受输入并进行转换的转换。
             var transition = this.CurrentState.GetTransitTransition(input);
@@ -205,6 +232,26 @@ namespace SamLu.RegularExpression.StateMachine
                 return this.Transit((T)(object)input);
             else
                 return base.Transit(input);
+        }
+
+        /// <summary>
+        /// 接受一个指定输入序列并进行一组转换动作。
+        /// </summary>
+        /// <param name="inputs">指定的输入序列。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="inputs"/> 的值为 null 。</exception>
+        public virtual void TransitMany(IEnumerable<T> inputs)
+        {
+            if (inputs == null) throw new ArgumentNullException(nameof(inputs));
+
+            this.BeginMatch(inputs);
+            
+            foreach (var input in inputs)
+            {
+                if (!this.Transit(input))
+                    break;
+            }
+
+            this.EndMatch();
         }
     }
 
@@ -216,14 +263,51 @@ namespace SamLu.RegularExpression.StateMachine
     /// <typeparam name="TTransition">有限状态机的转换的类型。</typeparam>
     public class RegexFSM<T, TState, TTransition> : FSM<TState, TTransition>, IRegexFSM<T, TState, TTransition>
         where TState : IRegexFSMState<T, TTransition>
-        where TTransition : IRegexFSMTransition<T,TState>
+        where TTransition : IRegexFSMTransition<T, TState>
     {
+        protected IList<Match<T>> matches = new List<Match<T>>();
+        public ICollection<Match<T>> MatchCollection =>
+            new ReadOnlyCollection<Match<T>>(this.matches);
+
+        #region Match
+        public event RegexFSMMatchEventHandler<T> Match;
+
+#pragma warning disable 1591
+        protected virtual void this_Match(object sender, RegexFSMMatchEventArgs<T> e)
+        {
+            this.matches.Add(e.Match);
+        }
+#pragma warning restore 1591
+
+        protected virtual void OnMatch(RegexFSMMatchEventArgs<T> e)
+        {
+            if (e == null) throw new ArgumentNullException(nameof(e));
+
+            this.Match(this, e);
+        }
+        #endregion
+
+        protected IEnumerable<T> inputs;
+
+        /// <summary>
+        /// 初始化状态机实例必要字段，进行匹配前准备工作。
+        /// </summary>
+        protected virtual void BeginMatch(IEnumerable<T> inputs)
+        {
+            this.inputs = inputs;
+        }
+
+        public virtual void EndMatch()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// 接受一个指定输入并进行转换。返回一个值，指示操作是否成功。
         /// </summary>
         /// <param name="input">指定的输入。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
-        public virtual bool Transit(T input)
+        protected internal virtual bool Transit(T input)
         {
             // 获取可以接受输入并进行转换的转换。
             var transition = this.CurrentState.GetTransitTransition(input);
@@ -247,6 +331,26 @@ namespace SamLu.RegularExpression.StateMachine
                 return this.Transit((T)(object)input);
             else
                 return base.Transit(input);
+        }
+
+        /// <summary>
+        /// 接受一个指定输入序列并进行一组转换动作。
+        /// </summary>
+        /// <param name="inputs">指定的输入序列。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="inputs"/> 的值为 null 。</exception>
+        public virtual void TransitMany(IEnumerable<T> inputs)
+        {
+            if (inputs == null) throw new ArgumentNullException(nameof(inputs));
+
+            this.BeginMatch(inputs);
+
+            foreach (var input in inputs)
+            {
+                if (!this.Transit(input))
+                    break;
+            }
+
+            this.EndMatch();
         }
 
         #region IRegexFSM{T} Implementation

@@ -354,13 +354,13 @@ namespace SamLu.RegularExpression
         #endregion
 
         #region Matches
-        public static ICollection<Match<T>> Matches<T>(IEnumerable<T> input, RegexObject<T> pattern) =>
+        public static MatchCollection<T> Matches<T>(IEnumerable<T> input, RegexObject<T> pattern) =>
             Regex.Matches(input, pattern, RegexOptions.None);
 
-        public static ICollection<Match<T>> Matches<T>(IEnumerable<T> input, RegexObject<T> pattern, RegexOptions options) =>
+        public static MatchCollection<T> Matches<T>(IEnumerable<T> input, RegexObject<T> pattern, RegexOptions options) =>
             new RegexProvider<T>(pattern, options).Matches(input);
 
-        public static ICollection<Match<T>> Matches<T, TRegexProvider>(IEnumerable<T> input, RegexObject<T> pattern, RegexOptions options, Func<RegexObject<T>, RegexOptions, TRegexProvider> activator)
+        public static MatchCollection<T> Matches<T, TRegexProvider>(IEnumerable<T> input, RegexObject<T> pattern, RegexOptions options, Func<RegexObject<T>, RegexOptions, TRegexProvider> activator)
             where TRegexProvider : RegexProvider<T>
         {
             if (activator == null) throw new ArgumentNullException(nameof(activator));

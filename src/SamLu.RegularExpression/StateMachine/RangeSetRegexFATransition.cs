@@ -13,7 +13,7 @@ namespace SamLu.RegularExpression.StateMachine
 {
     [DebugInfoProxy(typeof(RangeSetRegexFATransition<,>._DebugInfo), new[] { TypeParameterFillin.TypeParameter_0, TypeParameterFillin.TypeParameter_1 })]
     public class RangeSetRegexFATransition<T, TRegexFAState> : BasicRegexFATransition<T, TRegexFAState>
-        where TRegexFAState : IRegexFSMState<T>
+        where TRegexFAState : IRegexFSMState<T, BasicRegexFATransition<T, TRegexFAState>>
     {
         protected RangeSet<T> set;
         /// <summary>

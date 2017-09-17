@@ -16,7 +16,7 @@ namespace SamLu.RegularExpression.Extend
 
         protected Group() : base() { }
 
-        protected internal Group(IEnumerable<T> input, params (int index, int length)[] captures) : base()
+        protected internal Group(IEnumerable<T> input, (int index, int length)[] captures)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (captures == null) throw new ArgumentNullException(nameof(captures));

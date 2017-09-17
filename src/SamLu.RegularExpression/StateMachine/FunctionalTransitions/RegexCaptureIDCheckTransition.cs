@@ -14,5 +14,10 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
         public object ID => this.id;
 
         public RegexCaptureIDCheckTransition(object id) => this.id = id;
+
+        public bool CanAccept(T input)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

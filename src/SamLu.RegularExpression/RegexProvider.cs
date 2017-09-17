@@ -51,10 +51,10 @@ namespace SamLu.RegularExpression
         public virtual Match<T> Match(IEnumerable<T> input, int start, int length) =>
             this.Match(input.Skip(start).Take(length));
 
-        public virtual ICollection<Match<T>> Matches(IEnumerable<T> input) =>
-            this.MatchesInternal(NodeReader.CreateReader(input)).ToList();
+        public virtual MatchCollection<T> Matches(IEnumerable<T> input) =>
+            new MatchCollection<T>(this.MatchesInternal(NodeReader.CreateReader(input)));
 
-        public virtual ICollection<Match<T>> Matches(IEnumerable<T> input, int start, int length) =>
+        public virtual MatchCollection<T> Matches(IEnumerable<T> input, int start, int length) =>
             this.Matches(input.Skip(start).Take(length));
 
         //public virtual bool IsMatch(IEnumerable<T> input) { }
@@ -69,7 +69,7 @@ namespace SamLu.RegularExpression
             return true;
         }
 
-        public virtual bool TryMatches(IEnumerable<T> input, out ICollection<Match<T>> result)
+        public virtual bool TryMatches(IEnumerable<T> input, out MatchCollection<T> result)
         {
             result = null;
 

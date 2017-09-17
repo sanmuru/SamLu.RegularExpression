@@ -8,6 +8,100 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.StateMachine
 {
+    public class BasicRegexDFAStateBase<T> : DFAState, IRegexFSMState<T>
+    {
+        /// <summary>
+        /// 获取 <see cref="BasicRegexDFAStateBase{T}"/> 的转换集。
+        /// </summary>
+        new public virtual ICollection<IRegexFSMTransition<T>> Transitions =>
+            new ReadOnlyCollection<IRegexFSMTransition<T>>(base.Transitions.Cast<IRegexFSMTransition<T>>().ToList());
+
+        /// <summary>
+        /// 初始化 <see cref="BasicRegexDFAStateBase{T}"/> 类的新实例。
+        /// </summary>
+        public BasicRegexDFAStateBase() : base() { }
+
+        /// <summary>
+        /// 初始化 <see cref="BasicRegexDFAStateBase{T}"/> 类的新实例，该实例接受一个指定是否为结束状态的值。
+        /// </summary>
+        /// <param name="isTerminal">一个值，指示该实例是否为结束状态。</param>
+        public BasicRegexDFAStateBase(bool isTerminal) : base(isTerminal) { }
+
+        public BasicRegexDFAStateBase(BasicRegexDFAState<T> state) :
+            this((state ?? throw new ArgumentNullException(nameof(state))).IsTerminal)
+        {
+            // 复制转换集合。
+            foreach (var transition in state.Transitions)
+                this.AttachTransition(transition);
+
+            // 复制动作。
+            this.EntryAction = state.EntryAction;
+            this.ExitAction = state.ExitAction;
+            this.InputAction = state.InputAction;
+            this.TransitAction = state.TransitAction;
+        }
+
+        #region AttachTransition
+        /// <summary>
+        /// 添加指定的转换。
+        /// </summary>
+        /// <param name="transition">要添加的转换。</param>
+        /// <returns>一个值，指示操作是否成功。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="transition"/> 的值为 null 。</exception>
+        /// <exception cref="InvalidOperationException">在 <paramref name="transition"/> 为 <see cref="IEpsilonTransition"/> 接口的实例时抛出。试图向确定的有限自动机模型的状态中添加一个 ε 转换。</exception>
+        public sealed override bool AttachTransition(ITransition transition) => base.AttachTransition(transition);
+
+        /// <summary>
+        /// 添加指定的转换。
+        /// </summary>
+        /// <param name="transition">要添加的转换。</param>
+        /// <returns>一个值，指示操作是否成功。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="transition"/> 的值为 null 。</exception>
+        /// <exception cref="InvalidOperationException">在 <paramref name="transition"/> 为 <see cref="IEpsilonTransition"/> 接口的实例时抛出。试图向确定的有限自动机模型的状态中添加一个 ε 转换。</exception>
+        public virtual bool AttachTransition(IRegexFSMTransition<T> transition) => base.AttachTransition(transition);
+        #endregion
+
+        #region RemoveTransition
+        /// <summary>
+        /// 移除指定的转换。
+        /// </summary>
+        /// <param name="transition">要添加的转换。</param>
+        /// <returns>一个值，指示操作是否成功。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="transition"/> 的值为 null 。</exception>
+        /// <exception cref="InvalidOperationException">在 <paramref name="transition"/> 为 <see cref="IEpsilonTransition"/> 接口的实例时抛出。试图从确定的有限自动机模型的状态中移除一个 ε 转换。</exception>
+        public sealed override bool RemoveTransition(ITransition transition) => base.RemoveTransition(transition);
+
+        /// <summary>
+        /// 移除指定的转换。
+        /// </summary>
+        /// <param name="transition">要添加的转换。</param>
+        /// <returns>一个值，指示操作是否成功。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="transition"/> 的值为 null 。</exception>
+        /// <exception cref="InvalidOperationException">在 <paramref name="transition"/> 为 <see cref="IEpsilonTransition"/> 接口的实例时抛出。试图从确定的有限自动机模型的状态中移除一个 ε 转换。</exception>
+        public virtual bool RemoveTransition(IRegexFSMTransition<T> transition) => base.RemoveTransition(transition);
+        #endregion
+
+        public IRegexFSMTransition<T> GetTransitTransition(T input)
+        {
+            // 遍历当前状态的所有转换。
+            foreach (var transition in this.Transitions)
+                if (transition is IAcceptInputTransition<T> acceptInputTransition)
+                {
+                    // 若该转换接受输入，则进行转换操作。
+                    if (acceptInputTransition.CanAccept(input))
+                        return acceptInputTransition;
+                }
+
+            // 无转换接受输入
+            return null;
+        }
+
+        public IEnumerable<IRegexFSMTransition<T>> GetOrderedTransitions()
+        {
+            return this.Transitions.AsEnumerable();
+        }
+    }
+
     /// <summary>
     /// 表示基础正则表达式（ Basic Regular Expression ）构造的确定的有限自动机的状态。
     /// </summary>
@@ -24,7 +118,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// </summary>
         /// <param name="isTerminal">一个值，指示该实例是否为结束状态。</param>
         public BasicRegexDFAState(bool isTerminal) : base(isTerminal) { }
-
+        
         /// <summary>
         /// 添加指定的转换。
         /// </summary>
