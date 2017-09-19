@@ -304,19 +304,14 @@ namespace SamLu.RegularExpression.StateMachine
             public IRegexFSMState<T> InnerState { get; private set; }
 
             public RegexStateState(IRegexFSMState<T> state) => this.InnerState = state;
-
-            public IRegexFSMTransition<T> GetTransitTransition(T input)
-            {
-                return this.InnerState.GetTransitTransition(input);
-            }
-
+            
             public IEnumerable<IRegexFSMTransition<T>> GetOrderedTransitions()
             {
                 return this.InnerState.GetOrderedTransitions();
             }
         }
 
-        private sealed class RegexFunctionalTransitionGroupTransition<T> : FSMTransition<IRegexFSMState<T>>, IRegexFSMTransition<T>
+        private sealed class RegexFunctionalTransitionGroupTransition<T> : FSMTransition<IRegexFSMState<T>>, IRegexFSMTransitionProxy<T>
         {
             public IRegexFSMState<T> StateFrom { get; private set; }
             public IRegexFSMState<T> StateTo => this.FunctionalTransitions.FirstOrDefault()?.Target;
@@ -329,6 +324,30 @@ namespace SamLu.RegularExpression.StateMachine
                 this.StateFrom = transitionGroup.stateFrom;
                 this.AcceptInputTransition = transitionGroup.acceptInputTransition;
                 this.FunctionalTransitions = transitionGroup.functionalTransitions;
+            }
+
+            public bool TransitProxy(RegexFSMTransitProxyHandler<T> handler, params object[] args)
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    IRegexFSMState<T> state = fsm.CurrentState;
+
+                    bool f = true;
+                    foreach (var functionalTransition in this.FunctionalTransitions)
+                    {
+                        if (!handler(functionalTransition, args))
+                        {
+                            f = false;
+                            break;
+                        }
+                    }
+
+                    // 复原
+                    if (!f) fsm.Transit(state);
+
+                    return f;
+                }
+                else throw new InvalidOperationException();
             }
         }
     }

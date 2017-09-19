@@ -106,17 +106,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// <exception cref="ArgumentNullException"><paramref name="epsilonTransition"/> 的值为 null 。</exception>
         public virtual bool RemoveTransition(IRegexFSMEpsilonTransition<T> epsilonTransition) => base.RemoveTransition(epsilonTransition);
         #endregion
-
-        /// <summary>
-        /// 获取可以接受指定输入并进行转换的转换。
-        /// </summary>
-        /// <param name="input">指定的输入。</param>
-        /// <returns>可以接受指定输入并进行转换的转换。</returns>
-        public virtual IRegexFSMTransition<T> GetTransitTransition(T input)
-        {
-            throw new NotSupportedException();
-        }
-
+        
         #region IRegexFSMState{T} Implementation
         IEnumerable<IRegexFSMTransition<T>> IRegexFSMState<T>.GetOrderedTransitions() =>
             this.Transitions.OrderBy(
@@ -177,17 +167,7 @@ namespace SamLu.RegularExpression.StateMachine
             return base.AttachTransition(epsilonTransition);
         }
 
-        /// <summary>
-        /// 获取可以接受指定输入并进行转换的转换。
-        /// </summary>
-        /// <param name="input">指定的输入。</param>
-        /// <returns>可以接受指定输入并进行转换的转换。</returns>
-        public virtual BasicRegexFATransition<T, BasicRegexNFAState<T>> GetTransitTransition(T input)
-        {
-            throw new NotSupportedException();
-        }
-
-        #region IRegexFSMTransition{T} Implementation
+        #region IRegexFSMTransition{T}/IRegexFSMTransition{T, TState} Implementation
         ICollection<IRegexFSMTransition<T>> IRegexFSMState<T>.Transitions =>
             new ReadOnlyCollection<IRegexFSMTransition<T>>(
                 base.Transitions.Cast<IRegexFSMTransition<T>>().ToList()
@@ -198,17 +178,14 @@ namespace SamLu.RegularExpression.StateMachine
 
         bool IRegexNFAState<T>.RemoveTransition(IRegexFSMEpsilonTransition<T> epsilonTransition) =>
             this.RemoveTransition((BasicRegexNFAEpsilonTransition<T>)epsilonTransition);
-
-        IRegexFSMTransition<T> IRegexFSMState<T>.GetTransitTransition(T input) =>
-            this.GetTransitTransition(input);
-
+        
         bool IRegexFSMState<T>.AttachTransition(IRegexFSMTransition<T> transition) =>
             base.AttachTransition((BasicRegexFATransition<T, BasicRegexNFAState<T>>)transition);
 
         bool IRegexFSMState<T>.RemoveTransition(IRegexFSMTransition<T> transition) =>
             base.RemoveTransition((BasicRegexFATransition<T, BasicRegexNFAState<T>>)transition);
 
-        IEnumerable<IRegexFSMTransition<T>> IRegexFSMState<T>.GetOrderedTransitions() =>
+        IEnumerable<BasicRegexFATransition<T, BasicRegexNFAState<T>>> IRegexFSMState<T, BasicRegexFATransition<T, BasicRegexNFAState<T>>>.GetOrderedTransitions() =>
             this.Transitions.OrderBy(
                 (transition => transition),
                 Comparer<BasicRegexFATransition<T, BasicRegexNFAState<T>>>.Create((x, y) =>
@@ -221,6 +198,9 @@ namespace SamLu.RegularExpression.StateMachine
                         return 0;
                 })
             );
+
+        IEnumerable<IRegexFSMTransition<T>> IRegexFSMState<T>.GetOrderedTransitions() =>
+            ((IRegexFSMState<T, BasicRegexFATransition<T, BasicRegexNFAState<T>>>)this).GetOrderedTransitions();
 
         bool INFAState.AttachTransition(IEpsilonTransition epsilonTransition) =>
             this.AttachTransition((BasicRegexNFAEpsilonTransition<T>)epsilonTransition);

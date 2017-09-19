@@ -95,10 +95,10 @@ namespace SamLu.RegularExpression.StateMachine
             return null;
         }
 
-        public IEnumerable<IRegexFSMTransition<T>> GetOrderedTransitions()
-        {
-            return this.Transitions.AsEnumerable();
-        }
+        #region IRegexFSMTransition{T} Implementation
+        IEnumerable<IRegexFSMTransition<T>> IRegexFSMState<T>.GetOrderedTransitions()=>
+            this.Transitions.AsEnumerable();
+        #endregion
     }
 
     /// <summary>
@@ -117,7 +117,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// </summary>
         /// <param name="isTerminal">一个值，指示该实例是否为结束状态。</param>
         public BasicRegexDFAState(bool isTerminal) : base(isTerminal) { }
-        
+
         /// <summary>
         /// 添加指定的转换。
         /// </summary>
@@ -174,15 +174,12 @@ namespace SamLu.RegularExpression.StateMachine
             // 无转换接受输入
             return null;
         }
-        
-        #region IRegexFSMTransition{T} Implementation
+
+        #region IRegexFSMTransition{T}/IRegexFSMTransition{T, TState} Implementation
         ICollection<IRegexFSMTransition<T>> IRegexFSMState<T>.Transitions =>
             new ReadOnlyCollection<IRegexFSMTransition<T>>(
                 base.Transitions.Cast<IRegexFSMTransition<T>>().ToList()
             );
-
-        IRegexFSMTransition<T> IRegexFSMState<T>.GetTransitTransition(T input) =>
-            this.GetTransitTransition(input);
 
         bool IRegexFSMState<T>.AttachTransition(IRegexFSMTransition<T> transition) =>
             base.AttachTransition((BasicRegexFATransition<T, BasicRegexDFAState<T>>)transition);
@@ -190,8 +187,13 @@ namespace SamLu.RegularExpression.StateMachine
         bool IRegexFSMState<T>.RemoveTransition(IRegexFSMTransition<T> transition) =>
             base.RemoveTransition((BasicRegexFATransition<T, BasicRegexDFAState<T>>)transition);
 
+        IEnumerable<BasicRegexFATransition<T, BasicRegexDFAState<T>>> IRegexFSMState<T, BasicRegexFATransition<T, BasicRegexDFAState<T>>>.GetOrderedTransitions()
+        {
+            throw new NotImplementedException();
+        }
+
         IEnumerable<IRegexFSMTransition<T>> IRegexFSMState<T>.GetOrderedTransitions() =>
-            this.Transitions.AsEnumerable();
+            ((IRegexFSMState<T, BasicRegexFATransition<T, BasicRegexDFAState<T>>>)this).GetOrderedTransitions();
         #endregion
     }
 }

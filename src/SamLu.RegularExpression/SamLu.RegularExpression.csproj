@@ -79,6 +79,7 @@
     <Compile Include="Extend\RegexZeroLengthObject.cs" />
     <Compile Include="IAcceptInputTransition.cs" />
     <Compile Include="IRange.cs" />
+    <Compile Include="StateMachine\IRegexFSMTransitionProxy.cs" />
     <Compile Include="MatchCollection.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexFunctionalTransition.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexFunctionalTransitionMetadataAttribute.cs" />

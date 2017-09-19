@@ -71,10 +71,37 @@ namespace SamLu.RegularExpression.StateMachine
         {
             this.Match += this.this_Match;
         }
-        
-        protected Stack<(object id, int stateStackCount, int captureStart, int captureLength)> captureStack = new Stack<(object id, int stateStackCount, int captureStart, int captureLength)>();
-        protected Stack<(IRegexFSMTransition<T> functionalTransition, object arg, int preCommandStackCount, int thisStart)> commandStack = new Stack<(IRegexFSMTransition<T> functionalTransition, object arg, int preCommandStackCount, int thisStart)>();
-        protected Stack<(IRegexFSMState<T> nfaState, int curTransitinoCount, int commandStackCount, int start)> stateStack = new Stack<(IRegexFSMState<T> nfaState, int curTransitinoCount, int commandStackCount, int start)>();
+
+        #region 栈项类型
+        public class CaptureStackItem
+        {
+            public int StateStackCount { get; set; }
+            public object ID { get; set; }
+            public int CaptureStart { get; set; }
+            public int CaptureLength { get; set; }
+        }
+
+        public class StateStackItem
+        {
+            public int CommandStackCount { get; set; }
+            public int Start { get; set; }
+            public IRegexFSMState<T> State { get; set; }
+            public IEnumerator<IRegexFSMTransition<T>> TransitionEnumerator { get; set; }
+        }
+        #endregion
+
+        /// <summary>
+        /// 捕获栈。
+        /// </summary>
+        protected Stack<CaptureStackItem> captureStack = new Stack<CaptureStackItem>();
+        /// <summary>
+        /// 命令栈
+        /// </summary>
+        protected Stack<(IRegexFSMTransition<T> functionalTransition, object arg, int preCommandStackCount, int thisStart)> commandStack = new Stack<(IRegexFSMTransition<T>, object, int, int)>();
+        /// <summary>
+        /// 状态栈
+        /// </summary>
+        protected Stack<StateStackItem> stateStack = new Stack<StateStackItem>();
 
         public virtual void BeginCapture(object id)
         {
@@ -94,17 +121,17 @@ namespace SamLu.RegularExpression.StateMachine
             this.inputs = inputs;
 
             if (this.captureStack == null)
-                this.captureStack = new Stack<(object id, int stateStackCount, int captureStart, int captureLength)>();
+                this.captureStack = new Stack<CaptureStackItem>();
             else if (this.captureStack.Count != 0)
                 this.captureStack.Clear();
 
             if (this.commandStack == null)
-                this.commandStack = new Stack<(IRegexFSMTransition<T> functionalTransition, object arg, int preCommandStackCount, int thisStart)>();
+                this.commandStack = new Stack<(IRegexFSMTransition<T>, object, int, int)>();
             else if (this.commandStack.Count != 0)
                 this.commandStack.Clear();
 
             if (this.stateStack == null)
-                this.stateStack = new Stack<(IRegexFSMState<T> nfaState, int curTransitinoCount, int commandStackCount, int start)>();
+                this.stateStack = new Stack<StateStackItem>();
             else if (this.stateStack.Count != 0)
                 this.stateStack.Clear();
         }
@@ -115,7 +142,7 @@ namespace SamLu.RegularExpression.StateMachine
         private int top;
         public virtual void EndMatch()
         {
-            while (this.stateStack.Count != 0 && !this.stateStack.Peek().nfaState.IsTerminal)
+            while (this.stateStack.Count != 0 && !this.stateStack.Peek().State.IsTerminal)
                 this.stateStack.Pop();
             if (this.stateStack.Count == 0)
             {
@@ -125,7 +152,7 @@ namespace SamLu.RegularExpression.StateMachine
             }
             else
             {
-                while (this.captureStack.Count != 0 && !(this.captureStack.Peek().stateStackCount < this.stateStack.Count))
+                while (this.captureStack.Count != 0 && !(this.captureStack.Peek().StateStackCount < this.stateStack.Count))
                     this.captureStack.Pop();
                 if (this.captureStack.Count == 0) return;
                 else
@@ -134,8 +161,8 @@ namespace SamLu.RegularExpression.StateMachine
                         new Match<T>(this.inputs, this.start, this.top - this.start + 1,
                             this.captureStack.Reverse()
                                 .GroupBy(
-                                    (captureInfo => captureInfo.id),
-                                    (captureInfo => (captureInfo.captureStart, captureInfo.captureLength)),
+                                    (captureInfo => captureInfo.ID),
+                                    (captureInfo => (captureInfo.CaptureStart, captureInfo.CaptureLength)),
                                     new EqualityComparisonComparer<object>((x, y) =>
                                     {
                                         if (x == null && y == null) return false;
@@ -214,20 +241,99 @@ namespace SamLu.RegularExpression.StateMachine
         #endregion
 
         /// <summary>
+        /// <see cref="RegexFSM{T}"/> 的转换操作。此操作沿指定的转换进行。（默认的参数为此状态机本身）。
+        /// </summary>
+        /// <param name="transition">指定的转换。</param>
+        /// <returns>一个值，指示操作是否成功。</returns>
+        protected bool Transit(IRegexFSMTransition<T> transition) => this.Transit(transition, this);
+
+        /// <summary>
+        /// <see cref="RegexFSM{T}"/> 的转换操作。此操作沿指定的转换进行，接受指定的参数。
+        /// </summary>
+        /// <param name="transition">指定的转换。</param>
+        /// <param name="args">指定的参数。</param>
+        /// <returns>一个值，指示操作是否成功。</returns>
+        public sealed override bool Transit(ITransition transition, params object[] args) =>
+            base.Transit(transition, args);
+
+        /// <summary>
+        /// <see cref="RegexFSM{T}"/> 的转换操作。此操作沿指定的转换进行，接受指定的参数。
+        /// </summary>
+        /// <param name="transition">指定的转换。</param>
+        /// <param name="args">指定的参数。</param>
+        /// <returns>一个值，指示操作是否成功。</returns>
+        public virtual bool Transit(IRegexFSMTransition<T> transition, params object[] args) =>
+            base.Transit(transition, args);
+
+        /// <summary>
+        /// <see cref="RegexFSM{T}"/> 的转换操作。此操作将使有限状态机模型的 <see cref="CurrentState"/> 转换为指定的状态。（默认的参数为此状态机本身）。
+        /// </summary>
+        /// <param name="state">指定的状态。</param>
+        /// <param name="transition">指定的转换。若转换操作非正常逻辑转换，应设为 null 。</param>
+        /// <returns>一个值，指示操作是否成功。</returns>
+        protected bool Transit(IRegexFSMState<T> state, IRegexFSMTransition<T> transition) => this.Transit(state, transition, this);
+
+        /// <summary>
+        /// <see cref="RegexFSM{T}"/> 的转换操作。此操作将使有限状态机模型的 <see cref="CurrentState"/> 转换为指定的状态，接受指定的参数。
+        /// </summary>
+        /// <param name="state">指定的状态。</param>
+        /// <param name="transition">指定的转换。若转换操作非正常逻辑转换，应设为 null 。</param>
+        /// <param name="args">指定的参数。</param>
+        /// <returns>一个值，指示操作是否成功。</returns>
+        protected sealed override bool Transit(IState state, ITransition transition, params object[] args)=>
+            base.Transit(state, transition, args);
+
+        /// <summary>
+        /// <see cref="RegexFSM{T}"/> 的转换操作。此操作将使有限状态机模型的 <see cref="CurrentState"/> 转换为指定的状态，接受指定的参数。
+        /// </summary>
+        /// <param name="state">指定的状态。</param>
+        /// <param name="transition">指定的转换。若转换操作非正常逻辑转换，应设为 null 。</param>
+        /// <param name="args">指定的参数。</param>
+        /// <returns>一个值，指示操作是否成功。</returns>
+        protected virtual bool Transit(IRegexFSMState<T> state, IRegexFSMTransition<T> transition, params object[] args) =>
+            base.Transit(state, transition, args);
+
+        /// <summary>
         /// 接受一个指定输入并进行转换。返回一个值，指示操作是否成功。
         /// </summary>
         /// <param name="input">指定的输入。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
         protected internal virtual bool Transit(T input)
         {
-            // 获取可以接受输入并进行转换的转换。
-            var transition = this.CurrentState.GetTransitTransition(input);
-
-            if (transition == null)
-                // 无可行的转换，操作不成功。
-                return false;
+            IEnumerator<IRegexFSMTransition<T>> enumerator;
+            if (this.stateStack.Peek().State != this.CurrentState)
+            {
+                // 获取可以接受输入并进行转换的转换。
+                var transitions = this.CurrentState.GetOrderedTransitions();
+                if (transitions.Any())
+                {
+                    enumerator = transitions.GetEnumerator();
+                    this.stateStack.Push(new StateStackItem()
+                    {
+                        CommandStackCount = this.commandStack.Count,
+                        Start = this.start,
+                        State = this.CurrentState,
+                        TransitionEnumerator = enumerator
+                    });
+                }
+                else return false;
+            }
             else
-                return this.Transit(transition);
+                enumerator = this.stateStack.Peek().TransitionEnumerator;
+
+            if (enumerator.MoveNext())
+            {
+                IRegexFSMTransition<T> transition = enumerator.Current;
+                if (transition is IAcceptInputTransition<T>)
+                    return ((IAcceptInputTransition<T>)transition).CanAccept(input) && this.Transit(transition);
+                else if (transition is IRegexFSMTransitionProxy<T>)
+                    return ((IRegexFSMTransitionProxy<T>)transition).TransitProxy(
+                        (_transition, _args) => this.Transit(_transition.Target, _transition, _args), this
+                    ) && this.Transit(transition);
+                else
+                    return this.Transit(transition) && this.Transit(input);
+            }
+            else return false;
         }
 
         /// <summary>
@@ -236,10 +342,14 @@ namespace SamLu.RegularExpression.StateMachine
         /// <typeparam name="TInput">输入的类型。</typeparam>
         /// <param name="input">指定的输入。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
+        /// <see cref="Transit(T)"/>
+        /// <see cref="TransitManyInternal(IEnumerable{T})"/>
         public override bool Transit<TInput>(TInput input)
         {
             if (input is T)
                 return this.Transit((T)(object)input);
+            else if (input is IEnumerable<T>)
+                return this.TransitManyInternal((IEnumerable<T>)input);
             else
                 return base.Transit(input);
         }
@@ -254,14 +364,26 @@ namespace SamLu.RegularExpression.StateMachine
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
 
             this.BeginMatch(inputs);
-            
+
+            this.TransitManyInternal(inputs);
+
+            this.EndMatch();
+        }
+
+        /// <summary>
+        /// 子类重写时，提供接受一个指定输入序列并进行一组转换动作的实现。
+        /// </summary>
+        /// <param name="inputs">指定的输入序列。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="inputs"/> 的值为 null 。</exception>
+        protected virtual bool TransitManyInternal(IEnumerable<T> inputs)
+        {
             foreach (var input in inputs)
             {
                 if (!this.Transit(input))
-                    break;
+                    return false;
             }
 
-            this.EndMatch();
+            return true;
         }
     }
 
@@ -329,14 +451,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// <returns>一个值，指示操作是否成功。</returns>
         protected internal virtual bool Transit(T input)
         {
-            // 获取可以接受输入并进行转换的转换。
-            var transition = this.CurrentState.GetTransitTransition(input);
-
-            if (transition == null)
-                // 无可行的转换，操作不成功。
-                return false;
-            else
-                return this.Transit(transition);
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -345,10 +460,14 @@ namespace SamLu.RegularExpression.StateMachine
         /// <typeparam name="TInput">输入的类型。</typeparam>
         /// <param name="input">指定的输入。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
+        /// <see cref="Transit(T)"/>
+        /// <see cref="TransitManyInternal(IEnumerable{T})"/>
         public override bool Transit<TInput>(TInput input)
         {
             if (input is T)
                 return this.Transit((T)(object)input);
+            else if (input is IEnumerable<T>)
+                return this.TransitManyInternal((IEnumerable<T>)input);
             else
                 return base.Transit(input);
         }
@@ -364,13 +483,25 @@ namespace SamLu.RegularExpression.StateMachine
 
             this.BeginMatch(inputs);
 
+            this.TransitManyInternal(inputs);
+
+            this.EndMatch();
+        }
+
+        /// <summary>
+        /// 子类重写时，提供接受一个指定输入序列并进行一组转换动作的实现。
+        /// </summary>
+        /// <param name="inputs">指定的输入序列。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="inputs"/> 的值为 null 。</exception>
+        protected virtual bool TransitManyInternal(IEnumerable<T> inputs)
+        {
             foreach (var input in inputs)
             {
                 if (!this.Transit(input))
-                    break;
+                    return false;
             }
 
-            this.EndMatch();
+            return true;
         }
 
         #region IRegexFSM{T} Implementation

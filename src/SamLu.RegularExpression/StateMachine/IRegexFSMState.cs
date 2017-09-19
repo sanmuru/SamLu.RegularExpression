@@ -33,14 +33,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// <returns>一个值，指示操作是否成功。</returns>
         /// <exception cref="ArgumentNullException"><paramref name="transition"/> 的值为 null 。</exception>
         bool RemoveTransition(IRegexFSMTransition<T> transition);
-
-        /// <summary>
-        /// 获取可以接受指定输入并进行转换的转换。
-        /// </summary>
-        /// <param name="input">指定的输入。</param>
-        /// <returns>可以接受指定输入并进行转换的转换。</returns>
-        IRegexFSMTransition<T> GetTransitTransition(T input);
-
+        
         IEnumerable<IRegexFSMTransition<T>> GetOrderedTransitions();
     }
 
@@ -52,11 +45,6 @@ namespace SamLu.RegularExpression.StateMachine
     public interface IRegexFSMState<T, TTransition> : IRegexFSMState<T>, IState<TTransition>
         where TTransition : IRegexFSMTransition<T>
     {
-        /// <summary>
-        /// 获取可以接受指定输入并进行转换的转换。
-        /// </summary>
-        /// <param name="input">指定的输入。</param>
-        /// <returns>可以接受指定输入并进行转换的转换。</returns>
-        new TTransition GetTransitTransition(T input);
+        new IEnumerable<TTransition> GetOrderedTransitions();
     }
 }
