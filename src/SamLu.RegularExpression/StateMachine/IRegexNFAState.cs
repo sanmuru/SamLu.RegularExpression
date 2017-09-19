@@ -16,7 +16,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// <summary>
         /// 添加指定的 ε 转换。
         /// </summary>
-        /// <param name="epsilonTransition">要添加的转换。</param>
+        /// <param name="epsilonTransition">要添加的 ε 转换。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
         /// <exception cref="ArgumentNullException"><paramref name="epsilonTransition"/> 的值为 null 。</exception>
         bool AttachTransition(IRegexFSMEpsilonTransition<T> epsilonTransition);
@@ -24,7 +24,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// <summary>
         /// 移除指定的 ε 转换。
         /// </summary>
-        /// <param name="epsilonTransition">要添加的转换。</param>
+        /// <param name="epsilonTransition">要添加的 ε 转换。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
         /// <exception cref="ArgumentNullException"><paramref name="epsilonTransition"/> 的值为 null 。</exception>
         bool RemoveTransition(IRegexFSMEpsilonTransition<T> epsilonTransition);

@@ -706,7 +706,7 @@ namespace SamLu.RegularExpression
             Type supportedType = sourceTypes.FirstOrDefault(type => type.IsGenericType && type.GetGenericTypeDefinition() == __itemTypeDefinition);
             if (supportedType != null)
             { // 存在指定的类型。
-                var method = itemType.GetMethod(handlerName, BindingFlags.IgnoreCase | BindingFlags.NonPublic).MakeGenericMethod(itemType.GetGenericArguments());
+                var method = itemType.GetMethod(handlerName, BindingFlags.IgnoreCase | BindingFlags.NonPublic).MakeGenericMethod(supportedType.GetGenericArguments());
                 var handler = method.CreateDelegate(typeof(RegexMatchesHandler<>).MakeGenericType(supportedType), method.IsStatic ? null : this);
                 result = this.MatchesInternal(item, reader, handler, out bool isEnd);
 
@@ -715,7 +715,7 @@ namespace SamLu.RegularExpression
                 return true;
             }
             else
-            { // 存在指定的类型。
+            { // 不存在指定的类型。
                 result = false;
                 cache.IsEnd = reader.IsEnd();
                 cache.Handled = true;

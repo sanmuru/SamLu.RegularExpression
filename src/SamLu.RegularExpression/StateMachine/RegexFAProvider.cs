@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -171,9 +172,12 @@ namespace SamLu.RegularExpression.StateMachine
 
             return epsilonTransition;
         }
-        #endregion
 
-        protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexGroup(RegexGroup<T> group, IRegexNFA<T> nfa, IRegexNFAState<T> state)
+        protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexGroup(
+            RegexGroup<T> group,
+            IRegexNFA<T> nfa,
+            IRegexNFAState<T> state
+        )
         {
             IRegexNFAState<T> nextState = state;
 
@@ -195,7 +199,13 @@ namespace SamLu.RegularExpression.StateMachine
             nextState = this.contextInfo.ActivateRegexNFAState();
             nfa.SetTarget(captureStartTransition, nextState);
 
-            IRegexFSMTransition<T> transition = this.GenerateNFATransitionFromRegexObject(group.InnerRegex, nfa, nextState);
+            IRegexFSMTransition<T> transition;
+            if (group is RegexBalanceGroup<T> balanceGroup)
+                transition = this.GenerateNFATransitionFromRegexBalanceGroup(balanceGroup, nfa, nextState);
+            else if (group is RegexBalanceGroupItem<T> balanceGroupItem)
+                transition = this.GenerateNFATransitionFromRegexBalanceGroupItem(balanceGroupItem, nfa, nextState);
+            else
+                transition = this.GenerateNFATransitionFromRegexObject(group.InnerRegex, nfa, nextState);
             nfa.AttachTransition(nextState, transition);
             nextState = this.contextInfo.ActivateRegexNFAState();
             nfa.SetTarget(transition, nextState);
@@ -230,13 +240,291 @@ namespace SamLu.RegularExpression.StateMachine
             return captureEndTransition;
         }
 
-        protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexBalanceGroup(RegexBalanceGroup<T> balanceGroup, IRegexNFA<T> nfa, IRegexNFAState<T> state)
+        protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexBalanceGroup(
+            RegexBalanceGroup<T> balanceGroup,
+            IRegexNFA<T> nfa,
+            IRegexNFAState<T> state
+        )
         {
-            var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)nfa.UserData[RegexProvider<T>.Cache.BALANCE_GROUP_CACHE_KEY];
+            IRegexNFAState<T> nextState = state;
 
-            throw new NotImplementedException();
+            var captureStartTransition = new RegexCaptureStartTransition<T>(balanceGroup);
+            captureStartTransition.TransitAction += new CustomizedAction((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)fsm.UserData[RegexProvider<T>.Cache.BALANCE_GROUP_CACHE_KEY];
+
+                    if (!balanceGroupCache.ContainsKey(balanceGroup))
+                        balanceGroupCache.Add(balanceGroup, new Stack<object>());
+                }
+            });
+
+            var transition = this.GenerateNFATransitionFromRegexObject(balanceGroup.InnerRegex, nfa, nextState);
+            nfa.AttachTransition(state, transition);
+            nextState = this.contextInfo.ActivateRegexNFAState();
+            nfa.SetTarget(transition, nextState);
+
+            var predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)fsm.UserData[RegexProvider<T>.Cache.BALANCE_GROUP_CACHE_KEY];
+
+                    return (balanceGroupCache.ContainsKey(balanceGroup) && balanceGroupCache[balanceGroup] is Stack<object> seedStack) && seedStack.Count != 0;
+                }
+                else return false;
+            });
+            nfa.AttachTransition(nextState, predicateTransition);
+            nextState = this.contextInfo.ActivateRegexNFAState();
+            nfa.SetTarget(predicateTransition, nextState);
+
+            var captureEndTransition = new RegexCaptureEndTransition<T>(balanceGroup);
+            predicateTransition.TransitAction += new CustomizedAction((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)fsm.UserData[RegexProvider<T>.Cache.BALANCE_GROUP_CACHE_KEY];
+
+                    balanceGroupCache[balanceGroup].Pop(); 
+                }
+            });
+            nfa.AttachTransition(nextState, captureEndTransition);
+
+            return captureEndTransition;
         }
 
+        protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexBalanceGroupItem(
+            RegexBalanceGroupItem<T> balanceGroupItem,
+            IRegexNFA<T> nfa,
+            IRegexNFAState<T> state
+        )
+        {
+            IRegexFSMTransition<T> transition;
+            if (
+                this.GenerateNFATransitionFromRegexBalanceGroup__ItemInternal(
+                    typeof(RegexBalanceGroupOpenItem<,>),
+                    nameof(this.GenerateNFATransitionFromRegexBalanceGroupOpenItem),
+                    balanceGroupItem, nfa, state, out transition
+                ) ||
+                this.GenerateNFATransitionFromRegexBalanceGroup__ItemInternal(
+                    typeof(RegexBalanceGroupSubItem<,>),
+                    nameof(this.GenerateNFATransitionFromRegexBalanceGroupSubItem),
+                    balanceGroupItem, nfa, state, out transition
+                ) ||
+                this.GenerateNFATransitionFromRegexBalanceGroup__ItemInternal(
+                    typeof(RegexBalanceGroupCloseItem<,>),
+                    nameof(this.GenerateNFATransitionFromRegexBalanceGroupCloseItem),
+                    balanceGroupItem, nfa, state, out transition
+                )
+            )
+                return transition;
+            else
+            {
+                IRegexNFAState<T> nextState = state;
+
+                RegexPredicateTransition<T> predicateTransition;
+
+                predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+                {
+                    if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                    {
+                        var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)fsm.UserData[RegexProvider<T>.Cache.BALANCE_GROUP_CACHE_KEY];
+
+                        return (balanceGroupCache.ContainsKey(balanceGroupItem.___balanceGroup) && balanceGroupCache[balanceGroupItem.___balanceGroup] is Stack<object> seedStack) && seedStack.Count != 0 &&
+                            // 方法的返回值是 bool 。
+                            balanceGroupItem.Method.Method.ReturnType == typeof(bool);
+                    }
+                    else return false;
+                });
+                predicateTransition.TransitAction += new CustomizedAction((sender, args) =>
+                    ((IRegexFunctionalTransition<T>)sender).UserData["RESULT"] = (bool)balanceGroupItem.Method.DynamicInvoke()
+                );
+                nfa.AttachTransition(nextState, predicateTransition);
+                nextState = this.contextInfo.ActivateRegexNFAState();
+                nfa.SetTarget(predicateTransition, nextState);
+                predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+                    (bool)((IRegexFunctionalTransition<T>)sender).UserData["RESULT"]
+                );
+                nfa.AttachTransition(nextState, predicateTransition);
+                nextState = this.contextInfo.ActivateRegexNFAState();
+                nfa.SetTarget(predicateTransition, nextState);
+
+                transition = this.GenerateNFATransitionFromRegexObject(balanceGroupItem.InnerRegex, nfa, state);
+                nfa.AttachTransition(nextState, transition);
+
+                return transition;
+            }
+        }
+
+        private bool GenerateNFATransitionFromRegexBalanceGroup__ItemInternal(
+            Type __itemTypeDefinition,
+            string handlerName,
+            RegexBalanceGroupItem<T> item,
+            IRegexNFA<T> nfa,
+            IRegexNFAState<T> state,
+            out IRegexFSMTransition<T> transition
+        )
+        {
+            Type itemType = item.GetType();
+            IEnumerable<Type> sourceTypes;
+            if (__itemTypeDefinition.IsInterface)
+                sourceTypes = itemType.GetInterfaces();
+            else
+            {
+                List<Type> baseTypes = new List<Type> { itemType };
+                for (Type type = itemType; type.BaseType != typeof(object); type = type.BaseType) baseTypes.Add(itemType);
+                sourceTypes = baseTypes;
+            }
+            Type supportedType = sourceTypes.FirstOrDefault(type => type.IsGenericType && type.GetGenericTypeDefinition() == __itemTypeDefinition);
+            if (supportedType != null)
+            { // 存在指定的类型。
+                var method = itemType.GetMethod(handlerName, BindingFlags.IgnoreCase | BindingFlags.NonPublic).MakeGenericMethod(supportedType.GetGenericArguments());
+
+                transition = (IRegexFSMTransition<T>)method.Invoke(method.IsStatic ? null : this, new object[] { item, nfa, state });
+                return true;
+            }
+            else
+            { // 不存在指定的类型。
+                transition = null;
+                return false;
+            }
+        }
+
+        protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexBalanceGroupOpenItem<TSeed>(
+            RegexBalanceGroupOpenItem<T, TSeed> openItem,
+            IRegexNFA<T> nfa,
+            IRegexNFAState<T> state
+        )
+        {
+            IRegexNFAState<T> nextState = state;
+
+            RegexPredicateTransition<T> predicateTransition;
+
+            predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)fsm.UserData[RegexProvider<T>.Cache.BALANCE_GROUP_CACHE_KEY];
+
+                    return (balanceGroupCache.ContainsKey(openItem.___balanceGroup) && balanceGroupCache[openItem.___balanceGroup] is Stack<object> seedStack) && seedStack.Count != 0;
+                }
+                else return false;
+            });
+            predicateTransition.TransitAction += new CustomizedAction((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)fsm.UserData[RegexProvider<T>.Cache.BALANCE_GROUP_CACHE_KEY];
+
+                    balanceGroupCache[openItem.___balanceGroup].Push(openItem.Method.DynamicInvoke(null));
+                }
+            });
+            nfa.AttachTransition(nextState, predicateTransition);
+            nextState = this.contextInfo.ActivateRegexNFAState();
+            nfa.SetTarget(predicateTransition, nextState);
+            
+            var transition = this.GenerateNFATransitionFromRegexObject(openItem.InnerRegex, nfa, state);
+            nfa.AttachTransition(nextState, transition);
+
+            return transition;
+        }
+
+        protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexBalanceGroupSubItem<TSeed>(
+            RegexBalanceGroupSubItem<T, TSeed> subItem,
+            IRegexNFA<T> nfa,
+            IRegexNFAState<T> state
+        )
+        {
+            IRegexNFAState<T> nextState = state;
+
+            RegexPredicateTransition<T> predicateTransition;
+
+            predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)fsm.UserData[RegexProvider<T>.Cache.BALANCE_GROUP_CACHE_KEY];
+
+                    return (balanceGroupCache.ContainsKey(subItem.___balanceGroup) && balanceGroupCache[subItem.___balanceGroup] is Stack<object> seedStack) && seedStack.Count != 0;
+                }
+                else return false;
+            });
+            predicateTransition.TransitAction += new CustomizedAction((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)fsm.UserData[RegexProvider<T>.Cache.BALANCE_GROUP_CACHE_KEY];
+
+                    var seedStack = balanceGroupCache[subItem.___balanceGroup];
+                    seedStack.Push(subItem.Method.DynamicInvoke(seedStack.Pop()));
+                }
+            });
+            nfa.AttachTransition(nextState, predicateTransition);
+            nextState = this.contextInfo.ActivateRegexNFAState();
+            nfa.SetTarget(predicateTransition, nextState);
+            predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)fsm.UserData[RegexProvider<T>.Cache.BALANCE_GROUP_CACHE_KEY];
+
+                    var stack = balanceGroupCache[subItem.___balanceGroup];
+                    return subItem.Predicate((TSeed)stack.Pop());
+                }
+                else return false;
+            });
+            nfa.AttachTransition(nextState, predicateTransition);
+            nextState = this.contextInfo.ActivateRegexNFAState();
+            nfa.SetTarget(predicateTransition, nextState);
+
+            var transition = this.GenerateNFATransitionFromRegexObject(subItem.InnerRegex, nfa, state);
+            nfa.AttachTransition(nextState, transition);
+
+            return transition;
+        }
+
+        protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexBalanceGroupCloseItem<TSeed>(
+            RegexBalanceGroupCloseItem<T, TSeed> closeItem,
+            IRegexNFA<T> nfa,
+            IRegexNFAState<T> state
+        )
+        {
+            IRegexNFAState<T> nextState = state;
+
+            RegexPredicateTransition<T> predicateTransition;
+
+            predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)fsm.UserData[RegexProvider<T>.Cache.BALANCE_GROUP_CACHE_KEY];
+
+                    return ((balanceGroupCache.ContainsKey(closeItem.___balanceGroup) && balanceGroupCache[closeItem.___balanceGroup] is Stack<object> seedStack) && seedStack.Count != 0) &&
+                        (bool)closeItem.Method.DynamicInvoke(seedStack.Pop());
+                }
+                else return false;
+            });
+            predicateTransition.TransitAction += new CustomizedAction((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)fsm.UserData[RegexProvider<T>.Cache.BALANCE_GROUP_CACHE_KEY];
+
+                    var stack = balanceGroupCache[closeItem.___balanceGroup];
+                    stack.Push(closeItem.Method.DynamicInvoke(stack.Pop()));
+                }
+            });
+            nfa.AttachTransition(nextState, predicateTransition);
+            nextState = this.contextInfo.ActivateRegexNFAState();
+            nfa.SetTarget(predicateTransition, nextState);
+
+            var transition = this.GenerateNFATransitionFromRegexObject(closeItem.InnerRegex, nfa, state);
+            nfa.AttachTransition(nextState, transition);
+
+            return transition;
+        }
+        #endregion
         #endregion
 
         public IRegexDFA<T> GenerateRegexDFAFromRegexFSM(IRegexFSM<T> nfa)

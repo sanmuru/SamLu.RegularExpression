@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
 {
-    public sealed class RegexCaptureStartTransition<T> : FSMTransition, IRegexFunctionalTransition<T>
+    public sealed class RegexCaptureStartTransition<T> : RegexFunctionalTransition<T>
     {
         private RegexGroup<T> group;
 
@@ -17,22 +17,9 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
 
         public RegexCaptureStartTransition(RegexGroup<T> group) =>
             this.group = group ?? throw new ArgumentNullException(nameof(group));
-
-        /// <summary>
-        /// 获取 <see cref="RegexCaptureStartTransition{T}"/> 指向的状态。
-        /// </summary>
-        new public IRegexFSMState<T> Target => (IRegexFSMState<T>)base.Target;
-
-        /// <summary>
-        /// 将转换的目标设为指定状态。
-        /// </summary>
-        /// <param name="state">指定的状态。</param>
-        /// <returns>一个值，指示操作是否成功。</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="state"/> 的值为 null 。</exception>
-        public bool SetTarget(IRegexFSMState<T> state) => base.SetTarget(state);
     }
 
-    public sealed class RegexCaptureStartTransition<T, TState> : FSMTransition<TState>, IRegexFunctionalTransition<T, TState>
+    public sealed class RegexCaptureStartTransition<T, TState> : RegexFunctionalTransition<T, TState>
         where TState : IRegexFSMState<T>
     {
         private RegexGroup<T> group;
@@ -42,12 +29,5 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
 
         public RegexCaptureStartTransition(RegexGroup<T> group) =>
             this.group = group ?? throw new ArgumentNullException(nameof(group));
-
-        #region IRegexFSMTransition{T} Implementation
-        IRegexFSMState<T> IRegexFSMTransition<T>.Target => this.Target;
-
-        bool IRegexFSMTransition<T>.SetTarget(IRegexFSMState<T> state) =>
-            base.SetTarget((TState)state);
-        #endregion
     }
 }
