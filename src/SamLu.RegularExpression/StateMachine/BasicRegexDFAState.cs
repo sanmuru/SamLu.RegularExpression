@@ -38,7 +38,6 @@ namespace SamLu.RegularExpression.StateMachine
             this.EntryAction = state.EntryAction;
             this.ExitAction = state.ExitAction;
             this.InputAction = state.InputAction;
-            this.TransitAction = state.TransitAction;
         }
 
         #region AttachTransition

@@ -54,6 +54,7 @@
     <Compile Include="Adapter\RegexRangeAdaptor.cs" />
     <Compile Include="Adapter\SetAdaptor.cs" />
     <Compile Include="Capture.cs" />
+    <Compile Include="CustomizedAction.cs" />
     <Compile Include="Extend\Group.cs" />
     <Compile Include="Extend\GroupCollection.cs" />
     <Compile Include="Extend\IRegexAnchorPoint.cs" />
@@ -79,6 +80,8 @@
     <Compile Include="IAcceptInputTransition.cs" />
     <Compile Include="IRange.cs" />
     <Compile Include="MatchCollection.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexFunctionalTransition.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexFunctionalTransitionMetadataAttribute.cs" />
     <Compile Include="StateMachine\IRegexDFA.cs" />
     <Compile Include="Match.cs" />
     <Compile Include="ObjectModel\CharRange.cs" />
@@ -120,7 +123,7 @@
     <Compile Include="StateMachine\RangeSetRegexFATransition.cs" />
     <Compile Include="StateMachine\RegexFSM.cs" />
     <Compile Include="StateMachine\IRegexFSMState.cs" />
-    <Compile Include="StateMachine\FunctionalTransitions\RegexFunctionalTransition.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\IRegexFunctionalTransition.cs" />
     <Compile Include="StateMachine\RegexFSMMatchEvent.cs" />
     <Compile Include="StateMachine\RegexFSMUtility.cs" />
     <Compile Include="System\Collections\Generic\IReadOnlySet.cs" />

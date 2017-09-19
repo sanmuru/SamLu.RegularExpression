@@ -76,11 +76,6 @@ namespace RegexTest
         public class MyRegexFAProvider<T> : RegexFAProvider<T>
         {
             public MyRegexFAProvider(IRegexStateMachineActivationContextInfo<T> contextInfo) : base(contextInfo) { }
-
-            protected override BasicRegexFATransition<T, BasicRegexNFAState<T>> GenerateNFATransitionFromRegexCondition(RegexCondition<T> condition, BasicRegexNFA<T> nfa, BasicRegexNFAState<T> state)
-            {
-                return base.GenerateNFATransitionFromRegexCondition(condition, nfa, state);
-            }
         }
 
         #region char

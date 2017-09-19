@@ -260,7 +260,7 @@ namespace SamLu.RegularExpression.StateMachine
         public static IRegexFSM<T> Optimize<T>(this IRegexFSM<T> fsm)
         {
             fsm.EpsilonClosure();
-
+            
             var result = new RegexFSM<T>() { StartState = new RegexStateState<T>(fsm.StartState) };
 
             var states = fsm.States;
@@ -277,7 +277,7 @@ namespace SamLu.RegularExpression.StateMachine
                 .SelectMany(state => state.M())
                 .Select(group => new RegexFunctionalTransitionGroupTransition<T>(group))
                 .ToArray();
-            
+
             var D = new Dictionary<IRegexFSMState<T>, IRegexFSMState<T>>();
             Func<IRegexFSMState<T>, IRegexFSMState<T>> func = (formerState) =>
             {
@@ -299,11 +299,11 @@ namespace SamLu.RegularExpression.StateMachine
             return result;
         }
 
-        private sealed class RegexStateState<T>:FSMState<IRegexFSMTransition<T>>,IRegexFSMState<T>
+        private sealed class RegexStateState<T> : FSMState<IRegexFSMTransition<T>>, IRegexFSMState<T>
         {
             public IRegexFSMState<T> InnerState { get; private set; }
 
-            public RegexStateState(IRegexFSMState<T> state)=>this.InnerState=state;
+            public RegexStateState(IRegexFSMState<T> state) => this.InnerState = state;
 
             public IRegexFSMTransition<T> GetTransitTransition(T input)
             {

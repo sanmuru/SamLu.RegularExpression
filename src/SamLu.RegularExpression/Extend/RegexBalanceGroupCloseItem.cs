@@ -6,10 +6,18 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.Extend
 {
+    /// <summary>
+    /// 表示正则平衡组的结束项。
+    /// </summary>
+    /// <typeparam name="T">正则接受的对象的类型。</typeparam>
+    /// <typeparam name="TSeed">正则平衡组的结束项的内部累加器参数的类型。</typeparam>
     public class RegexBalanceGroupCloseItem<T, TSeed> : RegexBalanceGroupItem<T>
     {
         protected Predicate<TSeed> method;
 
+        /// <summary>
+        /// 获取正则平衡组的结束项在符合条件时执行的方法。
+        /// </summary>
         public sealed override Delegate Method => this.method;
 
         public RegexBalanceGroupCloseItem(RegexObject<T> regex, Predicate<TSeed> method) : base(regex) =>

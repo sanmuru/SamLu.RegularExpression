@@ -7,14 +7,27 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.Extend
 {
+    /// <summary>
+    /// 表示正则平衡组。
+    /// </summary>
+    /// <typeparam name="T">正则接受的对象的类型。</typeparam>
     public class RegexBalanceGroup<T> : RegexGroup<T>
     {
         protected RegexBalanceGroupItem<T> openItem;
         protected IList<RegexBalanceGroupItem<T>> subItems = new List<RegexBalanceGroupItem<T>>();
         protected RegexBalanceGroupItem<T> closeItem;
 
+        /// <summary>
+        /// 获取正则平衡组的开始项。
+        /// </summary>
         public RegexBalanceGroupItem<T> OpenItem => this.openItem;
+        /// <summary>
+        /// 获取正则平衡组的子项。
+        /// </summary>
         public ICollection<RegexBalanceGroupItem<T>> SubItems => new ReadOnlyCollection<RegexBalanceGroupItem<T>>(this.subItems);
+        /// <summary>
+        /// 获取正则平衡组的结束项。
+        /// </summary>
         public RegexBalanceGroupItem<T> CloseItem => this.closeItem;
 
         public RegexBalanceGroup(RegexObject<T> regex, RegexObject<T> openItemInnerRegex, RegexObject<T> closeItemInnerRegex, object id = null) :
@@ -45,7 +58,7 @@ namespace SamLu.RegularExpression.Extend
                       new RegexBalanceGroupSubItem<T, int>(
                           subItemInnerRegex,
                           (seed => seed--),
-                          (seed => seed <= 0)
+                          (seed => seed > 0)
                       )
                 )
             ) this.RegisterSubItem(subItem);

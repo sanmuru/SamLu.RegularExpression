@@ -19,9 +19,9 @@ namespace SamLu.RegularExpression.StateMachine
         new IRegexFSMState<T> CurrentState { get; }
         
         /// <summary>
-        /// 获取 <see cref="IRegexFSM{T}"/> 的起始状态。
+        /// 获取或设置 <see cref="IRegexFSM{T}"/> 的起始状态。
         /// </summary>
-        new IRegexFSMState<T> StartState { get; }
+        new IRegexFSMState<T> StartState { get; set; }
 
         /// <summary>
         /// 获取 <see cref="IRegexFSM{T}"/> 的状态集。
@@ -68,6 +68,10 @@ namespace SamLu.RegularExpression.StateMachine
         /// <param name="inputs">指定的输入序列。</param>
         /// <exception cref="ArgumentNullException"><paramref name="inputs"/> 的值为 null 。</exception>
         void TransitMany(IEnumerable<T> inputs);
+
+        void BeginCapture(object id);
+
+        void EndCapture(object id);
     }
 
     /// <summary>

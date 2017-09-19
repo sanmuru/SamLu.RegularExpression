@@ -76,6 +76,16 @@ namespace SamLu.RegularExpression.StateMachine
         protected Stack<(IRegexFSMTransition<T> functionalTransition, object arg, int preCommandStackCount, int thisStart)> commandStack = new Stack<(IRegexFSMTransition<T> functionalTransition, object arg, int preCommandStackCount, int thisStart)>();
         protected Stack<(IRegexFSMState<T> nfaState, int curTransitinoCount, int commandStackCount, int start)> stateStack = new Stack<(IRegexFSMState<T> nfaState, int curTransitinoCount, int commandStackCount, int start)>();
 
+        public virtual void BeginCapture(object id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void EndCapture(object id)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// 初始化状态机实例必要字段，进行匹配前准备工作。
         /// </summary>
@@ -289,6 +299,16 @@ namespace SamLu.RegularExpression.StateMachine
 
         protected IEnumerable<T> inputs;
 
+        public virtual void BeginCapture(object id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void EndCapture(object id)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// 初始化状态机实例必要字段，进行匹配前准备工作。
         /// </summary>
@@ -356,7 +376,7 @@ namespace SamLu.RegularExpression.StateMachine
         #region IRegexFSM{T} Implementation
         IRegexFSMState<T> IRegexFSM<T>.CurrentState => base.CurrentState;
 
-        IRegexFSMState<T> IRegexFSM<T>.StartState => base.StartState;
+        IRegexFSMState<T> IRegexFSM<T>.StartState { get => this.StartState; set => this.StartState = (TState)value; }
 
         ICollection<IRegexFSMState<T>> IRegexFSM<T>.States =>
             new ReadOnlyCollection<IRegexFSMState<T>>(

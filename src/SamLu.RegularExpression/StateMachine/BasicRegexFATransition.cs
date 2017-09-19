@@ -10,49 +10,58 @@ namespace SamLu.RegularExpression.StateMachine
     /// <summary>
     /// 表示基础正则表达式（ Basic Regular Expression ）构造的有限自动机的转换。
     /// </summary>
-    public class BasicRegexFATransitionBase<T> : FSMTransition, IRegexFSMTransition<T>, IAcceptInputTransition<T>
+    public class BasicRegexFATransition<T> : FSMTransition, IAcceptInputTransition<T>
     {
         private Predicate<T> predicate;
         /// <summary>
-        /// 获取一个方法，该方法确定 <see cref="BasicRegexFATransitionBase{T}"/> 接受的输入是否满足条件。
+        /// 获取一个方法，该方法确定 <see cref="BasicRegexFATransition{T}"/> 接受的输入是否满足条件。
         /// </summary>
         public virtual Predicate<T> Predicate => this.predicate;
 
         /// <summary>
         /// 初始化 <see cref="BasicRegexFATransition{T, TRegexFAState}"/> 类的新实例。
         /// </summary>
-        protected BasicRegexFATransitionBase() { }
+        protected BasicRegexFATransition() { }
 
         /// <summary>
-        /// 初始化 <see cref="BasicRegexFATransitionBase{T}"/> 类的新实例。该实例使用指定的确定 <see cref="BasicRegexFATransitionBase{T}"/> 接受的输入是否满足条件的方法。
+        /// 初始化 <see cref="BasicRegexFATransition{T}"/> 类的新实例。该实例使用指定的确定 <see cref="BasicRegexFATransition{T}"/> 接受的输入是否满足条件的方法。
         /// </summary>
-        /// <param name="predicate">指定的确定 <see cref="BasicRegexFATransitionBase{T}"/> 接受的输入是否满足条件的方法。</param>
+        /// <param name="predicate">指定的确定 <see cref="BasicRegexFATransition{T}"/> 接受的输入是否满足条件的方法。</param>
         /// <exception cref="ArgumentNullException"><paramref name="predicate"/> 的值为 null 。</exception>
-        public BasicRegexFATransitionBase(Predicate<T> predicate) : this()
+        public BasicRegexFATransition(Predicate<T> predicate) : this()
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
             this.predicate = predicate;
         }
-
-        public BasicRegexFATransitionBase(BasicRegexFATransition<T, BasicRegexNFAState<T>> transition) :
+        
+        public BasicRegexFATransition(BasicRegexFATransition<T, BasicRegexNFAState<T>> transition) :
             this((transition ?? throw new ArgumentNullException(nameof(transition))).Predicate)
-        { }
+        {
+            this.TransitAction = transition.TransitAction;
+        }
 
-        public BasicRegexFATransitionBase(BasicRegexFATransition<T, BasicRegexDFAState<T>> transition) :
+        public BasicRegexFATransition(BasicRegexFATransition<T, BasicRegexDFAState<T>> transition) :
             this((transition ?? throw new ArgumentNullException(nameof(transition))).Predicate)
-        { }
+        {
+            this.TransitAction = transition.TransitAction;
+        }
 
-        public BasicRegexFATransitionBase(IAcceptInputTransition<T> transition) :
+        public BasicRegexFATransition(IAcceptInputTransition<T> transition) :
             this((transition ?? throw new ArgumentNullException(nameof(transition))).CanAccept)
-        { }
+        {
+            this.TransitAction = transition.TransitAction;
+        }
 
-        public static BasicRegexFATransitionBase<T> Adapt<TRegexFAState>(BasicRegexFATransition<T, TRegexFAState> transition)
+        public static BasicRegexFATransition<T> Adapt<TRegexFAState>(BasicRegexFATransition<T, TRegexFAState> transition)
             where TRegexFAState : IRegexFSMState<T, BasicRegexFATransition<T, TRegexFAState>> =>
-            new BasicRegexFATransitionBase<T>((transition ?? throw new ArgumentNullException(nameof(transition))).Predicate);
+            new BasicRegexFATransition<T>((transition ?? throw new ArgumentNullException(nameof(transition))).Predicate)
+            {
+                TransitAction = transition.TransitAction
+            };
 
         /// <summary>
-        /// 获取 <see cref="BasicRegexFATransitionBase{T}"/> 指向的状态。
+        /// 获取 <see cref="BasicRegexFATransition{T}"/> 指向的状态。
         /// </summary>
         new public virtual IRegexFSMState<T> Target => (IRegexFSMState<T>)base.Target;
 

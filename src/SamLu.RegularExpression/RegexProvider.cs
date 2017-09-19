@@ -801,18 +801,22 @@ namespace SamLu.RegularExpression
             return result;
         }
 
-        protected virtual bool RegexBalanceGroupSubItemMatchesInternal<TSeed>(RegexBalanceGroupOpenItem<T, TSeed> subItem, NodeReader<IEnumerable<T>, T> reader, Cache cache)
+        protected virtual bool RegexBalanceGroupSubItemMatchesInternal<TSeed>(RegexBalanceGroupSubItem<T, TSeed> subItem, NodeReader<IEnumerable<T>, T> reader, Cache cache)
         {
             var balanceGroupCache = (IDictionary<RegexBalanceGroup<T>, Stack<object>>)cache[Cache.BALANCE_GROUP_CACHE_KEY];
 
-            if (this.MatchesInternal(subItem.InnerRegex, reader,
-                new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
-                out bool isEnd
-            ))
+            if (balanceGroupCache.ContainsKey(subItem.___balanceGroup))
             {
-                if (balanceGroupCache.ContainsKey(subItem.___balanceGroup))
+                var stack = balanceGroupCache[subItem.___balanceGroup];
+
+                if (
+                    subItem.Predicate((TSeed)stack.Peek()) &&
+                    this.MatchesInternal(subItem.InnerRegex, reader,
+                        new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                        out bool isEnd
+                    )
+                )
                 {
-                    var stack = balanceGroupCache[subItem.___balanceGroup];
                     stack.Push(subItem.Method.DynamicInvoke(stack.Pop()));
 
                     return true;

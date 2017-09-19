@@ -9,7 +9,7 @@ namespace SamLu.RegularExpression.Extend
 {
     public class GroupCollection<T> : ICollection<Group<T>>
     {
-        private ICollection<Group<T>> groups;
+        private ICollection<Group<T>> groups = new List<Group<T>>();
 
         public int Count => this.groups.Count;
 
