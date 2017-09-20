@@ -66,6 +66,11 @@
     <Compile Include="Extend\RegexEndBorder.cs" />
     <Compile Include="Extend\RegexGroup.cs" />
     <Compile Include="Extend\RegexGroupReference.cs" />
+    <Compile Include="Extend\RegexMultiBranchBranch.cs" />
+    <Compile Include="Extend\RegexMultiBranchBranchCollection.cs" />
+    <Compile Include="Extend\RegexMultiBranchBranchPredicate.cs" />
+    <Compile Include="Extend\RegexMultiBranchGroupReferenceBranchPredicate.cs" />
+    <Compile Include="Extend\RegexMultiBranchPatternBranchPredicate.cs" />
     <Compile Include="Extend\RegexNamedGroup.cs" />
     <Compile Include="Extend\RegexMultiBranch.cs" />
     <Compile Include="Extend\RegexNegativeCaptureGroup.cs" />

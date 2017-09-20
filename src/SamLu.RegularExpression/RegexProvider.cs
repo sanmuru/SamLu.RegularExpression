@@ -898,14 +898,14 @@ namespace SamLu.RegularExpression
         {
             bool result;
             bool isEnd;
-            foreach (var pair in multiBranch.Branches)
+            foreach (var branch in multiBranch.Branches)
             {
-                if (this.MatchesInternal(pair.Key, reader,
-                    new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
+                if (this.MatchesInternal(branch.Predicate, reader,
+                    new RegexMatchesHandler<RegexMultiBranchBranchPredicate<T>>(this.RegexMultiBranchBranchPredicateMatchesInternal),
                     out isEnd
                 ))
                 {
-                    result = this.MatchesInternal(pair.Value, reader,
+                    result = this.MatchesInternal(branch.Pattern, reader,
                         new RegexMatchesHandler<RegexObject<T>>(this.RegexObjectMatchesInternal),
                         out isEnd
                     );
@@ -922,6 +922,65 @@ namespace SamLu.RegularExpression
             cache.IsEnd = isEnd;
             cache.Handled = true;
             yield return result;
+        }
+
+        protected virtual bool RegexMultiBranchBranchPredicateMatchesInternal(RegexMultiBranchBranchPredicate<T> predicate, NodeReader<IEnumerable<T>, T> reader, Cache cache)
+        {
+            if (predicate is RegexMultiBranchPatternBranchPredicate<T> patternPredicate)
+                return this.RegexMultiBranchPatternBranchPredicateMatchesInternal(patternPredicate, reader, cache);
+            else if (predicate is RegexMultiBranchGroupReferenceBranchPredicate<T> groupReferencePredicate)
+                return this.RegexMultiBranchGroupReferenceBranchPredicateMatchesInternal(groupReferencePredicate, reader, cache);
+            else
+                throw new NotSupportedException();
+        }
+
+        protected virtual bool RegexMultiBranchPatternBranchPredicateMatchesInternal(RegexMultiBranchPatternBranchPredicate<T> patternPredicate, NodeReader<IEnumerable<T>, T> reader, Cache cache)
+        {
+            IRegexAnchorPoint<T> pattern;
+            if (patternPredicate.Pattern is IRegexAnchorPoint<T>)
+                pattern = (IRegexAnchorPoint<T>)patternPredicate.Pattern;
+            else
+                pattern = new RegexZeroLengthObject<T>(patternPredicate.Pattern);
+
+            bool result = this.MatchesInternal(
+                pattern,
+                reader,
+                new Func<IRegexAnchorPoint<T>, NodeReader<IEnumerable<T>, T>, Cache, bool>(this.IRegexAnchorPointMatchesInternal),
+                out bool isEnd
+            );
+            cache.IsEnd = isEnd;
+            cache.Handled = true;
+
+            return result;
+        }
+
+        protected virtual bool RegexMultiBranchGroupReferenceBranchPredicateMatchesInternal(RegexMultiBranchGroupReferenceBranchPredicate<T> groupReferencePredicate, NodeReader<IEnumerable<T>, T> reader, Cache cache)
+        {
+            cache.IsEnd = reader.IsEnd();
+            cache.Handled = true;
+
+            var regexGroups = (Stack<RegexGroup<T>>)cache[Cache.REGEX_GROUPS_CACHE_KEY];
+
+            RegexGroupReference<T> groupReference = groupReferencePredicate.GroupReference;
+            if (groupReference.IsDetermined)
+                return true;
+            else
+            {
+                var groups = regexGroups.Where(_group => _group.ID == groupReference.GroupID).ToArray();
+                switch (groups.Length)
+                {
+                    case 0:
+                        //throw new InvalidOperationException("未找到引用的正则组。");
+                        return false;
+                    case 1:
+                        return true;
+                    default:
+                        return true;
+                        //throw new InvalidOperationException("找到多个重复 ID 的正则组。");
+                        //return false;
+
+                }
+            }
         }
         #endregion
 
