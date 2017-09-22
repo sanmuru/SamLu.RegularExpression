@@ -9,13 +9,25 @@ namespace SamLu.RegularExpression.Extend
 {
     public class GroupCollection<T> : ICollection<Group<T>>
     {
-        private ICollection<Group<T>> groups = new List<Group<T>>();
+        private ICollection<Group<T>> groups;
 
         public int Count => this.groups.Count;
 
         public Group<T> this[int index] => this.groups.ElementAt(index);
 
         public Group<T> this[object id] => throw new NotImplementedException();
+
+        public GroupCollection()
+        {
+            this.groups = new List<Group<T>>();
+        }
+
+        public GroupCollection(IEnumerable<Group<T>> collection)
+        {
+            if (collection == null) throw new ArgumentNullException(nameof(collection));
+
+            this.groups = new List<Group<T>>(collection);
+        }
 
         public void Add(Group<T> item)
         {

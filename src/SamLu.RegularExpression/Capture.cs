@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression
 {
+    /// <summary>
+    /// 表示一个捕获
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class Capture<T>
     {
         protected int index;
@@ -13,7 +17,13 @@ namespace SamLu.RegularExpression
 
         protected IEnumerable<T> input;
 
+        /// <summary>
+        /// 获取一个 <see cref="Capture{T}"/> 的索引。
+        /// </summary>
         public int Index => this.index;
+        /// <summary>
+        /// 获取一个 <see cref="Capture{T}"/> 的长度。
+        /// </summary>
         public int Length => this.length;
 
         public virtual IEnumerable<T> Value => this.input.Skip(this.index).Take(this.length);

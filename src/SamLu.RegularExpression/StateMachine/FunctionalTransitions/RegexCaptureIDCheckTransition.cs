@@ -7,22 +7,23 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
 {
-    public sealed class RegexCaptureIDCheckTransition<T> : RegexFunctionalTransition<T>, IAcceptInputTransition<T>
+    public sealed class RegexCaptureIDCheckTransition<T> : RegexPredicateTransition<T>
     {
         private object id;
 
         [RegexFunctionalTransitionMetadata]
         public object ID => this.id;
 
-        public RegexCaptureIDCheckTransition(object id) => this.id = id;
-
-        public bool CanAccept(T input)
+        public RegexCaptureIDCheckTransition(object id, Func<RegexCaptureIDCheckTransition<T>, object[], bool> predicate) : base()
         {
-            throw new NotImplementedException();
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+            this.id = id;
+            base.predicate = (sender, args) => predicate((RegexCaptureIDCheckTransition<T>)sender, args);
         }
     }
 
-    public sealed class RegexCaptureIDCheckTransition<T, TState> : RegexFunctionalTransition<T, TState>, IAcceptInputTransition<T>
+    public sealed class RegexCaptureIDCheckTransition<T, TState> : RegexPredicateTransition<T, TState>
         where TState : IRegexFSMState<T>
     {
         private object id;
@@ -30,11 +31,12 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
         [RegexFunctionalTransitionMetadata]
         public object ID => this.id;
 
-        public RegexCaptureIDCheckTransition(object id) => this.id = id;
-
-        public bool CanAccept(T input)
+        public RegexCaptureIDCheckTransition(object id, Func<RegexCaptureIDCheckTransition<T, TState>, object[], bool> predicate) : base()
         {
-            throw new NotImplementedException();
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+            this.id = id;
+            base.predicate = (sender, args) => predicate((RegexCaptureIDCheckTransition<T, TState>)sender, args);
         }
     }
 }

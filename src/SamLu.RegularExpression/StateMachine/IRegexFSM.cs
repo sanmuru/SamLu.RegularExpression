@@ -28,7 +28,13 @@ namespace SamLu.RegularExpression.StateMachine
         /// </summary>
         new ICollection<IRegexFSMState<T>> States { get; }
         
+        IEnumerable<T> Inputs { get; }
+
+        int Index { get; }
+
         event RegexFSMMatchEventHandler<T> Match;
+
+        MatchCollection<T> Matches { get; }
 
         void EndMatch();
 

@@ -24,6 +24,7 @@ namespace SamLu.RegularExpression.StateMachine
         }
 
         #region GenerateRegexFSMFromRegexObject
+
         public IRegexFSM<T> GenerateRegexFSMFromRegexObject(RegexObject<T> regex, RegexOptions options)
         {
             if (regex == null) throw new ArgumentNullException(nameof(regex));
@@ -72,7 +73,80 @@ namespace SamLu.RegularExpression.StateMachine
             IRegexNFAState<T> state
         )
         {
+            if (anchorPoint is RegexZeroLengthObject<T> zeroLength)
+                return this.GenerateNFATransitionFromRegexZeroLengthObject(zeroLength, nfa, state);
+            else if (anchorPoint is RegexStartBorder<T> startBorder)
+                return this.GenerateNFATransitionFromRegexStartBorder(startBorder, nfa, state);
+            else if (anchorPoint is RegexEndBorder<T> endBorder)
+                return this.GenerateNFATransitionFromRegexEndBorder(endBorder, nfa, state);
+            else if (anchorPoint is RegexPreviousMatch<T> previousMatch)
+                return this.GenerateNFATransitionFromRegexPreviousMatch(previousMatch, nfa, state);
+            else
+                throw new NotSupportedException();
+        }
+
+        private IRegexFSMTransition<T> GenerateNFATransitionFromRegexZeroLengthObject(
+            RegexZeroLengthObject<T> zeroLength,
+            IRegexNFA<T> nfa,
+            IRegexNFAState<T> state
+        )
+        {
             throw new NotImplementedException();
+        }
+
+        private IRegexFSMTransition<T> GenerateNFATransitionFromRegexStartBorder(
+            RegexStartBorder<T> startBorder,
+            IRegexNFA<T> nfa,
+            IRegexNFAState<T> state
+        )
+        {
+            var predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+                (args.FirstOrDefault() is IRegexFSM<T> fsm) &&
+                    fsm.Index == 0
+            );
+            nfa.AttachTransition(state, predicateTransition);
+
+            return predicateTransition;
+        }
+
+        private IRegexFSMTransition<T> GenerateNFATransitionFromRegexEndBorder(
+            RegexEndBorder<T> endBorder,
+            IRegexNFA<T> nfa,
+            IRegexNFAState<T> state
+        )
+        {
+            var predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+                (args.FirstOrDefault() is IRegexFSM<T> fsm) &&
+                    fsm.Index == fsm.Inputs.Count()
+            );
+            nfa.AttachTransition(state, predicateTransition);
+
+            return predicateTransition;
+        }
+
+        private IRegexFSMTransition<T> GenerateNFATransitionFromRegexPreviousMatch(
+            RegexPreviousMatch<T> previousMatch,
+            IRegexNFA<T> nfa,
+            IRegexNFAState<T> state
+        )
+        {
+            var predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var lastMatch = fsm.Matches?.LastOrDefault();
+                    if (lastMatch == null)
+                        // 没有上一个匹配。
+                        return true;
+                    else
+                        // 状态机当前索引与上一个匹配的结尾索引相邻。
+                        return fsm.Index == lastMatch.Index + lastMatch.Length;
+                }
+                else return false;
+            });
+            nfa.AttachTransition(state, predicateTransition);
+
+            return predicateTransition;
         }
 
         protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexGroupReference(
@@ -81,15 +155,48 @@ namespace SamLu.RegularExpression.StateMachine
             IRegexNFAState<T> state
         )
         {
-            throw new NotImplementedException();
+            RegexGroup<T> group;
+            if (groupReference.IsDetermined)
+                group = groupReference.Group;
+            else
+            {
+                IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+
+                var groups = this.regexGroups.Where(_group => _group.ID == groupReference.GroupID).ToArray();
+                switch (groups.Length)
+                {
+                    case 0:
+                        //throw new InvalidOperationException("未找到引用的正则组。");
+                        epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+                        nfa.AttachTransition(state, epsilonTransition);
+                        return epsilonTransition;
+                    case 1:
+                        group = groups[0];
+                        break;
+                    default:
+                        group = new RegexGroup<T>(
+                            groups.Select(_group => _group.InnerRegex).UnionMany()
+                        );
+                        break;
+                        //throw new InvalidOperationException("找到多个重复 ID 的正则组。");
+                        //epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+                        //nfa.AttachTransition(state, epsilonTransition);
+                        //return epsilonTransition;
+                }
+            }
+
+            return this.GenerateNFATransitionFromRegexGroup(group, nfa, state);
         }
 
+        private IList<RegexGroup<T>> regexGroups = new List<RegexGroup<T>>();
         protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexGroup(
             RegexGroup<T> group,
             IRegexNFA<T> nfa,
             IRegexNFAState<T> state
         )
         {
+            this.regexGroups.Add(group);
+
             IRegexNFAState<T> nextState = state;
 
             var captureStartTransition = new RegexCaptureStartTransition<T>(group);
@@ -150,6 +257,7 @@ namespace SamLu.RegularExpression.StateMachine
             return captureEndTransition;
         }
 
+        private IDictionary<RegexBalanceGroup<T>, Stack<object>> balanceGroupCache = new Dictionary<RegexBalanceGroup<T>, Stack<object>>();
         protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexBalanceGroup(
             RegexBalanceGroup<T> balanceGroup,
             IRegexNFA<T> nfa,

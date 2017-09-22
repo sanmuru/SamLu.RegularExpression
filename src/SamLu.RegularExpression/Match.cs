@@ -8,14 +8,21 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression
 {
+    /// <summary>
+    /// 表示单个正则表达式匹配的结果。
+    /// </summary>
+    /// <typeparam name="T">正则接受的对象的类型。</typeparam>
     public class Match<T> : Group<T>
     {
+        /// <summary>
+        /// 获取空组。 所有失败的匹配都返回此空匹配。
+        /// </summary>
         public static Match<T> Empty =>
             new Match<T>(Enumerable.Empty<T>(), 0, 0, Enumerable.Empty<Group<T>>());
 
         protected IList<Group<T>> groups;
 
-        public ICollection<Group<T>> Groups => new ReadOnlyCollection<Group<T>>(this.groups);
+        public GroupCollection<T> Groups => new GroupCollection<T>(this.groups);
         
         public override bool Success => this.groups.Any(group => group.Success);
 

@@ -257,6 +257,12 @@ namespace SamLu.RegularExpression.StateMachine
                 yield break;
         }
 
+        /// <summary>
+        /// 最小化 <see cref="IRegexFSM{T}"/> 。
+        /// </summary>
+        /// <typeparam name="T">正则接受的对象的类型。</typeparam>
+        /// <param name="fsm">将要进行最小化的正则构造的有限状态机。</param>
+        /// <returns>经过最小化后的正则构造的有限状态机。</returns>
         public static IRegexFSM<T> Optimize<T>(this IRegexFSM<T> fsm)
         {
             fsm.EpsilonClosure();
@@ -303,15 +309,14 @@ namespace SamLu.RegularExpression.StateMachine
         {
             public IRegexFSMState<T> InnerState { get; private set; }
 
-            public RegexStateState(IRegexFSMState<T> state) => this.InnerState = state;
-            
-            public IEnumerable<IRegexFSMTransition<T>> GetOrderedTransitions()
-            {
-                return this.InnerState.GetOrderedTransitions();
-            }
+            public RegexStateState(IRegexFSMState<T> state) =>
+                this.InnerState = state ?? throw new ArgumentNullException(nameof(state));
+
+            public IEnumerable<IRegexFSMTransition<T>> GetOrderedTransitions() =>
+                this.InnerState.GetOrderedTransitions();
         }
 
-        private sealed class RegexFunctionalTransitionGroupTransition<T> : FSMTransition<IRegexFSMState<T>>, IRegexFSMTransitionProxy<T>
+        private sealed class RegexFunctionalTransitionGroupTransition<T> : FSMTransition<IRegexFSMState<T>>, IAcceptInputTransition<T>, IRegexFSMTransitionProxy<T>
         {
             public IRegexFSMState<T> StateFrom { get; private set; }
             public IRegexFSMState<T> StateTo => this.FunctionalTransitions.FirstOrDefault()?.Target;
@@ -326,28 +331,33 @@ namespace SamLu.RegularExpression.StateMachine
                 this.FunctionalTransitions = transitionGroup.functionalTransitions;
             }
 
-            public bool TransitProxy(RegexFSMTransitProxyHandler<T> handler, params object[] args)
+            public bool TransitProxy(T input, RegexFSMTransitProxyHandler<T> handler, params object[] args)
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {
                     IRegexFSMState<T> state = fsm.CurrentState;
 
-                    bool f = true;
+                    bool success = true;
                     foreach (var functionalTransition in this.FunctionalTransitions)
                     {
                         if (!handler(functionalTransition, args))
                         {
-                            f = false;
+                            success = false;
                             break;
                         }
                     }
 
                     // 复原
-                    if (!f) fsm.Transit(state);
+                    if (!success) fsm.Transit(state);
 
-                    return f;
+                    return success && this.CanAccept(input);
                 }
                 else throw new InvalidOperationException();
+            }
+
+            public bool CanAccept(T input)
+            {
+                return this.AcceptInputTransition.CanAccept(input);
             }
         }
     }

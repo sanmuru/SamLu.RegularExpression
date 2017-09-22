@@ -871,7 +871,6 @@ namespace SamLu.RegularExpression
                         break;
                         //throw new InvalidOperationException("找到多个重复 ID 的正则组。");
                         //return false;
-
                 }
             }
 

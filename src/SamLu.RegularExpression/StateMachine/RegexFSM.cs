@@ -43,8 +43,8 @@ namespace SamLu.RegularExpression.StateMachine
             );
 
         protected IList<Match<T>> matches = new List<Match<T>>();
-        public ICollection<Match<T>> MatchCollection =>
-            new ReadOnlyCollection<Match<T>>(this.matches);
+        public MatchCollection<T> Matches =>
+            new MatchCollection<T>(this.matches);
 
         #region Match
         public event RegexFSMMatchEventHandler<T> Match;
@@ -118,7 +118,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// </summary>
         protected virtual void BeginMatch(IEnumerable<T> inputs)
         {
-            this.inputs = inputs;
+            this.Inputs = inputs;
 
             if (this.captureStack == null)
                 this.captureStack = new Stack<CaptureStackItem>();
@@ -137,7 +137,8 @@ namespace SamLu.RegularExpression.StateMachine
         }
 
 #warning
-        protected IEnumerable<T> inputs;
+        public IEnumerable<T> Inputs { get; protected set; }
+        public int Index { get; protected set; }
         private int start;
         private int top;
         public virtual void EndMatch()
@@ -158,7 +159,7 @@ namespace SamLu.RegularExpression.StateMachine
                 else
                 {
                     this.OnMatch(new RegexFSMMatchEventArgs<T>(
-                        new Match<T>(this.inputs, this.start, this.top - this.start + 1,
+                        new Match<T>(this.Inputs, this.start, this.top - this.start + 1,
                             this.captureStack.Reverse()
                                 .GroupBy(
                                     (captureInfo => captureInfo.ID),
@@ -172,7 +173,7 @@ namespace SamLu.RegularExpression.StateMachine
                                 .Select(group =>
                                 {
                                     var captures = group.ToArray();
-                                    return new Extend.Group<T>(this.inputs, captures);
+                                    return new Extend.Group<T>(this.Inputs, captures);
                                 })
                         )
                     ));
@@ -324,12 +325,14 @@ namespace SamLu.RegularExpression.StateMachine
             if (enumerator.MoveNext())
             {
                 IRegexFSMTransition<T> transition = enumerator.Current;
-                if (transition is IAcceptInputTransition<T>)
-                    return ((IAcceptInputTransition<T>)transition).CanAccept(input) && this.Transit(transition);
-                else if (transition is IRegexFSMTransitionProxy<T>)
+                if (transition is IRegexFSMTransitionProxy<T>)
                     return ((IRegexFSMTransitionProxy<T>)transition).TransitProxy(
-                        (_transition, _args) => this.Transit(_transition.Target, _transition, _args), this
+                        input,
+                        (_transition, _args) => this.Transit(_transition.Target, _transition, _args),
+                        this
                     ) && this.Transit(transition);
+                else if (transition is IAcceptInputTransition<T>)
+                    return ((IAcceptInputTransition<T>)transition).CanAccept(input) && this.Transit(transition);
                 else
                     return this.Transit(transition) && this.Transit(input);
             }
@@ -398,8 +401,8 @@ namespace SamLu.RegularExpression.StateMachine
         where TTransition : IRegexFSMTransition<T, TState>
     {
         protected IList<Match<T>> matches = new List<Match<T>>();
-        public ICollection<Match<T>> MatchCollection =>
-            new ReadOnlyCollection<Match<T>>(this.matches);
+        public MatchCollection<T> Matches =>
+            new MatchCollection<T>(this.matches);
 
         #region Match
         public event RegexFSMMatchEventHandler<T> Match;
@@ -419,7 +422,8 @@ namespace SamLu.RegularExpression.StateMachine
         }
         #endregion
 
-        protected IEnumerable<T> inputs;
+        public IEnumerable<T> Inputs { get; protected set; }
+        public int Index { get; protected set; }
 
         public virtual void BeginCapture(object id)
         {
@@ -436,7 +440,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// </summary>
         protected virtual void BeginMatch(IEnumerable<T> inputs)
         {
-            this.inputs = inputs;
+            this.Inputs = inputs;
         }
 
         public virtual void EndMatch()
