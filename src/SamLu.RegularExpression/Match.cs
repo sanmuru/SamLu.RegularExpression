@@ -18,17 +18,17 @@ namespace SamLu.RegularExpression
         /// 获取空组。 所有失败的匹配都返回此空匹配。
         /// </summary>
         public static Match<T> Empty =>
-            new Match<T>(Enumerable.Empty<T>(), 0, 0, Enumerable.Empty<Group<T>>());
+            new Match<T>(Enumerable.Empty<T>(), 0, 0, Enumerable.Empty<(object, Group<T>)>());
 
-        protected IList<Group<T>> groups;
+        protected GroupCollection<T> groups;
 
-        public GroupCollection<T> Groups => new GroupCollection<T>(this.groups);
-        
+        public GroupCollection<T> Groups => groups;
+
         public override bool Success => this.groups.Any(group => group.Success);
 
         protected Match() : base() { }
 
-        protected internal Match(IEnumerable<T> input, int index, int length, IEnumerable<Group<T>> groups) : base()
+        protected internal Match(IEnumerable<T> input, int index, int length, IEnumerable<(object id, Group<T> group)> groups) : base()
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
             if (groups == null) throw new ArgumentNullException(nameof(groups));
@@ -38,7 +38,7 @@ namespace SamLu.RegularExpression
             base.input = input;
 
             base.captures = new List<Capture<T>> { new Capture<T>(input, index, length) };
-            this.groups = new List<Group<T>>(new[] { new Group<T>(input, new[] { (index, length) }) }.Concat(groups));
+            this.groups = new GroupCollection<T>(this, new[] { ((object)null, new Group<T>(input, new[] { (index, length) })) }.Concat(groups));
         }
     }
 }

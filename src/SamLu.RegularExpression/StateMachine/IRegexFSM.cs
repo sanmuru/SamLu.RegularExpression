@@ -1,4 +1,5 @@
-﻿using SamLu.StateMachine;
+﻿using SamLu.RegularExpression.StateMachine.Service;
+using SamLu.StateMachine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// 获取 <see cref="IRegexFSM{T}"/> 的当前状态。
         /// </summary>
         new IRegexFSMState<T> CurrentState { get; }
-        
+
         /// <summary>
         /// 获取或设置 <see cref="IRegexFSM{T}"/> 的起始状态。
         /// </summary>
@@ -27,7 +28,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// 获取 <see cref="IRegexFSM{T}"/> 的状态集。
         /// </summary>
         new ICollection<IRegexFSMState<T>> States { get; }
-        
+
         IEnumerable<T> Inputs { get; }
 
         int Index { get; }
@@ -75,9 +76,9 @@ namespace SamLu.RegularExpression.StateMachine
         /// <exception cref="ArgumentNullException"><paramref name="inputs"/> 的值为 null 。</exception>
         void TransitMany(IEnumerable<T> inputs);
 
-        void BeginCapture(object id);
+        void Capture(object captureIDToken, object id, int start, int length);
 
-        void EndCapture(object id);
+        TService GetService<TService>() where TService : IRegexFSMService<T>, new();
     }
 
     /// <summary>
@@ -90,5 +91,6 @@ namespace SamLu.RegularExpression.StateMachine
         where TState : IRegexFSMState<T, TTransition>
         where TTransition : IRegexFSMTransition<T, TState>
     {
+        new TService GetService<TService>() where TService : IRegexFSMService<T, TState, TTransition>, new();
     }
 }

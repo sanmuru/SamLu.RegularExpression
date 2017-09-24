@@ -335,7 +335,8 @@ namespace SamLu.RegularExpression.StateMachine
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {
-                    IRegexFSMState<T> state = fsm.CurrentState;
+                    var backTraceService = fsm.GetService<RegexFSM<T>.BackTraceService>();
+                    var timepoint = backTraceService.GetTimepoint();
 
                     bool success = true;
                     foreach (var functionalTransition in this.FunctionalTransitions)
@@ -348,7 +349,7 @@ namespace SamLu.RegularExpression.StateMachine
                     }
 
                     // 复原
-                    if (!success) fsm.Transit(state);
+                    backTraceService.BackTrace(timepoint, false);
 
                     return success && this.CanAccept(input);
                 }

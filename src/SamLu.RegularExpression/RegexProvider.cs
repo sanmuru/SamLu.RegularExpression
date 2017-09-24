@@ -113,7 +113,7 @@ namespace SamLu.RegularExpression
                                 .Min()
                         )
                         .Select(group =>
-                            new Group<T>(
+                            (group.Key, new Group<T>(
                                 reader.Reader,
                                 group
                                     .AsEnumerable()
@@ -122,7 +122,7 @@ namespace SamLu.RegularExpression
                                     ))
                                     .Select(capture => (capture.Index, capture.Length))
                                     .ToArray()
-                            )
+                            ))
                         );
                     var match = new Match<T>(reader.Reader, prePosition, curPositon, groups);
                     this.globalCacheDic[Cache.PREVIEW_MATCH_CACHE_KEY] = match;

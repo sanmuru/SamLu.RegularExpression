@@ -1,4 +1,6 @@
-﻿using SamLu.RegularExpression.StateMachine.FunctionalTransitions;
+﻿using SamLu.IO;
+using SamLu.RegularExpression.StateMachine.FunctionalTransitions;
+using SamLu.RegularExpression.StateMachine.Service;
 using SamLu.StateMachine;
 using System;
 using System.Collections.Generic;
@@ -76,7 +78,8 @@ namespace SamLu.RegularExpression.StateMachine
         public class CaptureStackItem
         {
             public int StateStackCount { get; set; }
-            public object ID { get; set; }
+            public object CaptureIDToken { get; set; }
+            public object CaptureID { get; set; }
             public int CaptureStart { get; set; }
             public int CaptureLength { get; set; }
         }
@@ -102,13 +105,8 @@ namespace SamLu.RegularExpression.StateMachine
         /// 状态栈
         /// </summary>
         protected Stack<StateStackItem> stateStack = new Stack<StateStackItem>();
-
-        public virtual void BeginCapture(object id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual void EndCapture(object id)
+        
+        public virtual void Capture(object captureIDToken, object id, int start, int length)
         {
             throw new NotImplementedException();
         }
@@ -137,8 +135,17 @@ namespace SamLu.RegularExpression.StateMachine
         }
 
 #warning
-        public IEnumerable<T> Inputs { get; protected set; }
-        public int Index { get; protected set; }
+        private NodeReader<IEnumerable<T>, T> nodeReader;
+        public virtual IEnumerable<T> Inputs
+        {
+            get => this.nodeReader.Reader;
+            protected set => this.nodeReader = value.CreateReader();
+        }
+        public virtual int Index
+        {
+            get => this.nodeReader.Position;
+            protected set => this.nodeReader.Position = value;
+        }
         private int start;
         private int top;
         public virtual void EndMatch()
@@ -162,18 +169,21 @@ namespace SamLu.RegularExpression.StateMachine
                         new Match<T>(this.Inputs, this.start, this.top - this.start + 1,
                             this.captureStack.Reverse()
                                 .GroupBy(
-                                    (captureInfo => captureInfo.ID),
-                                    (captureInfo => (captureInfo.CaptureStart, captureInfo.CaptureLength)),
-                                    new EqualityComparisonComparer<object>((x, y) =>
+                                    (captureInfo =>
                                     {
-                                        if (x == null && y == null) return false;
-                                        else return object.Equals(x, y);
+                                        (object id, object idToken) groupKey = (captureInfo.CaptureID, captureInfo.CaptureIDToken);
+                                        return groupKey;
+                                    }),
+                                    (captureInfo => (captureInfo.CaptureStart, captureInfo.CaptureLength)),
+                                    new EqualityComparisonComparer<(object id, object idToken)>((x, y) =>
+                                    {
+                                        return object.Equals(x.id, y.id) && object.Equals(x.idToken, y.idToken);
                                     })
                                 )
                                 .Select(group =>
                                 {
                                     var captures = group.ToArray();
-                                    return new Extend.Group<T>(this.Inputs, captures);
+                                    return (group.Key.id, new Extend.Group<T>(this.Inputs, captures));
                                 })
                         )
                     ));
@@ -241,6 +251,7 @@ namespace SamLu.RegularExpression.StateMachine
             base.SetTarget(transition, state);
         #endregion
 
+        #region Transit
         /// <summary>
         /// <see cref="RegexFSM{T}"/> 的转换操作。此操作沿指定的转换进行。（默认的参数为此状态机本身）。
         /// </summary>
@@ -388,6 +399,65 @@ namespace SamLu.RegularExpression.StateMachine
 
             return true;
         }
+        #endregion
+
+        #region 状态机服务
+        #region Services
+        public class BackTraceService : RegexFSMService<T, RegexFSM<T>>
+        {
+            private RegexFSM<T> fsm;
+
+            public override void Connect(RegexFSM<T> fsm)
+            {
+                if (fsm == null) throw new ArgumentNullException(nameof(fsm));
+
+                this.fsm = fsm;
+            }
+
+            public Timepoint GetTimepoint()
+            {
+                return new Timepoint(this);
+            }
+
+            public void BackTrace(Timepoint timepoint, bool removeCaptures)
+            {
+                if (timepoint == null) throw new ArgumentNullException(nameof(timepoint));
+
+                this.fsm.Index = timepoint.FSMIndex;
+                while (this.fsm.stateStack.Count > timepoint.StateStackCount)
+                    this.fsm.stateStack.Pop();
+                if (removeCaptures)
+                {
+                    while (this.fsm.captureStack.Peek().StateStackCount > timepoint.StateStackCount)
+                        this.fsm.captureStack.Pop();
+                }
+            }
+
+            public class Timepoint
+            {
+                public int FSMIndex { get; private set; }
+                public int StateStackCount { get; private set; }
+
+                protected internal Timepoint(BackTraceService service)
+                {
+                    if (service == null) throw new ArgumentNullException(nameof(service));
+
+                    this.FSMIndex = service.fsm.Index;
+                    this.StateStackCount = service.fsm.stateStack.Count;
+                }
+            }
+        }
+        #endregion
+
+        public virtual TService GetService<TService>()
+            where TService : IRegexFSMService<T>, new()
+        {
+            TService service = new TService();
+            service.Connect(this);
+
+            return service;
+        }
+        #endregion
     }
 
     /// <summary>
@@ -406,7 +476,7 @@ namespace SamLu.RegularExpression.StateMachine
 
         #region Match
         public event RegexFSMMatchEventHandler<T> Match;
-
+        
 #pragma warning disable 1591
         protected virtual void this_Match(object sender, RegexFSMMatchEventArgs<T> e)
         {
@@ -422,15 +492,19 @@ namespace SamLu.RegularExpression.StateMachine
         }
         #endregion
 
-        public IEnumerable<T> Inputs { get; protected set; }
-        public int Index { get; protected set; }
-
-        public virtual void BeginCapture(object id)
+        private NodeReader<IEnumerable<T>, T> nodeReader;
+        public virtual IEnumerable<T> Inputs
         {
-            throw new NotImplementedException();
+            get => this.nodeReader.Reader;
+            protected set => this.nodeReader = value.CreateReader();
         }
-
-        public virtual void EndCapture(object id)
+        public virtual int Index
+        {
+            get => this.nodeReader.Position;
+            protected set => this.nodeReader.Position = value;
+        }
+        
+        public virtual void Capture(object captureIDToken, object id, int start, int length)
         {
             throw new NotImplementedException();
         }
@@ -448,6 +522,7 @@ namespace SamLu.RegularExpression.StateMachine
             throw new NotImplementedException();
         }
 
+        #region Transit
         /// <summary>
         /// 接受一个指定输入并进行转换。返回一个值，指示操作是否成功。
         /// </summary>
@@ -507,6 +582,18 @@ namespace SamLu.RegularExpression.StateMachine
 
             return true;
         }
+        #endregion
+
+        #region 状态机服务
+        public virtual TService GetService<TService>()
+            where TService : IRegexFSMService<T, TState, TTransition>, new()
+        {
+            TService service = new TService();
+            service.Connect(this);
+
+            return service;
+        }
+        #endregion
 
         #region IRegexFSM{T} Implementation
         IRegexFSMState<T> IRegexFSM<T>.CurrentState => base.CurrentState;
@@ -528,6 +615,24 @@ namespace SamLu.RegularExpression.StateMachine
 
         bool IRegexFSM<T>.SetTarget(IRegexFSMTransition<T> transition, IRegexFSMState<T> state) =>
             this.SetTarget((TTransition)transition, (TState)state);
+        
+        TService IRegexFSM<T>.GetService<TService>()
+        {
+            if (typeof(IRegexFSMService<T, TState, TTransition>).IsAssignableFrom(typeof(TService)))
+                return (TService)(
+                    typeof(IRegexFSM<T, TState, TTransition>)
+                        .GetMethod(nameof(this.GetService), Type.EmptyTypes) // 获取 IRegexFSM{T, TState, TTransition}.GetService{TService} 方法。
+                        .MakeGenericMethod(typeof(TService))
+                        .Invoke(this, null) // 调用方法。
+                );
+            else
+            {
+                TService service = new TService();
+                service.Connect(this);
+
+                return service;
+            }
+        }
         #endregion
     }
 }

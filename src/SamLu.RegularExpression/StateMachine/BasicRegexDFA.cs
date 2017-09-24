@@ -101,7 +101,7 @@ namespace SamLu.RegularExpression.StateMachine
                 {
                     // 提交一个匹配。
                     this.OnMatch(new RegexFSMMatchEventArgs<T>(new Match<T>(
-                        this.Inputs, this.start, this.top.Value - this.start + 1, Enumerable.Empty<Group<T>>()
+                        this.Inputs, this.start, this.top.Value - this.start + 1, Enumerable.Empty<(object, Group<T>)>()
                     )));
 
                     // 将表示提交的匹配的数据清零。
@@ -137,7 +137,7 @@ namespace SamLu.RegularExpression.StateMachine
             {
                 // 提交一个匹配。
                 this.OnMatch(new RegexFSMMatchEventArgs<T>(new Match<T>(
-                    this.Inputs, this.start, this.top.Value - this.start + 1, Enumerable.Empty<Group<T>>()
+                    this.Inputs, this.start, this.top.Value - this.start + 1, Enumerable.Empty<(object, Group<T>)>()
                 )));
             }
         }

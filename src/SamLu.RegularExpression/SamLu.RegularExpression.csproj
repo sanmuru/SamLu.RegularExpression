@@ -85,6 +85,8 @@
     <Compile Include="IAcceptInputTransition.cs" />
     <Compile Include="IRange.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexPredicateTransition.cs" />
+    <Compile Include="StateMachine\Service\CaptureService.cs" />
+    <Compile Include="StateMachine\Service\IRegexFSMService.cs" />
     <Compile Include="StateMachine\IRegexFSMTransitionProxy.cs" />
     <Compile Include="MatchCollection.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexFunctionalTransition.cs" />
@@ -132,6 +134,7 @@
     <Compile Include="StateMachine\IRegexFSMState.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\IRegexFunctionalTransition.cs" />
     <Compile Include="StateMachine\RegexFSMMatchEvent.cs" />
+    <Compile Include="StateMachine\Service\RegexFSMService.cs" />
     <Compile Include="StateMachine\RegexFSMUtility.cs" />
     <Compile Include="System\Collections\Generic\IReadOnlySet.cs" />
     <Compile Include="SamLu\DebugView\CollectionDebugView.cs" />

@@ -1,5 +1,6 @@
 ﻿using SamLu.RegularExpression.Extend;
 using SamLu.RegularExpression.StateMachine.FunctionalTransitions;
+using SamLu.RegularExpression.StateMachine.Service;
 using SamLu.StateMachine;
 using System;
 using System.Collections.Generic;
@@ -195,6 +196,8 @@ namespace SamLu.RegularExpression.StateMachine
             IRegexNFAState<T> state
         )
         {
+            const string CAPTURE_SERVICE_KEY = "CAPTURE_SERVICE";
+
             this.regexGroups.Add(group);
 
             IRegexNFAState<T> nextState = state;
@@ -210,7 +213,12 @@ namespace SamLu.RegularExpression.StateMachine
                     regexGroups.Push(_group);
 
                     if (_group.IsCaptive)
-                        fsm.BeginCapture(_group.ID);
+                    {
+                        CaptureService<T> captureService = fsm.GetService<CaptureService<T>>();
+                        captureService.StartCapture(_group, _group.ID);
+
+                        ((RegexCaptureStartTransition<T>)sender).UserData[CAPTURE_SERVICE_KEY] = captureService;
+                    }
                 }
             });
             nfa.AttachTransition(nextState, captureStartTransition);
@@ -232,11 +240,15 @@ namespace SamLu.RegularExpression.StateMachine
                 var captureIDStorageTransition = new RegexCaptureIDStorageTransition<T>(group.ID);
                 captureIDStorageTransition.TransitAction += new CustomizedAction((sender, args) =>
                 {
+                    var _group = ((RegexCaptureStartTransition<T>)sender).Group;
+
                     if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                     {
-                        fsm.EndCapture(((RegexCaptureIDStorageTransition<T>)sender).ID);
+                        CaptureService<T> captureService = (CaptureService<T>)((RegexCaptureIDStorageTransition<T>)sender).UserData[CAPTURE_SERVICE_KEY];
+                        captureService.EndCapture(_group, fsm.Capture);
                     }
                 });
+                captureIDStorageTransition.UserData[CAPTURE_SERVICE_KEY] = captureStartTransition.UserData[CAPTURE_SERVICE_KEY];
                 nfa.AttachTransition(nextState, captureIDStorageTransition);
                 nextState = this.contextInfo.ActivateRegexNFAState();
                 nfa.SetTarget(captureIDStorageTransition, nextState);
