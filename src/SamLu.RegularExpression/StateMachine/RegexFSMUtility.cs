@@ -337,21 +337,19 @@ namespace SamLu.RegularExpression.StateMachine
                 {
                     var backTraceService = fsm.GetService<RegexFSM<T>.BackTraceService>();
                     var timepoint = backTraceService.GetTimepoint();
-
-                    bool success = true;
+                    
                     foreach (var functionalTransition in this.FunctionalTransitions)
                     {
                         if (!handler(functionalTransition, args))
                         {
-                            success = false;
-                            break;
+                            // 复原
+                            backTraceService.BackTrace(timepoint, true);
+
+                            return false;
                         }
                     }
-
-                    // 复原
-                    backTraceService.BackTrace(timepoint, false);
-
-                    return success && this.CanAccept(input);
+                    
+                    return this.CanAccept(input);
                 }
                 else throw new InvalidOperationException();
             }

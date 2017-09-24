@@ -92,7 +92,48 @@ namespace SamLu.RegularExpression.StateMachine
             IRegexNFAState<T> state
         )
         {
-            throw new NotImplementedException();
+            const string PROGRESS_SERVICE_KEY = "PROGRESS_SERVICE";
+            const string PROGRESS_KEY = "TIMEPOINT";
+
+            IRegexNFAState<T> nextState = state;
+
+            RegexPredicateTransition<T> predicateTransition;
+
+            predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var progressService = fsm.GetService<RegexFSM<T>.ProgressService>();
+                    var progress = progressService.GetProgress();
+                    fsm.UserData[PROGRESS_SERVICE_KEY] = progressService;
+                    fsm.UserData[PROGRESS_KEY] = progress;
+
+                    return true;
+                }
+                return false;
+            });
+            nfa.AttachTransition(nextState, predicateTransition);
+            nextState = this.contextInfo.ActivateRegexNFAState();
+            nfa.SetTarget(predicateTransition, nextState);
+
+            var transition = this.GenerateNFATransitionFromRegexObject(zeroLength.InnerRegex, nfa, nextState);
+            nextState = this.contextInfo.ActivateRegexNFAState();
+            nfa.SetTarget(transition, nextState);
+
+            predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            {
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    var progressService = (RegexFSM<T>.ProgressService)fsm.UserData[PROGRESS_SERVICE_KEY];
+                    var progress = (RegexFSM<T>.ProgressService.Progress)fsm.UserData[PROGRESS_KEY];
+                    progressService.SetProgress(progress);
+
+                    return true;
+                }
+                return false;
+            });
+
+            return predicateTransition;
         }
 
         private IRegexFSMTransition<T> GenerateNFATransitionFromRegexStartBorder(

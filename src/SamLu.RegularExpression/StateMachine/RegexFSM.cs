@@ -447,6 +447,42 @@ namespace SamLu.RegularExpression.StateMachine
                 }
             }
         }
+
+        public class ProgressService : RegexFSMService<T, RegexFSM<T>>
+        {
+            private RegexFSM<T> fsm;
+
+            public override void Connect(RegexFSM<T> fsm)
+            {
+                if (fsm == null) throw new ArgumentNullException(nameof(fsm));
+
+                this.fsm = fsm;
+            }
+
+            public Progress GetProgress()
+            {
+                return new Progress(this);
+            }
+
+            public void SetProgress(Progress progress)
+            {
+                if (progress == null) throw new ArgumentNullException(nameof(progress));
+
+                this.fsm.Index = progress.Value;
+            }
+
+            public class Progress
+            {
+                public int Value { get; private set; }
+
+                protected internal Progress(ProgressService service)
+                {
+                    if (service == null) throw new ArgumentNullException(nameof(service));
+
+                    this.Value = service.fsm.Index;
+                }
+            }
+        }
         #endregion
 
         public virtual TService GetService<TService>()
