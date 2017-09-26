@@ -1,4 +1,5 @@
-﻿using SamLu.StateMachine;
+﻿using SamLu.IO;
+using SamLu.StateMachine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
             this.predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
 
         #region IRegexFSMTransitionProxy{T} Implementation
-        bool IRegexFSMTransitionProxy<T>.TransitProxy(T input, RegexFSMTransitProxyHandler<T> handler, params object[] args) => this.Predicate(this, args);
+        bool IRegexFSMTransitionProxy<T>.TransitProxy(IReaderSource<T> readerSource, RegexFSMTransitProxyHandler<T> handler, params object[] args) => this.Predicate(this, args);
         #endregion
     }
 
@@ -38,9 +39,9 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
             this.predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
 
         #region IRegexFSMTransitionProxy{T}/IRegexFSMTransitionProxy{T, TState} Implementation
-        bool IRegexFSMTransitionProxy<T>.TransitProxy(T input, RegexFSMTransitProxyHandler<T> handler, params object[] args) => this.Predicate(this, args);
+        bool IRegexFSMTransitionProxy<T>.TransitProxy(IReaderSource<T> readerSource, RegexFSMTransitProxyHandler<T> handler, params object[] args) => this.Predicate(this, args);
 
-        bool IRegexFSMTransitionProxy<T, TState>.TransitProxy(T input, RegexFSMTransitProxyHandler<T, TState> handler, params object[] args) => this.Predicate(this, args);
+        bool IRegexFSMTransitionProxy<T, TState>.TransitProxy(IReaderSource<T> readerSource, RegexFSMTransitProxyHandler<T, TState> handler, params object[] args) => this.Predicate(this, args);
         #endregion
     }
 }

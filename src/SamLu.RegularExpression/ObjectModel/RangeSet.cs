@@ -1319,7 +1319,18 @@ namespace SamLu.RegularExpression.ObjectModel
         bool ICollection<IRange<T>>.Contains(IRange<T> item) => this.IsSupersetOf(item);
 
         void ICollection<IRange<T>>.CopyTo(IRange<T>[] array, int arrayIndex) =>
-            ((IEnumerable<IRange<T>>)this).ToList().CopyTo(array, arrayIndex);
+            this.ranges
+                .OrderBy(
+                    (range => (range.Minimum, range.CanTakeMinimum)),
+                    Comparer<(T minimum, bool canTakeMinimum)>.Create((x, y) =>
+                        this.comparer.Compare(
+                            x.canTakeMinimum ? x.minimum : this.rangeInfo.GetNext(x.minimum),
+                            y.canTakeMinimum ? y.minimum : this.rangeInfo.GetNext(y.minimum)
+                        )
+                    )
+                )
+                .ToList()
+                .CopyTo(array, arrayIndex);
 
         IEnumerator<IRange<T>> IEnumerable<IRange<T>>.GetEnumerator() =>
             this.ranges

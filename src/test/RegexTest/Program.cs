@@ -44,6 +44,18 @@ namespace RegexTest
                 {
                     var ___nfa = char_Provider.GenerateRegexFSMFromRegexObject(regexObj, RegexOptions.None);
                     var ___dfa = char_Provider.GenerateRegexDFAFromRegexFSM(___nfa);
+
+                    IEnumerable<char> inputs = Enumerable.Repeat<Func<int, int>>(new Random().Next, 25).Select(nextFunc => (char)('a' - 1 + nextFunc(4)));
+                    char[] charArray = inputs.ToArray();
+                    IRegexFSM<char> ___fsm;
+#if true
+                    ___fsm = new RegexFSM<char>() { StartState = ___dfa.StartState };
+#else
+                    ___fsm = ___dfa;
+#endif
+                    ___fsm.TransitMany(charArray);
+
+                    var matches = ___fsm.Matches;
                 };
             action?.Invoke(Regex.Const('a').Optional().Concat(Regex.Const('b').Concat(Regex.Const('c').Optional())));
 
@@ -141,49 +153,78 @@ namespace RegexTest
                 this.set = new CharRangeSet();
             }
 
-            public BasicRegexDFA<char> ActivateRegexDFA()
+            public IRegexNFA<char> ActivateRegexNFA()
+            {
+                return new BasicRegexNFA<char>();
+            }
+
+            public TRegexNFA ActivateRegexNFAFromDumplication<TRegexNFA>(TRegexNFA nfa)
+                where TRegexNFA : IRegexNFA<char>
+            {
+                if (typeof(BasicRegexNFA<char>).IsAssignableFrom(typeof(TRegexNFA)))
+                    return (TRegexNFA)(object)this.ActivateRegexNFAFromDumplication((BasicRegexNFA<char>)(object)nfa);
+                else
+                    return nfa;
+            }
+
+            private BasicRegexNFA<char> ActivateRegexNFAFromDumplication(BasicRegexNFA<char> nfa)
+            {
+                return new BasicRegexNFA<char>();
+            }
+
+            public IRegexDFA<char> ActivateRegexDFA()
             {
                 return new BasicRegexDFA<char>();
             }
 
-            public BasicRegexDFAState<char> ActivateRegexDFAState(bool isTerminal = false)
+            public TRegexDFA ActivateRegexDFAFromDumplication<TRegexDFA>(TRegexDFA nfa)
+                where TRegexDFA : IRegexDFA<char>
             {
-                return new BasicRegexDFAState<char>(isTerminal);
+                if (typeof(BasicRegexDFA<char>).IsAssignableFrom(typeof(TRegexDFA)))
+                    return (TRegexDFA)(object)this.ActivateRegexDFAFromDumplication((BasicRegexDFA<char>)(object)nfa);
+                else
+                    return nfa;
             }
 
-            public BasicRegexFATransition<char, BasicRegexDFAState<char>> ActivateRegexDFATransitionFromAccreditedSet(ISet<char> set)
+            private BasicRegexDFA<char> ActivateRegexDFAFromDumplication(BasicRegexDFA<char> nfa)
             {
-                if (set == null) throw new ArgumentNullException(nameof(set));
-
-                return new RangeSetRegexDFATransition(set);
+                return new BasicRegexDFA<char>();
             }
 
-            public BasicRegexNFA<char> ActivateRegexNFA()
-            {
-                return new BasicRegexNFA<char>();
-            }
-
-            public BasicRegexNFAEpsilonTransition<char> ActivateRegexNFAEpsilonTransition()
-            {
-                return new BasicRegexNFAEpsilonTransition<char>();
-            }
-
-            public BasicRegexNFA<char> ActivateRegexNFAFromDumplication(BasicRegexNFA<char> nfa)
-            {
-                return new BasicRegexNFA<char>();
-            }
-
-            public BasicRegexNFAState<char> ActivateRegexNFAState(bool isTerminal = false)
+            public IRegexNFAState<char> ActivateRegexNFAState(bool isTerminal = false)
             {
                 return new BasicRegexNFAState<char>(isTerminal);
             }
 
-            public BasicRegexNFAState<char> ActivateRegexNFAStateFromDumplication(BasicRegexNFAState<char> state)
+            public TRegexNFAState ActivateRegexNFAStateFromDumplication<TRegexNFAState>(TRegexNFAState state)
+                where TRegexNFAState : IRegexNFAState<char>
+            {
+                if (typeof(BasicRegexNFAState<char>).IsAssignableFrom(typeof(TRegexNFAState)))
+                    return (TRegexNFAState)(object)this.ActivateRegexNFAStateFromDumplication((BasicRegexNFAState<char>)(object)state);
+                else
+                    return state;
+            }
+
+            private BasicRegexNFAState<char> ActivateRegexNFAStateFromDumplication(BasicRegexNFAState<char> state)
             {
                 return new BasicRegexNFAState<char>(state.IsTerminal);
             }
 
-            public BasicRegexFATransition<char, BasicRegexNFAState<char>> ActivateRegexNFATransitionFromDumplication(BasicRegexFATransition<char, BasicRegexNFAState<char>> transition)
+            public IRegexFSMState<char> ActivateRegexDFAState(bool isTerminal = false)
+            {
+                return new BasicRegexDFAState<char>(isTerminal);
+            }
+
+            public TRegexNFATransition ActivateRegexNFATransitionFromDumplication<TRegexNFATransition>(TRegexNFATransition transition)
+                where TRegexNFATransition : IRegexFSMTransition<char>
+            {
+                if (typeof(BasicRegexFATransition<char, BasicRegexNFAState<char>>).IsAssignableFrom(typeof(TRegexNFATransition)))
+                    return (TRegexNFATransition)(object)this.ActivateRegexNFATransitionFromDumplication((BasicRegexFATransition<char, BasicRegexNFAState<char>>)(object)transition);
+                else
+                    return transition;
+            }
+
+            private BasicRegexFATransition<char, BasicRegexNFAState<char>> ActivateRegexNFATransitionFromDumplication(BasicRegexFATransition<char, BasicRegexNFAState<char>> transition)
             {
                 if (transition is RangeRegexNFATransition range)
                     return new RangeRegexNFATransition(range.Range);
@@ -191,7 +232,34 @@ namespace RegexTest
                     return new SetRegexNFATransition(set.Set);
                 else return new BasicRegexFATransition<char, BasicRegexNFAState<char>>(transition.Predicate);
             }
-            
+
+            public IRegexFSMEpsilonTransition<char> ActivateRegexNFAEpsilonTransition()
+            {
+                return new BasicRegexNFAEpsilonTransition<char>();
+            }
+
+            public TRegexDFAState ActivateRegexDFAStateFromDumplication<TRegexDFAState>(TRegexDFAState state)
+                where TRegexDFAState : IRegexFSMState<char>
+            {
+                if (typeof(BasicRegexDFAState<char>).IsAssignableFrom(typeof(TRegexDFAState)))
+                    return (TRegexDFAState)(object)this.ActivateRegexDFAStateFromDumplication((BasicRegexDFAState<char>)(object)state);
+                else
+                    return state;
+            }
+
+            private BasicRegexDFAState<char> ActivateRegexDFAStateFromDumplication(BasicRegexDFAState<char> state)
+            {
+                return new BasicRegexDFAState<char>(state.IsTerminal);
+            }
+
+            public IAcceptInputTransition<char> ActivateRegexDFATransitionFromAccreditedSet(ISet<char> set)
+            {
+                if (set == null) throw new ArgumentNullException(nameof(set));
+
+                return new RangeSetRegexDFATransition(set);
+            }
+
+            #region NFATransition 类型
             public class SetRegexNFATransition : BasicRegexFATransition<char, BasicRegexNFAState<char>>
             {
                 private ISet<char> set;
@@ -346,31 +414,35 @@ namespace RegexTest
                     }
                 }
             }
+            #endregion
 
-            public BasicRegexFATransition<char, BasicRegexNFAState<char>> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<char> regex)
+            public IAcceptInputTransition<char> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<char> regex)
             {
+                BasicRegexFATransition<char, BasicRegexNFAState<char>> transition;
+
                 if (regex is IRange<char> range)
-                    return new RangeRegexNFATransition(range);
+                    transition = new RangeRegexNFATransition(range);
                 else
-                    return new BasicRegexFATransition<char, BasicRegexNFAState<char>>(regex.Condition);
+                    transition = new BasicRegexFATransition<char, BasicRegexNFAState<char>>(regex.Condition);
+
+                return transition;
             }
 
-            public BasicRegexFATransition<char, BasicRegexDFAState<char>> CombineRegexDFATransitions(IEnumerable<BasicRegexFATransition<char, BasicRegexDFAState<char>>> dfaTransitions)
+            public IAcceptInputTransition<char> CombineRegexDFATransitions(IEnumerable<IAcceptInputTransition<char>> dfaTransitions)
             {
                 if (dfaTransitions == null) throw new ArgumentNullException(nameof(dfaTransitions));
 
-                CharRangeSet set = new CharRangeSet();
-                set.UnionWith(
+                CharRangeSet set = new CharRangeSet(
                     dfaTransitions
                         .Where(transition => transition != null)
                         .SelectMany(transition => 
-                            ((transition as RangeSetRegexDFATransition).Set as CharRangeSet) as IEnumerable<IRange<char>>
+                            this.GetAccreditedSetFromRegexFSMTransition(transition)
                         )
                 );
                 return this.ActivateRegexDFATransitionFromAccreditedSet(set);
             }
 
-            public ISet<char> GetAccreditedSetFromRegexNFATransition(BasicRegexFATransition<char, BasicRegexNFAState<char>> transition)
+            public ISet<char> GetAccreditedSetFromRegexFSMTransition(IAcceptInputTransition<char> transition)
             {
                 if (transition is SetRegexNFATransition set)
                     return set.Set;
@@ -380,7 +452,7 @@ namespace RegexTest
                         new CharRange(range.Range.Minimum,range.Range.Maximum,range.Range.CanTakeMinimum,range.Range.CanTakeMaximum)
                     };
                 else
-                    return new HashSet<char>(this.AccreditedSet.Where(c => transition.Predicate(c)));
+                    return new CharRangeSet(this.AccreditedSet.Where(c => transition.CanAccept(c)));
             }
 
             public ISet<char> GetAccreditedSetExceptResult(ISet<char> first, ISet<char> second)
@@ -421,118 +493,168 @@ namespace RegexTest
         public class MyStringRegexRunContextInfo : IRegexStateMachineActivationContextInfo<string>
         {
             private RangeSet<string> set;
-            private RangeInfo<string> rangeInfo = new CustomizedRangeInfo<string>(
-                (item =>
-                {
-                    int result;
-                    if (item == ":")
-                        return int.MaxValue.ToString();
-                    else if (int.TryParse(item, out result))
-                    {
-                        if (result == int.MinValue)
-                            return ".";
-                        else
-                            return (result - 1).ToString();
-                    }
-                    else //if (item == ".")
-                        throw new InvalidOperationException();
-                }),
-                (item =>
-                {
-                    int result;
-                    if (item == ".")
-                        return int.MinValue.ToString();
-                    else if (int.TryParse(item, out result))
-                    {
-                        if (result == int.MaxValue)
-                            return ":";
-                        else
-                            return (result + 1).ToString();
-                    }
-                    else //if (item == ":")
-                        throw new InvalidOperationException();
-                }),
-                ((x, y) =>
-                {
-                    int xParse, yParse;
-                    bool canXParse = int.TryParse(x, out xParse);
-                    bool canYParse = int.TryParse(y, out yParse);
-
-                    if (canXParse && canYParse) return xParse.CompareTo(yParse);
-                    else if (!canXParse && !canYParse)
-                    {
-                        if (x == "." || x == ":" || y == "." || y == ":") return x.CompareTo(y);
-                        else throw new InvalidOperationException();
-                    }
-                    else if (canXParse)
-                    {
-                        if (y == ".") return 1;
-                        else if (y == ":") return -1;
-                        else throw new InvalidOperationException();
-                    }
-                    else// if (canYParse)\
-                    {
-                        if (x == ".") return -1;
-                        else if (x == ":") return 1;
-                        else throw new InvalidOperationException();
-                    }
-                })
-            );
+            private RangeInfo<string> rangeInfo;
 
             public ISet<string> AccreditedSet => this.set;
 
             public MyStringRegexRunContextInfo()
             {
+                this.rangeInfo = new CustomizedRangeInfo<string>(
+                    (item =>
+                    {
+                        int result;
+                        if (item == ":")
+                            return int.MaxValue.ToString();
+                        else if (int.TryParse(item, out result))
+                        {
+                            if (result == int.MinValue)
+                                return ".";
+                            else
+                                return (result - 1).ToString();
+                        }
+                        else //if (item == ".")
+                            throw new InvalidOperationException();
+                    }),
+                    (item =>
+                    {
+                        int result;
+                        if (item == ".")
+                            return int.MinValue.ToString();
+                        else if (int.TryParse(item, out result))
+                        {
+                            if (result == int.MaxValue)
+                                return ":";
+                            else
+                                return (result + 1).ToString();
+                        }
+                        else //if (item == ":")
+                            throw new InvalidOperationException();
+                    }),
+                    ((x, y) =>
+                    {
+                        int xParse, yParse;
+                        bool canXParse = int.TryParse(x, out xParse);
+                        bool canYParse = int.TryParse(y, out yParse);
+
+                        if (canXParse && canYParse) return xParse.CompareTo(yParse);
+                        else if (!canXParse && !canYParse)
+                        {
+                            if (x == "." || x == ":" || y == "." || y == ":") return x.CompareTo(y);
+                            else throw new InvalidOperationException();
+                        }
+                        else if (canXParse)
+                        {
+                            if (y == ".") return 1;
+                            else if (y == ":") return -1;
+                            else throw new InvalidOperationException();
+                        }
+                        else// if (canYParse)\
+                        {
+                            if (x == ".") return -1;
+                            else if (x == ":") return 1;
+                            else throw new InvalidOperationException();
+                        }
+                    })
+                );
                 this.set = new RangeSet<string>(this.rangeInfo);
             }
 
-            public BasicRegexDFA<string> ActivateRegexDFA()
+            public IRegexDFA<string> ActivateRegexDFA()
             {
                 return new BasicRegexDFA<string>();
             }
 
-            public BasicRegexDFAState<string> ActivateRegexDFAState(bool isTerminal = false)
+            public TRegexDFA ActivateRegexDFAFromDumplication<TRegexDFA>(TRegexDFA dfa)
+                where TRegexDFA : IRegexDFA<string>
+            {
+                if (typeof(BasicRegexDFA<string>).IsAssignableFrom(typeof(TRegexDFA)))
+                    return (TRegexDFA)(object)this.ActivateRegexDFAFromDumplication((BasicRegexDFA<string>)(object)dfa);
+                else
+                    return dfa;
+            }
+
+            private BasicRegexDFA<string> ActivateRegexDFAFromDumplication(BasicRegexDFA<string> dfa)
+            {
+                if (dfa == null) throw new ArgumentNullException(nameof(dfa));
+
+                return new BasicRegexDFA<string>();
+            }
+
+            public IRegexFSMState<string> ActivateRegexDFAState(bool isTerminal = false)
             {
                 return new BasicRegexDFAState<string>(isTerminal);
             }
 
-            public BasicRegexFATransition<string, BasicRegexDFAState<string>> ActivateRegexDFATransitionFromAccreditedSet(ISet<string> set)
+            public TRegexDFAState ActivateRegexDFAStateFromDumplication<TRegexDFAState>(TRegexDFAState state)
+                where TRegexDFAState : IRegexFSMState<string>
+            {
+                if (typeof(BasicRegexDFAState<string>).IsAssignableFrom(typeof(TRegexDFAState)))
+                    return (TRegexDFAState)(object)this.ActivateRegexDFAStateFromDumplication((BasicRegexDFAState<string>)(object)state);
+                else
+                    return state;
+            }
+
+            private BasicRegexDFAState<string> ActivateRegexDFAStateFromDumplication(BasicRegexDFAState<string> state)
+            {
+                if (state == null) throw new ArgumentNullException(nameof(state));
+
+                return new BasicRegexDFAState<string>(state.IsTerminal);
+            }
+
+            public IAcceptInputTransition<string> ActivateRegexDFATransitionFromAccreditedSet(ISet<string> set)
             {
                 if (set == null) throw new ArgumentNullException(nameof(set));
 
                 return new RangeSetRegexFATransition<string, BasicRegexDFAState<string>>(set as RangeSet<string>);
             }
 
-            public BasicRegexNFA<string> ActivateRegexNFA()
+            public IRegexNFA<string> ActivateRegexNFA()
             {
                 return new BasicRegexNFA<string>();
             }
 
-            public BasicRegexNFA<string> ActivateRegexNFAFromDumplication(BasicRegexNFA<string> nfa)
+            public TRegexNFA ActivateRegexNFAFromDumplication<TRegexNFA>(TRegexNFA nfa) where TRegexNFA : IRegexNFA<string>
+            {
+                if (typeof(BasicRegexNFA<string>).IsAssignableFrom(typeof(TRegexNFA)))
+                    return (TRegexNFA)(object)this.ActivateRegexNFAFromDumplication((BasicRegexNFA<string>)(object)nfa);
+                else
+                    return nfa;
+            }
+
+            private BasicRegexNFA<string> ActivateRegexNFAFromDumplication(BasicRegexNFA<string> nfa)
             {
                 if (nfa == null) throw new ArgumentNullException(nameof(nfa));
 
-                return this.ActivateRegexNFA();
+                return new BasicRegexNFA<string>();
             }
 
-            public BasicRegexNFAEpsilonTransition<string> ActivateRegexNFAEpsilonTransition()
+            public IRegexFSMEpsilonTransition<string> ActivateRegexNFAEpsilonTransition()
             {
                 return new BasicRegexNFAEpsilonTransition<string>();
             }
 
-            public BasicRegexNFAState<string> ActivateRegexNFAState(bool isTerminal = false)
+            public IRegexNFAState<string> ActivateRegexNFAState(bool isTerminal = false)
             {
                 return new BasicRegexNFAState<string>(isTerminal);
             }
 
-            public BasicRegexNFAState<string> ActivateRegexNFAStateFromDumplication(BasicRegexNFAState<string> state)
+            public TRegexNFAState ActivateRegexNFAStateFromDumplication<TRegexNFAState>(TRegexNFAState state)
+                where TRegexNFAState : IRegexNFAState<string>
+            {
+                if (typeof(BasicRegexNFAState<string>).IsAssignableFrom(typeof(TRegexNFAState)))
+                    return (TRegexNFAState)(object)this.ActivateRegexNFAStateFromDumplication((BasicRegexNFAState<string>)(object)state);
+                else
+                    return state;
+            }
+
+            private BasicRegexNFAState<string> ActivateRegexNFAStateFromDumplication(BasicRegexNFAState<string> state)
             {
                 if (state == null) throw new ArgumentNullException(nameof(state));
 
-                return this.ActivateRegexNFAState(state.IsTerminal);
+                return new BasicRegexNFAState<string>(state.IsTerminal);
             }
 
-            public BasicRegexFATransition<string, BasicRegexNFAState<string>> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<string> regex)
+            public IAcceptInputTransition<string> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<string> regex)
             {
                 if (regex == null) throw new ArgumentNullException(nameof(regex));
 
@@ -544,10 +666,30 @@ namespace RegexTest
                 else if (regex is IRange<string> range)
                     set.AddRange(range.Minimum, range.Maximum, range.CanTakeMinimum, range.CanTakeMaximum);
                 else throw new NotSupportedException();
+
                 return new RangeSetRegexFATransition<string, BasicRegexNFAState<string>>(set);
             }
 
-            public BasicRegexFATransition<string, BasicRegexNFAState<string>> ActivateRegexNFATransitionFromDumplication(BasicRegexFATransition<string, BasicRegexNFAState<string>> transition)
+            public TRegexFSMTransition ActivateRegexNFATransitionFromDumplication<TRegexFSMTransition>(TRegexFSMTransition transition)
+                where TRegexFSMTransition : IRegexFSMTransition<string>
+            {
+                if (typeof(BasicRegexFATransition<string, BasicRegexNFAState<string>>).IsAssignableFrom(typeof(TRegexFSMTransition)))
+                    return (TRegexFSMTransition)(object)this.ActivateRegexNFATransitionFromDumplication((BasicRegexFATransition<string, BasicRegexNFAState<string>>)(object)transition);
+                else
+                    return transition;
+            }
+
+            private BasicRegexFATransition<string, BasicRegexNFAState<string>> ActivateRegexNFATransitionFromDumplication(BasicRegexFATransition<string, BasicRegexNFAState<string>> transition)
+            {
+                if (transition == null) throw new ArgumentNullException(nameof(transition));
+
+                if (transition is RangeSetRegexFATransition<string, BasicRegexNFAState<string>> rangeSetTransition)
+                    return this.ActivateRegexNFATransitionFromDumplication(rangeSetTransition);
+                else
+                    return transition;
+            }
+
+            private RangeSetRegexFATransition<string, BasicRegexNFAState<string>> ActivateRegexNFATransitionFromDumplication(RangeSetRegexFATransition<string, BasicRegexNFAState<string>> transition)
             {
                 if (transition == null) throw new ArgumentNullException(nameof(transition));
 
@@ -557,12 +699,32 @@ namespace RegexTest
                 );
             }
 
-            public BasicRegexFATransition<string, BasicRegexDFAState<string>> CombineRegexDFATransitions(IEnumerable<BasicRegexFATransition<string, BasicRegexDFAState<string>>> dfaTransitions)
+            public IAcceptInputTransition<string> CombineRegexDFATransitions(IEnumerable<IAcceptInputTransition<string>> dfaTransitions)
             {
-                throw new NotImplementedException();
+                if (dfaTransitions == null) throw new ArgumentNullException(nameof(dfaTransitions));
+
+                RangeSet<string> set = new RangeSet<string>(
+                    dfaTransitions
+                        .Where(transition => transition != null)
+                        .SelectMany(transition =>
+                            this.GetAccreditedSetFromRegexFSMTransition(transition)
+                        ),
+                    this.rangeInfo
+                );
+                return this.ActivateRegexDFATransitionFromAccreditedSet(set);
             }
 
-            public ISet<string> GetAccreditedSetFromRegexNFATransition(BasicRegexFATransition<string, BasicRegexNFAState<string>> transition)
+            public ISet<string> GetAccreditedSetFromRegexFSMTransition(IAcceptInputTransition<string> transition)
+            {
+                if (transition == null) throw new ArgumentNullException(nameof(transition));
+
+                if (transition is BasicRegexFATransition<string, BasicRegexNFAState<string>>)
+                    return this.GetAccreditedSetFromRegexNFATransition((BasicRegexFATransition<string, BasicRegexNFAState<string>>)transition);
+                else
+                    return new RangeSet<string>(this.AccreditedSet.Where(transition.CanAccept), this.rangeInfo);
+            }
+            
+            private ISet<string> GetAccreditedSetFromRegexNFATransition(BasicRegexFATransition<string, BasicRegexNFAState<string>> transition)
             {
                 if (transition == null) throw new ArgumentNullException(nameof(transition));
 

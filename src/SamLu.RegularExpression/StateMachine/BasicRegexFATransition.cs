@@ -19,6 +19,11 @@ namespace SamLu.RegularExpression.StateMachine
         public virtual Predicate<T> Predicate => this.predicate;
 
         /// <summary>
+        /// 获取 <see cref="BasicRegexFATransition{T}"/> 指向的状态。
+        /// </summary>
+        new public virtual IRegexFSMState<T> Target => (IRegexFSMState<T>)base.Target;
+
+        /// <summary>
         /// 初始化 <see cref="BasicRegexFATransition{T, TRegexFAState}"/> 类的新实例。
         /// </summary>
         protected BasicRegexFATransition() { }
@@ -34,36 +39,27 @@ namespace SamLu.RegularExpression.StateMachine
 
             this.predicate = predicate;
         }
-        
-        public BasicRegexFATransition(BasicRegexFATransition<T, BasicRegexNFAState<T>> transition) :
-            this((transition ?? throw new ArgumentNullException(nameof(transition))).Predicate)
-        {
-            this.TransitAction = transition.TransitAction;
-        }
 
-        public BasicRegexFATransition(BasicRegexFATransition<T, BasicRegexDFAState<T>> transition) :
-            this((transition ?? throw new ArgumentNullException(nameof(transition))).Predicate)
-        {
-            this.TransitAction = transition.TransitAction;
-        }
-
+        /// <summary>
+        /// 初始化 <see cref="BasicRegexFATransition{T}"/> 类的新实例。该实例使用指定的 <see cref="IAcceptInputTransition{T}"/> 对象的 <see cref="IAcceptInputTransition{T}.CanAccept(T)"/> 方法来确定 <see cref="BasicRegexFATransition{T}"/> 接受的输入是否满足条件。
+        /// </summary>
+        /// <param name="transition">指定的转换。</param>
         public BasicRegexFATransition(IAcceptInputTransition<T> transition) :
             this((transition ?? throw new ArgumentNullException(nameof(transition))).CanAccept)
         {
             this.TransitAction = transition.TransitAction;
         }
 
+        /// <summary>
+        /// 适配 <see cref="BasicRegexFATransition{T, TRegexFAState}"/> 对象，使其符合 <see cref="BasicRegexFATransition{T}"/> 的接口和行为。
+        /// </summary>
+        /// <typeparam name="TRegexFAState">正则表达式构造的有限自动机的状态的类型。</typeparam>
+        /// <param name="transition">被适配的 <see cref="BasicRegexFATransition{T, TRegexFAState}"/> 对象。</param>
+        /// <returns><paramref name="transition"/> 经过适配后的 <see cref="BasicRegexFATransition{T, TRegexFAState}"/> 对象。</returns>
+        /// <seealso cref="BasicRegexFATransitionAdaptor{T, TRegexFAState}"/>
         public static BasicRegexFATransition<T> Adapt<TRegexFAState>(BasicRegexFATransition<T, TRegexFAState> transition)
             where TRegexFAState : IRegexFSMState<T, BasicRegexFATransition<T, TRegexFAState>> =>
-            new BasicRegexFATransition<T>((transition ?? throw new ArgumentNullException(nameof(transition))).Predicate)
-            {
-                TransitAction = transition.TransitAction
-            };
-
-        /// <summary>
-        /// 获取 <see cref="BasicRegexFATransition{T}"/> 指向的状态。
-        /// </summary>
-        new public virtual IRegexFSMState<T> Target => (IRegexFSMState<T>)base.Target;
+            new BasicRegexFATransitionAdaptor<T, TRegexFAState>(transition);
 
         /// <summary>
         /// 将转换的目标设为指定状态。

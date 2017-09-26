@@ -29,16 +29,6 @@ namespace SamLu.RegularExpression.StateMachine
         /// </summary>
         new ICollection<IRegexFSMState<T>> States { get; }
 
-        IEnumerable<T> Inputs { get; }
-
-        int Index { get; }
-
-        event RegexFSMMatchEventHandler<T> Match;
-
-        MatchCollection<T> Matches { get; }
-
-        void EndMatch();
-
         /// <summary>
         /// 向 <see cref="IRegexFSM{T}"/> 的一个指定状态添加指定转换。
         /// </summary>
@@ -70,14 +60,46 @@ namespace SamLu.RegularExpression.StateMachine
         bool SetTarget(IRegexFSMTransition<T> transition, IRegexFSMState<T> state);
 
         /// <summary>
+        /// 获取 <see cref="IRegexFSM{T}"/> 匹配过程的输入对象序列。
+        /// </summary>
+        IEnumerable<T> Inputs { get; }
+
+        /// <summary>
+        /// 获取 <see cref="IRegexFSM{T}"/> 匹配过程的在 <see cref="Inputs"/> 中的当前位置。
+        /// </summary>
+        int Index { get; }
+
+        /// <summary>
+        /// <see cref="IRegexFSM{T}"/> 的匹配事件。
+        /// </summary>
+        event RegexFSMMatchEventHandler<T> Match;
+
+        /// <summary>
+        /// <see cref="IRegexFSM{T}"/> 的所有匹配。
+        /// </summary>
+        MatchCollection<T> Matches { get; }
+        
+        /// <summary>
+        /// 记录一个匹配。
+        /// </summary>
+        /// <param name="captureIDToken">匹配的 ID 标志符。</param>
+        /// <param name="id">捕获的 ID 。</param>
+        /// <param name="start">捕获的开始位置。</param>
+        /// <param name="length">捕获的长度。</param>
+        void Capture(object captureIDToken, object id, int start, int length);
+
+        /// <summary>
         /// 接受一个指定输入序列并进行一组转换动作。
         /// </summary>
         /// <param name="inputs">指定的输入序列。</param>
         /// <exception cref="ArgumentNullException"><paramref name="inputs"/> 的值为 null 。</exception>
         void TransitMany(IEnumerable<T> inputs);
 
-        void Capture(object captureIDToken, object id, int start, int length);
-
+        /// <summary>
+        /// 获取 <see cref="IRegexFSM{T}"/> 的服务。
+        /// </summary>
+        /// <typeparam name="TService">服务的类型。</typeparam>
+        /// <returns><see cref="IRegexFSM{T}"/> 的指定类型的服务。</returns>
         TService GetService<TService>() where TService : IRegexFSMService<T>, new();
     }
 

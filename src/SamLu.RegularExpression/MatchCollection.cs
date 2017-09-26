@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,8 @@ namespace SamLu.RegularExpression
     /// 包含所有正则匹配的集合。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
+    [DebuggerDisplay("Count = {Count}")]
+    [DebuggerTypeProxy(typeof(SamLu.DebugView.CollectionDebugView<>))]
     public class MatchCollection<T> : IReadOnlyList<Match<T>>, ICollection
     {
         private IReadOnlyList<Match<T>> innerList;

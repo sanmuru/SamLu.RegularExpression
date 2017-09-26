@@ -2,12 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.Extend
 {
+    [DebuggerDisplay("Count = {Count}")]
+    [DebuggerTypeProxy(typeof(SamLu.DebugView.CollectionDebugView<>))]
     public class GroupCollection<T> : IReadOnlyCollection<Group<T>>
     {
         private Match<T> match;

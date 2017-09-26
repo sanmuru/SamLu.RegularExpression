@@ -157,24 +157,7 @@ namespace SamLu.RegularExpression.StateMachine
 
             return base.RemoveTransition(transition);
         }
-
-        /// <summary>
-        /// 获取可以接受指定输入并进行转换的转换。
-        /// </summary>
-        /// <param name="input">指定的输入。</param>
-        /// <returns>可以接受指定输入并进行转换的转换。</returns>
-        public BasicRegexFATransition<T, BasicRegexDFAState<T>> GetTransitTransition(T input)
-        {
-            // 遍历当前状态的所有转换。
-            foreach (var transition in this.Transitions)
-                // 若有转换接受输入，则进行转换操作。
-                if (transition.Predicate(input))
-                    return transition;
-
-            // 无转换接受输入
-            return null;
-        }
-
+        
         #region IRegexFSMTransition{T}/IRegexFSMTransition{T, TState} Implementation
         ICollection<IRegexFSMTransition<T>> IRegexFSMState<T>.Transitions =>
             new ReadOnlyCollection<IRegexFSMTransition<T>>(
@@ -187,10 +170,7 @@ namespace SamLu.RegularExpression.StateMachine
         bool IRegexFSMState<T>.RemoveTransition(IRegexFSMTransition<T> transition) =>
             base.RemoveTransition((BasicRegexFATransition<T, BasicRegexDFAState<T>>)transition);
 
-        IEnumerable<BasicRegexFATransition<T, BasicRegexDFAState<T>>> IRegexFSMState<T, BasicRegexFATransition<T, BasicRegexDFAState<T>>>.GetOrderedTransitions()
-        {
-            throw new NotImplementedException();
-        }
+        IEnumerable<BasicRegexFATransition<T, BasicRegexDFAState<T>>> IRegexFSMState<T, BasicRegexFATransition<T, BasicRegexDFAState<T>>>.GetOrderedTransitions() => this.Transitions;
 
         IEnumerable<IRegexFSMTransition<T>> IRegexFSMState<T>.GetOrderedTransitions() =>
             ((IRegexFSMState<T, BasicRegexFATransition<T, BasicRegexDFAState<T>>>)this).GetOrderedTransitions();

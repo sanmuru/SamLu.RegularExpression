@@ -1,4 +1,5 @@
-﻿using SamLu.StateMachine;
+﻿using SamLu.IO;
+using SamLu.StateMachine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -266,43 +267,48 @@ namespace SamLu.RegularExpression.StateMachine
         public static IRegexFSM<T> Optimize<T>(this IRegexFSM<T> fsm)
         {
             fsm.EpsilonClosure();
-            
-            var result = new RegexFSM<T>() { StartState = new RegexStateState<T>(fsm.StartState) };
 
-            var states = fsm.States;
-            var transitions = fsm.StartState.RecurGetTransitions().ToList();
-            var signedStates = states.Where(state =>
-                state != fsm.StartState && // 不是起始状态
-                !state.IsTerminal && // 不是结束状态
-                transitions
-                    .Where(transition => transition.Target == state)
-                    .All(transition => !(transition is IAcceptInputTransition<T>))
-            );
-            var unsignedStates = states.Except(signedStates);
-            var groupTransitions = unsignedStates
-                .SelectMany(state => state.M())
-                .Select(group => new RegexFunctionalTransitionGroupTransition<T>(group))
-                .ToArray();
-
-            var D = new Dictionary<IRegexFSMState<T>, IRegexFSMState<T>>();
-            Func<IRegexFSMState<T>, IRegexFSMState<T>> func = (formerState) =>
+            if (fsm.StartState.RecurGetTransitions().All(transition => transition is IAcceptInputTransition<T>))
+                return fsm;
+            else
             {
-                if (D.ContainsKey(formerState)) return D[formerState];
-                else
+                var result = new RegexFSM<T>() { StartState = new RegexStateState<T>(fsm.StartState) };
+
+                var states = fsm.States;
+                var transitions = fsm.StartState.RecurGetTransitions().ToList();
+                var signedStates = states.Where(state =>
+                    state != fsm.StartState && // 不是起始状态
+                    !state.IsTerminal && // 不是结束状态
+                    transitions
+                        .Where(transition => transition.Target == state)
+                        .All(transition => !(transition is IAcceptInputTransition<T>))
+                );
+                var unsignedStates = states.Except(signedStates);
+                var groupTransitions = unsignedStates
+                    .SelectMany(state => state.M())
+                    .Select(group => new RegexFunctionalTransitionGroupTransition<T>(group))
+                    .ToArray();
+
+                var D = new Dictionary<IRegexFSMState<T>, IRegexFSMState<T>>();
+                Func<IRegexFSMState<T>, IRegexFSMState<T>> func = (formerState) =>
                 {
-                    var newState = new RegexStateState<T>(formerState);
-                    D.Add(formerState, newState);
-                    return newState;
+                    if (D.ContainsKey(formerState)) return D[formerState];
+                    else
+                    {
+                        var newState = new RegexStateState<T>(formerState);
+                        D.Add(formerState, newState);
+                        return newState;
+                    }
+                };
+                D.Add(fsm.StartState, result.StartState);
+                foreach (var groupTransition in groupTransitions)
+                {
+                    result.AttachTransition(func(groupTransition.StateFrom), groupTransition);
+                    result.SetTarget(groupTransition, func(groupTransition.StateTo));
                 }
-            };
-            D.Add(fsm.StartState, result.StartState);
-            foreach (var groupTransition in groupTransitions)
-            {
-                result.AttachTransition(func(groupTransition.StateFrom), groupTransition);
-                result.SetTarget(groupTransition, func(groupTransition.StateTo));
-            }
 
-            return result;
+                return result;
+            }
         }
 
         private sealed class RegexStateState<T> : FSMState<IRegexFSMTransition<T>>, IRegexFSMState<T>
@@ -319,7 +325,7 @@ namespace SamLu.RegularExpression.StateMachine
         private sealed class RegexFunctionalTransitionGroupTransition<T> : FSMTransition<IRegexFSMState<T>>, IAcceptInputTransition<T>, IRegexFSMTransitionProxy<T>
         {
             public IRegexFSMState<T> StateFrom { get; private set; }
-            public IRegexFSMState<T> StateTo => this.FunctionalTransitions.FirstOrDefault()?.Target;
+            public IRegexFSMState<T> StateTo => this.AcceptInputTransition.Target;
 
             public IAcceptInputTransition<T> AcceptInputTransition { get; private set; }
             public IRegexFSMTransition<T>[] FunctionalTransitions { get; private set; }
@@ -331,7 +337,7 @@ namespace SamLu.RegularExpression.StateMachine
                 this.FunctionalTransitions = transitionGroup.functionalTransitions;
             }
 
-            public bool TransitProxy(T input, RegexFSMTransitProxyHandler<T> handler, params object[] args)
+            public bool TransitProxy(IReaderSource<T> readerSource, RegexFSMTransitProxyHandler<T> handler, params object[] args)
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {
@@ -344,12 +350,16 @@ namespace SamLu.RegularExpression.StateMachine
                         {
                             // 复原
                             backTraceService.BackTrace(timepoint, true);
-
                             return false;
                         }
                     }
-                    
-                    return this.CanAccept(input);
+
+                    if (readerSource.HasNext() && this.CanAccept(readerSource.Peek()))
+                    {
+                        readerSource.Read();
+                        return true;
+                    }
+                    else return false;
                 }
                 else throw new InvalidOperationException();
             }

@@ -692,7 +692,6 @@ namespace SamLu.RegularExpression.StateMachine
                                 return true;
                                 //throw new InvalidOperationException("找到多个重复 ID 的正则组。");
                                 //return false;
-
                         }
                     }
                 }
@@ -700,13 +699,13 @@ namespace SamLu.RegularExpression.StateMachine
             });
         }
 
-        protected virtual BasicRegexFATransition<T> GenerateNFATransitionFromRegexCondition(
+        protected virtual IAcceptInputTransition<T> GenerateNFATransitionFromRegexCondition(
             RegexCondition<T> condition,
             IRegexNFA<T> nfa,
             IRegexNFAState<T> state
         )
         {
-            BasicRegexFATransition<T> transition = this.contextInfo.ActivateRegexNFATransitionFromRegexCondition(condition);
+            IAcceptInputTransition<T> transition = this.contextInfo.ActivateRegexNFATransitionFromRegexCondition(condition);
             nfa.AttachTransition(state, transition);
 
             return transition;
@@ -852,7 +851,7 @@ namespace SamLu.RegularExpression.StateMachine
                 var accreditedSetsDic = transitions
                     .ToDictionary(
                         (transition => transition),
-                        (transition => this.contextInfo.GetAccreditedSetFromRegexNFATransition((BasicRegexFATransition<T>)transition))
+                        (transition => this.contextInfo.GetAccreditedSetFromRegexFSMTransition((IAcceptInputTransition<T>)transition))
                     );
                 // 计算接受的对象集的并集。
                 var sets = accreditedSetsDic.Values.ToArray();

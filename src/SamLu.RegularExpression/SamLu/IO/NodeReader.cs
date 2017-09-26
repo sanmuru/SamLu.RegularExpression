@@ -127,7 +127,7 @@ namespace SamLu.IO
 		{
 			if (this.Position == this.buffer.Count) this._ReadBuffer(10);
 
-			if (this.Position == this.buffer.Count) throw new InvalidOperationException("内部读取器没有数据。");
+			if (this.Position == this.buffer.Count) throw new InvalidOperationException("内部读取器已抵达结尾。");
 			else return this.buffer[this.Position];
 		}
 
@@ -331,6 +331,19 @@ namespace SamLu.IO
 
 			return new NodeReader<IEnumerable<TNode>, TNode>(nodes);
 		}
+
+        /// <summary>
+        /// 使用指定的节点枚举器创建<see cref="NodeReader{TReader, TNode}"/>对象。
+        /// </summary>
+        /// <typeparam name="TNode">节点的类型。</typeparam>
+        /// <param name="enumerator">指定的节点枚举器。</param>
+        /// <returns>使用指定的节点枚举器创建的<see cref="NodeReader{TReader, TNode}"/>对象。</returns>
+        public static NodeReader<IEnumerator<TNode>, TNode> CreateReader<TNode>(this IEnumerator<TNode> enumerator)
+        {
+            if (enumerator == null) throw new ArgumentNullException(nameof(enumerator));
+
+            return new NodeReader<IEnumerator<TNode>, TNode>(enumerator);
+        }
 
 		public static NodeReader<TReader, TNode> CreateReader<TReader, TNode>(this TReader reader, Func<TReader, bool> eofFunc)
 		{

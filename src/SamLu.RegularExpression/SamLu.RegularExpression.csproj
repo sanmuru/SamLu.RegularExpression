@@ -84,7 +84,10 @@
     <Compile Include="Extend\RegexZeroLengthObject.cs" />
     <Compile Include="IAcceptInputTransition.cs" />
     <Compile Include="IRange.cs" />
+    <Compile Include="StateMachine\BasicRegexFATransitionAdaptor.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexPredicateTransition.cs" />
+    <Compile Include="StateMachine\ObjectModel\CaptureStack.cs" />
+    <Compile Include="StateMachine\ObjectModel\StateStack.cs" />
     <Compile Include="StateMachine\Service\CaptureService.cs" />
     <Compile Include="StateMachine\Service\IRegexFSMService.cs" />
     <Compile Include="StateMachine\IRegexFSMTransitionProxy.cs" />

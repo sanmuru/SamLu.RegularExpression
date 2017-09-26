@@ -16,6 +16,13 @@ namespace SamLu.IO
 		/// </summary>
 		/// <returns>下一个节点。</returns>
 		TNode Read();
+
+        /// <summary>
+        /// 获取下一个节点，并返回，但内部指针不前移。
+        /// </summary>
+        /// <returns>下一个节点。</returns>
+        TNode Peek();
+
 		/// <summary>
 		/// 获取一个值，指示是否有下一个节点未读。
 		/// </summary>
