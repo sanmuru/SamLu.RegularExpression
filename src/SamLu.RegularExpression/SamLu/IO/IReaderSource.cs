@@ -9,7 +9,7 @@ namespace SamLu.IO
 	/// 表示源节点读取器的接口。
 	/// </summary>
 	/// <typeparam name="TNode"></typeparam>
-	public interface IReaderSource<TNode>
+	public interface IReaderSource<out TNode>
 	{
 		/// <summary>
 		/// 读取下一个节点，并返回。

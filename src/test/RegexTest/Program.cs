@@ -48,7 +48,7 @@ namespace RegexTest
                     IEnumerable<char> inputs = Enumerable.Repeat<Func<int, int>>(new Random().Next, 25).Select(nextFunc => (char)('a' - 1 + nextFunc(4)));
                     char[] charArray = inputs.ToArray();
                     IRegexFSM<char> ___fsm;
-#if true
+#if false
                     ___fsm = new RegexFSM<char>() { StartState = ___dfa.StartState };
 #else
                     ___fsm = ___dfa;
