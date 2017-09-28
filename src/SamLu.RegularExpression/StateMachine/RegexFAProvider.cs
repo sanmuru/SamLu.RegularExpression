@@ -202,14 +202,14 @@ namespace SamLu.RegularExpression.StateMachine
                 group = groupReference.Group;
             else
             {
-                IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+                IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexFSMEpsilonTransition();
 
                 var groups = this.regexGroups.Where(_group => _group.ID == groupReference.GroupID).ToArray();
                 switch (groups.Length)
                 {
                     case 0:
                         //throw new InvalidOperationException("未找到引用的正则组。");
-                        epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+                        epsilonTransition = this.contextInfo.ActivateRegexFSMEpsilonTransition();
                         nfa.AttachTransition(state, epsilonTransition);
                         return epsilonTransition;
                     case 1:
@@ -725,18 +725,18 @@ namespace SamLu.RegularExpression.StateMachine
 
             var transition = this.GenerateNFATransitionFromRegexRepeatInternal(repeat.InnerRegex, nfa, state, count, out IList<IRegexNFAState<T>> nodes);
 
-            if (repeat.IsInfinte)
+            if (count > ulong.MinValue)
             {
-                IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
-                var reversedNodes = nodes.Reverse();
-                nfa.AttachTransition(reversedNodes.First(), epsilonTransition);
-                nfa.SetTarget(epsilonTransition, reversedNodes.Skip(1).First());
-            }
-            else
-            {
-                if (count > 0)
+                if (repeat.IsInfinte)
                 {
-                    IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+                    IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexFSMEpsilonTransition();
+                    var reversedNodes = nodes.Reverse();
+                    nfa.AttachTransition(reversedNodes.First(), epsilonTransition);
+                    nfa.SetTarget(epsilonTransition, reversedNodes.Skip(1).First());
+                }
+                else
+                {
+                    IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexFSMEpsilonTransition();
                     foreach (var _state in nodes.Take((int)(repeat.MaximumCount.Value - (repeat.MinimumCount ?? ulong.MinValue))))
                         nfa.AttachTransition(_state, epsilonTransition);
 
@@ -766,7 +766,7 @@ namespace SamLu.RegularExpression.StateMachine
                 nodes.Add(nextState);
             }
 
-            IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+            IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexFSMEpsilonTransition();
             nfa.AttachTransition(nextState, epsilonTransition);
 
             return epsilonTransition;
@@ -786,7 +786,7 @@ namespace SamLu.RegularExpression.StateMachine
                 nfa.SetTarget(transition, nextState);
             }
 
-            IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+            IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexFSMEpsilonTransition();
             nfa.AttachTransition(nextState, epsilonTransition);
 
             return epsilonTransition;
@@ -806,7 +806,7 @@ namespace SamLu.RegularExpression.StateMachine
                 nfa.AttachTransition(state, transition);
             }
 
-            IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexNFAEpsilonTransition();
+            IRegexFSMEpsilonTransition<T> epsilonTransition = this.contextInfo.ActivateRegexFSMEpsilonTransition();
             nfa.AttachTransition(endState, epsilonTransition);
 
             return epsilonTransition;

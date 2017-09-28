@@ -23,21 +23,31 @@ namespace RegexTest
             set.Add('c');
             ;
 
+#if false
             Dictionary<int, int> d = new Dictionary<int, int>();
             var chars = Regex.Range('\0', 'z', true, false);
             var tchars = Regex.Range(new TT<char>('a'), new TT<char>('z'), false, true);
 
             var phone = Regex.Range(0, 9).RepeatMany(10);
 
-            Func<int, RegexRepeat<char>> func = (count) =>
-                  Regex.Range('0', '9').Repeat(1, (ulong)count);
-            var section = func(3);
+            Func<int, RegexObject<char>> func = (count) =>
+            {
+                var junkPrefix = Regex.Const('0').NoneOrMany();
+                Func<int, char> convertor = Convert.ToChar;
+                return junkPrefix + Enumerable.Range(0, count).Select(num => num.ToString().Select(c => Regex.Const(c)).ConcatMany()).UnionMany();
+            };
+            var section = func(255);
             var dot = Regex.Const('.');
             var colon = Regex.Const(':');
-            var port = func(4);
+            var port = func(9999);
             var ipAddress = new RegexObject<char>[] { section, dot, section, dot, section, dot, section, new RegexObject<char>[] { colon, port }.ConcatMany().Optional() }.ConcatMany();
 
             IRegexFAProvider<char> char_Provider = new RegexFAProvider<char>(new MyCharRegexRunContextInfo());
+
+            var char_nfa = char_Provider.GenerateRegexFSMFromRegexObject(ipAddress, RegexOptions.None);
+            //var debuginfo = char_nfa.GetDebugInfo();
+            var char_dfa = char_Provider.GenerateRegexDFAFromRegexFSM(char_nfa);
+            ;
 
             Action<RegexObject<char>> action =
                 regexObj =>
@@ -46,23 +56,20 @@ namespace RegexTest
                     var ___dfa = char_Provider.GenerateRegexDFAFromRegexFSM(___nfa);
 
                     IEnumerable<char> inputs = Enumerable.Repeat<Func<int, int>>(new Random().Next, 25).Select(nextFunc => (char)('a' - 1 + nextFunc(4)));
-                    char[] charArray = inputs.ToArray();
+                    char[] ___charArray = inputs.ToArray();
                     IRegexFSM<char> ___fsm;
 #if false
                     ___fsm = new RegexFSM<char>() { StartState = ___dfa.StartState };
 #else
                     ___fsm = ___dfa;
 #endif
-                    ___fsm.TransitMany(charArray);
+                    ___fsm.TransitMany(___charArray);
 
-                    var matches = ___fsm.Matches;
+                    var ___matches = ___fsm.Matches;
                 };
             action?.Invoke(Regex.Const('a').Optional().Concat(Regex.Const('b').Concat(Regex.Const('c').Optional())));
-
-            var char_nfa = char_Provider.GenerateRegexFSMFromRegexObject(ipAddress, RegexOptions.None);
-            //var debuginfo = char_nfa.GetDebugInfo();
-            var char_dfa = char_Provider.GenerateRegexDFAFromRegexFSM(char_nfa);
-            ;
+            
+#endif
 
             Func<int, int, RegexRange<string>> func_adpator = (min, max) =>
                new RegexRangeAdaptor<int, string>(
@@ -79,10 +86,72 @@ namespace RegexTest
                 new RegexObject<string>[] { section_adpator, dot_adaptor, section_adpator, dot_adaptor, section_adpator, dot_adaptor, section_adpator, new RegexObject<string>[] { colon_adaptor, port_adaptor }.ConcatMany().Optional() }.ConcatMany();
 
             IRegexFAProvider<string> string_Provider = new RegexFAProvider<string>(new MyStringRegexRunContextInfo());
-            
+
             var string_nfa = string_Provider.GenerateRegexFSMFromRegexObject(ipAddress_adaptor, RegexOptions.None);
             var string_dfa = string_Provider.GenerateRegexDFAFromRegexFSM(string_nfa);
             ;
+
+            Random random = new Random();
+            int 样本树 = 100;
+            var ipAddressStrFragments =
+                Enumerable.Repeat(
+                    new Tuple<Func<int>, Func<double>>(
+                        (() => random.Next(4, 6)),
+                        (() => random.NextDouble() * 1.15)
+                    ),
+                    样本树
+                )
+                .Select(tuple =>
+                {
+                    int groupCount = tuple.Item1();
+                    int sectionMax = 255;
+                    int portMax = 9999;
+                    return
+                        Enumerable.Repeat<IEnumerable<string>>(
+                            new string[]
+                            {
+                                ((int)(sectionMax*tuple.Item2())).ToString(),
+                                "."
+                            },
+                            3)
+                        .Aggregate((ss1, ss2) => ss1.Concat(ss2))
+                        .Concat(groupCount > 3 ?
+                            new string[] { ((int)(sectionMax * tuple.Item2())).ToString() }
+                                .Concat(groupCount > 4 ?
+                                    new string[]
+                                    {
+                                        ":",
+                                        ((int)(portMax*tuple.Item2())).ToString()
+                                    } :
+                                    Enumerable.Empty<string>()
+                                ) :
+                            Enumerable.Empty<string>()
+                        );
+                });
+#if false
+            IRegexFSM<char> char_fsm = char_dfa;
+            var matchesArray =
+                ipAddressStrFragments
+                    .Select(ipAddressStrFragment => string.Join(string.Empty, ipAddressStrFragment))
+                    .Select(ipAddressStr =>
+                    {
+                        char_fsm.TransitMany(ipAddressStr);
+                        return char_fsm.Matches;
+                    })
+                    .ToArray();
+            ;
+#else
+            IRegexFSM<string> string_fsm = string_dfa;
+            var matchesArray =
+                ipAddressStrFragments
+                .Select(ipAddressStr =>
+                {
+                    string_fsm.TransitMany(ipAddressStr);
+                    return string_fsm.Matches;
+                })
+                .ToArray();
+            ;
+#endif
         }
 
         public class MyRegexFAProvider<T> : RegexFAProvider<T>
@@ -90,7 +159,7 @@ namespace RegexTest
             public MyRegexFAProvider(IRegexStateMachineActivationContextInfo<T> contextInfo) : base(contextInfo) { }
         }
 
-        #region char
+#region char
         public class MyRegexNFATransition<T> : BasicRegexFATransition<T, BasicRegexNFAState<T>>
         {
             private ISet<T> set;
@@ -233,9 +302,9 @@ namespace RegexTest
                 else return new BasicRegexFATransition<char, BasicRegexNFAState<char>>(transition.Predicate);
             }
 
-            public IRegexFSMEpsilonTransition<char> ActivateRegexNFAEpsilonTransition()
+            public IRegexFSMEpsilonTransition<char> ActivateRegexFSMEpsilonTransition()
             {
-                return new BasicRegexNFAEpsilonTransition<char>();
+                return new BasicRegexFSMEpsilonTransition<char>();
             }
 
             public TRegexDFAState ActivateRegexDFAStateFromDumplication<TRegexDFAState>(TRegexDFAState state)
@@ -259,7 +328,7 @@ namespace RegexTest
                 return new RangeSetRegexDFATransition(set);
             }
 
-            #region NFATransition 类型
+#region NFATransition 类型
             public class SetRegexNFATransition : BasicRegexFATransition<char, BasicRegexNFAState<char>>
             {
                 private ISet<char> set;
@@ -414,7 +483,7 @@ namespace RegexTest
                     }
                 }
             }
-            #endregion
+#endregion
 
             public IAcceptInputTransition<char> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<char> regex)
             {
@@ -487,9 +556,9 @@ namespace RegexTest
                 return set;
             }
         }
-        #endregion
+#endregion
 
-        #region string
+#region string
         public class MyStringRegexRunContextInfo : IRegexStateMachineActivationContextInfo<string>
         {
             private RangeSet<string> set;
@@ -628,9 +697,9 @@ namespace RegexTest
                 return new BasicRegexNFA<string>();
             }
 
-            public IRegexFSMEpsilonTransition<string> ActivateRegexNFAEpsilonTransition()
+            public IRegexFSMEpsilonTransition<string> ActivateRegexFSMEpsilonTransition()
             {
-                return new BasicRegexNFAEpsilonTransition<string>();
+                return new BasicRegexFSMEpsilonTransition<string>();
             }
 
             public IRegexNFAState<string> ActivateRegexNFAState(bool isTerminal = false)
@@ -776,7 +845,7 @@ namespace RegexTest
                 return set;
             }
         }
-        #endregion
+#endregion
 
         [System.Diagnostics.DebuggerDisplay("{t}")]
         struct TT<T> : IComparable<TT<T>>, IEquatable<TT<T>>

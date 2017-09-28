@@ -85,6 +85,8 @@
     <Compile Include="IAcceptInputTransition.cs" />
     <Compile Include="IRange.cs" />
     <Compile Include="SamLu\IO\NodeArrayReader.cs" />
+    <Compile Include="StateMachine\ConstAdaptorRegexFATransition.cs" />
+    <Compile Include="StateMachine\BasicRegexStateMachineActivationContextInfo.cs" />
     <Compile Include="StateMachine\BasicRegexFATransitionAdaptor.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexPredicateTransition.cs" />
     <Compile Include="StateMachine\ObjectModel\CaptureStack.cs" />
@@ -159,7 +161,7 @@
     <Compile Include="StateMachine\IRegexStateMachineActivationContextInfo.cs" />
     <Compile Include="StateMachine\BasicRegexDFA.cs" />
     <Compile Include="StateMachine\BasicRegexDFAState.cs" />
-    <Compile Include="StateMachine\BasicRegexNFAEpsilonTransition.cs" />
+    <Compile Include="StateMachine\BasicRegexFSMEpsilonTransition.cs" />
     <Compile Include="StateMachine\RegexFAProvider.cs" />
     <Compile Include="StateMachine\RegexFAStateGroup.cs" />
     <Compile Include="StateMachine\BasicRegexNFA.cs" />

@@ -75,7 +75,7 @@ namespace SamLu.RegularExpression.StateMachine
         {
             if (e == null) throw new ArgumentNullException(nameof(e));
 
-            this.Match(this, e);
+            this.Match?.Invoke(this, e);
         }
         #endregion
 
@@ -696,9 +696,17 @@ namespace SamLu.RegularExpression.StateMachine
         {
             if (e == null) throw new ArgumentNullException(nameof(e));
 
-            this.Match(this, e);
+            this.Match?.Invoke(this, e);
         }
         #endregion
+
+        /// <summary>
+        /// 初始化 <see cref="RegexFSM{T, TState, TTransition}"/> 类的新实例。
+        /// </summary>
+        public RegexFSM() : base()
+        {
+            this.Match += this.this_Match;
+        }
 
         #region 缓存数据
         /// <summary>
@@ -832,7 +840,7 @@ namespace SamLu.RegularExpression.StateMachine
         protected virtual bool TransitInternal(out bool inputAccepted)
         {
             IReaderSource<TTransition> transitionReader;
-            if (this.stateStack.Count != 0 && object.Equals(this.stateStack.Peek(), this.CurrentState))
+            if (this.stateStack.Count != 0 && object.Equals(this.stateStack.Peek().State, this.CurrentState))
                 transitionReader = this.stateStack.Peek().TransitionReader;
             else
             {

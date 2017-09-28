@@ -128,7 +128,7 @@ namespace SamLu.RegularExpression.StateMachine
     /// 表示基础正则表达式（ Basic Regular Expression ）构造的非确定的有限自动机的状态。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
-    public class BasicRegexNFAState<T> : NFAState<BasicRegexFATransition<T, BasicRegexNFAState<T>>, BasicRegexNFAEpsilonTransition<T>>, IRegexNFAState<T, BasicRegexFATransition<T, BasicRegexNFAState<T>>, BasicRegexNFAEpsilonTransition<T>>
+    public class BasicRegexNFAState<T> : NFAState<BasicRegexFATransition<T, BasicRegexNFAState<T>>, BasicRegexFSMEpsilonTransition<T>>, IRegexNFAState<T, BasicRegexFATransition<T, BasicRegexNFAState<T>>, BasicRegexFSMEpsilonTransition<T>>
     {
         /// <summary>
         /// 初始化 <see cref="BasicRegexNFAState{T}"/> 类的新实例。
@@ -147,7 +147,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// <param name="epsilonTransition">要添加的 ε 转换。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
         /// <exception cref="ArgumentNullException"><paramref name="epsilonTransition"/> 的值为 null 。</exception>
-        public override bool AttachTransition(BasicRegexNFAEpsilonTransition<T> epsilonTransition)
+        public override bool AttachTransition(BasicRegexFSMEpsilonTransition<T> epsilonTransition)
         {
             if (epsilonTransition == null) throw new ArgumentNullException(nameof(epsilonTransition));
 
@@ -160,7 +160,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// <param name="epsilonTransition">要添加的 ε 转换。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
         /// <exception cref="ArgumentNullException"><paramref name="epsilonTransition"/> 的值为 null 。</exception>
-        public override bool RemoveTransition(BasicRegexNFAEpsilonTransition<T> epsilonTransition)
+        public override bool RemoveTransition(BasicRegexFSMEpsilonTransition<T> epsilonTransition)
         {
             if (epsilonTransition == null) throw new ArgumentNullException(nameof(epsilonTransition));
 
@@ -174,10 +174,10 @@ namespace SamLu.RegularExpression.StateMachine
             );
 
         bool IRegexNFAState<T>.AttachTransition(IRegexFSMEpsilonTransition<T> epsilonTransition) =>
-            this.AttachTransition((BasicRegexNFAEpsilonTransition<T>)epsilonTransition);
+            this.AttachTransition((BasicRegexFSMEpsilonTransition<T>)epsilonTransition);
 
         bool IRegexNFAState<T>.RemoveTransition(IRegexFSMEpsilonTransition<T> epsilonTransition) =>
-            this.RemoveTransition((BasicRegexNFAEpsilonTransition<T>)epsilonTransition);
+            this.RemoveTransition((BasicRegexFSMEpsilonTransition<T>)epsilonTransition);
         
         bool IRegexFSMState<T>.AttachTransition(IRegexFSMTransition<T> transition) =>
             base.AttachTransition((BasicRegexFATransition<T, BasicRegexNFAState<T>>)transition);
@@ -190,8 +190,8 @@ namespace SamLu.RegularExpression.StateMachine
                 (transition => transition),
                 Comparer<BasicRegexFATransition<T, BasicRegexNFAState<T>>>.Create((x, y) =>
                 {
-                    bool f1 = x is BasicRegexNFAEpsilonTransition<T>;
-                    bool f2 = y is BasicRegexNFAEpsilonTransition<T>;
+                    bool f1 = x is BasicRegexFSMEpsilonTransition<T>;
+                    bool f2 = y is BasicRegexFSMEpsilonTransition<T>;
                     if (f1 ^ f2)
                         return f1 ? -1 : 1;
                     else
@@ -203,10 +203,10 @@ namespace SamLu.RegularExpression.StateMachine
             ((IRegexFSMState<T, BasicRegexFATransition<T, BasicRegexNFAState<T>>>)this).GetOrderedTransitions();
 
         bool INFAState.AttachTransition(IEpsilonTransition epsilonTransition) =>
-            this.AttachTransition((BasicRegexNFAEpsilonTransition<T>)epsilonTransition);
+            this.AttachTransition((BasicRegexFSMEpsilonTransition<T>)epsilonTransition);
 
         bool INFAState.RemoveTransition(IEpsilonTransition epsilonTransition) =>
-            this.RemoveTransition((BasicRegexNFAEpsilonTransition<T>)epsilonTransition);
+            this.RemoveTransition((BasicRegexFSMEpsilonTransition<T>)epsilonTransition);
         #endregion
     }
 }

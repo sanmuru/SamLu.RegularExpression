@@ -40,10 +40,10 @@ namespace SamLu.RegularExpression.StateMachine
         /// <summary>
         /// 远程创建指定 <typeparamref name="TRegexDFA"/> 对象的空副本。
         /// </summary>
-        /// <param name="nfa">指定正则构造确定自动机。</param>
+        /// <param name="dfa">指定正则构造确定自动机。</param>
         /// <typeparam name="TRegexDFA">正则构造确定自动机对象的类型。</typeparam>
         /// <returns>指定正则构造确定自动机的空副本。</returns>
-        TRegexDFA ActivateRegexDFAFromDumplication<TRegexDFA>(TRegexDFA nfa) where TRegexDFA : IRegexDFA<T>;
+        TRegexDFA ActivateRegexDFAFromDumplication<TRegexDFA>(TRegexDFA dfa) where TRegexDFA : IRegexDFA<T>;
 
         /// <summary>
         /// 远程创建 <see cref="IRegexNFAState{T}"/> 的新实例。
@@ -95,7 +95,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// 远程创建 <see cref="IRegexFSMEpsilonTransition{T}"/> 的新实例。
         /// </summary>
         /// <returns><see cref="IRegexFSMEpsilonTransition{T}"/> 的新实例。</returns>
-        IRegexFSMEpsilonTransition<T> ActivateRegexNFAEpsilonTransition();
+        IRegexFSMEpsilonTransition<T> ActivateRegexFSMEpsilonTransition();
 
         /// <summary>
         /// 从可接受的对象集中获取信息，远程创建 DFA 转换的新实例。
@@ -147,10 +147,10 @@ namespace SamLu.RegularExpression.StateMachine
         /// <summary>
         /// 合并多个指向相同目标状态的 DFA 转换。
         /// </summary>
-        /// <param name="dfaTransitions">多个指向相同目标状态的 DFA 转换。</param>
+        /// <param name="transitions">多个指向相同目标状态的 DFA 转换。</param>
         /// <returns>合并后的 DFA 转换。</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="dfaTransitions"/> 的值为 null 。</exception>
-        /// <exception cref="InvalidOperationException"><paramref name="dfaTransitions"/> 中的 DFA 转换不全指向相同目标状态。</exception>
-        IAcceptInputTransition<T> CombineRegexDFATransitions(IEnumerable<IAcceptInputTransition<T>> dfaTransitions);
+        /// <exception cref="ArgumentNullException"><paramref name="transitions"/> 的值为 null 。</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="transitions"/> 中的 DFA 转换不全指向相同目标状态。</exception>
+        IAcceptInputTransition<T> CombineRegexDFATransitions(IEnumerable<IAcceptInputTransition<T>> transitions);
     }
 }
