@@ -1,4 +1,5 @@
 ﻿using SamLu.IO;
+using SamLu.RegularExpression.StateMachine.FunctionalTransitions;
 using SamLu.StateMachine;
 using System;
 using System.Collections.Generic;
@@ -229,7 +230,94 @@ namespace SamLu.RegularExpression.StateMachine
         }
         #endregion
 
-        private static IEnumerable<(IRegexFSMState<T>, IAcceptInputTransition<T>, IRegexFSMTransition<T>[])> M<T>(this IRegexFSMState<T> state)
+        #region GetOrderedTransitions
+        public static IEnumerable<IRegexFSMTransition<T>> GetOrderedTransitions<T>(this IRegexFSMState<T> state)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+
+            var comparer = Comparer<IRegexFSMTransition<T>>.Create((x, y) =>
+            {
+                Func<IRegexFSMTransition<T>, int> func = transition =>
+                {
+                    if (transition is IRegexFSMEpsilonTransition<T>) return 0;
+                    else if (transition is IRegexFSMFunctionalTransition<T>) return 1;
+                    else return 2;
+                };
+
+                return func(x).CompareTo(func(y));
+            });
+
+            return state.Transitions.OrderBy((transition => transition), comparer);
+        }
+
+        public static IEnumerable<TTransition> GetOrderedTransitions<T, TState, TTransition>(this TState state)
+            where TState : IRegexFSMState<T, TTransition>
+            where TTransition :  IRegexFSMTransition<T, TState>
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+
+            var comparer = Comparer<TTransition>.Create((x, y) =>
+            {
+                Func<TTransition, int> func = transition =>
+                {
+                    if (transition is IRegexFSMEpsilonTransition<T>) return 0;
+                    else if (transition is IRegexFSMFunctionalTransition<T>) return 1;
+                    else return 2;
+                };
+
+                return func(x).CompareTo(func(y));
+            });
+
+            return state.Transitions.OrderBy((transition => transition), comparer);
+        }
+
+        public static IEnumerable<TTransition> GetOrderedTransitions<T, TState, TTransition, TEpsilonTransition>(this TState state)
+            where TState : IRegexFSMState<T, TTransition>
+            where TTransition : class, IRegexFSMTransition<T, TState>
+            where TEpsilonTransition : TTransition, IRegexFSMEpsilonTransition<T, TState>
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+
+            var comparer = Comparer<TTransition>.Create((x, y) =>
+            {
+                Func<TTransition, int> func = transition =>
+                {
+                    if (transition is TEpsilonTransition) return 0;
+                    else if (transition is IRegexFSMFunctionalTransition<T>) return 1;
+                    else return 2;
+                };
+
+                return func(x).CompareTo(func(y));
+            });
+
+            return state.Transitions.OrderBy((transition => transition), comparer);
+        }
+
+        public static IEnumerable<TTransition> GetOrderedTransitions<T, TState, TTransition, TEpsilonTransition, TFunctionalTransition>(this TState state)
+            where TState : IRegexFSMState<T, TTransition>
+            where TTransition : class, IRegexFSMTransition<T, TState>
+            where TEpsilonTransition : TTransition, IRegexFSMEpsilonTransition<T, TState>
+            where TFunctionalTransition : TTransition, IRegexFSMFunctionalTransition<T, TState>
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+
+            var comparer = Comparer<TTransition>.Create((x, y) =>
+            {
+                Func<TTransition, int> func = transition =>
+                {
+                    if (transition is TEpsilonTransition) return 0;
+                    else if (transition is TFunctionalTransition) return 1;
+                    else return 2;
+                };
+
+                return func(x).CompareTo(func(y));
+            });
+
+            return state.Transitions.OrderBy((transition => transition), comparer);
+        }
+        #endregion
+
+        private static IEnumerable<(IRegexFSMState<T> stateFrom, IAcceptInputTransition<T> acceptInputTransition, IRegexFSMTransition<T>[] functionalTransitions)> M<T>(this IRegexFSMState<T> state)
         {
             return MInternal(state, new HashSet<IRegexFSMState<T>>())
                 .Select(transitions =>
@@ -286,7 +374,11 @@ namespace SamLu.RegularExpression.StateMachine
                 var unsignedStates = states.Except(signedStates);
                 var groupTransitions = unsignedStates
                     .SelectMany(state => state.M())
-                    .Select(group => new RegexFunctionalTransitionGroupTransition<T>(group))
+                    .Select(group =>
+                        group.functionalTransitions.Length == 0 ?
+                            new RegexAcceptInputTransitionGroupTransition<T>(group.stateFrom, group.acceptInputTransition) :
+                            new RegexFunctionalTransitionGroupTransition<T>(group)
+                    )
                     .ToArray();
 
                 var D = new Dictionary<IRegexFSMState<T>, IRegexFSMState<T>>();
@@ -311,7 +403,7 @@ namespace SamLu.RegularExpression.StateMachine
             }
         }
 
-        private sealed class RegexStateState<T> : FSMState<IRegexFSMTransition<T>>, IRegexFSMState<T>
+        internal sealed class RegexStateState<T> : FSMState<IRegexFSMTransition<T>>, IRegexFSMState<T>
         {
             public IRegexFSMState<T> InnerState { get; private set; }
 
@@ -322,18 +414,43 @@ namespace SamLu.RegularExpression.StateMachine
                 this.InnerState.GetOrderedTransitions();
         }
 
-        private sealed class RegexFunctionalTransitionGroupTransition<T> : FSMTransition<IRegexFSMState<T>>, IAcceptInputTransition<T>, IRegexFSMTransitionProxy<T>
+        internal class RegexAcceptInputTransitionGroupTransition<T> : FSMTransition, IAcceptInputTransition<T>
         {
-            public IRegexFSMState<T> StateFrom { get; private set; }
+            public IRegexFSMState<T> StateFrom { get; protected set; }
             public IRegexFSMState<T> StateTo => this.AcceptInputTransition.Target;
 
-            public IAcceptInputTransition<T> AcceptInputTransition { get; private set; }
-            public IRegexFSMTransition<T>[] FunctionalTransitions { get; private set; }
+            public IAcceptInputTransition<T> AcceptInputTransition { get; protected set; }
 
-            public RegexFunctionalTransitionGroupTransition((IRegexFSMState<T> stateFrom, IAcceptInputTransition<T> acceptInputTransition, IRegexFSMTransition<T>[] functionalTransitions) transitionGroup)
+            public RegexAcceptInputTransitionGroupTransition(IRegexFSMState<T> stateFrom, IAcceptInputTransition<T> acceptInputTransition)
             {
-                this.StateFrom = transitionGroup.stateFrom;
-                this.AcceptInputTransition = transitionGroup.acceptInputTransition;
+                this.StateFrom = stateFrom;
+                this.AcceptInputTransition = acceptInputTransition;
+            }
+
+            public bool CanAccept(T input)
+            {
+                return this.AcceptInputTransition.CanAccept(input);
+            }
+
+            #region IAcceptInputTransition{T} Implementation
+            IRegexFSMState<T> IRegexFSMTransition<T>.Target => (IRegexFSMState<T>)base.Target;
+
+            bool IRegexFSMTransition<T>.SetTarget(IRegexFSMState<T> state) => base.SetTarget(state);
+            #endregion
+        }
+
+        internal class RegexFunctionalTransitionGroupTransition<T> : RegexAcceptInputTransitionGroupTransition<T>, IRegexFSMTransitionProxy<T>, IRegexFSMFunctionalTransition<T>
+        {
+            public IRegexFSMTransition<T>[] FunctionalTransitions { get; protected set; }
+            
+            public RegexFunctionalTransitionGroupTransition(
+                (IRegexFSMState<T> stateFrom, IAcceptInputTransition<T> acceptInputTransition, IRegexFSMTransition<T>[] functionalTransitions) transitionGroup
+            ) :
+                base(
+                    transitionGroup.stateFrom,
+                    transitionGroup.acceptInputTransition
+                )
+            {
                 this.FunctionalTransitions = transitionGroup.functionalTransitions;
             }
 
@@ -364,10 +481,11 @@ namespace SamLu.RegularExpression.StateMachine
                 else throw new InvalidOperationException();
             }
 
-            public bool CanAccept(T input)
-            {
-                return this.AcceptInputTransition.CanAccept(input);
-            }
+            #region IRegexFunctionalTransition{T} Implementation
+            private IDictionary<object, object> userData = new Dictionary<object, object>();
+
+            IDictionary<object, object> IRegexFSMFunctionalTransition<T>.UserData => this.userData;
+            #endregion
         }
     }
 }

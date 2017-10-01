@@ -186,18 +186,7 @@ namespace SamLu.RegularExpression.StateMachine
             base.RemoveTransition((BasicRegexFATransition<T, BasicRegexNFAState<T>>)transition);
 
         IEnumerable<BasicRegexFATransition<T, BasicRegexNFAState<T>>> IRegexFSMState<T, BasicRegexFATransition<T, BasicRegexNFAState<T>>>.GetOrderedTransitions() =>
-            this.Transitions.OrderBy(
-                (transition => transition),
-                Comparer<BasicRegexFATransition<T, BasicRegexNFAState<T>>>.Create((x, y) =>
-                {
-                    bool f1 = x is BasicRegexFSMEpsilonTransition<T>;
-                    bool f2 = y is BasicRegexFSMEpsilonTransition<T>;
-                    if (f1 ^ f2)
-                        return f1 ? -1 : 1;
-                    else
-                        return 0;
-                })
-            );
+            this.GetOrderedTransitions<T, BasicRegexNFAState<T>, BasicRegexFATransition<T, BasicRegexNFAState<T>>, BasicRegexFSMEpsilonTransition<T>>()
 
         IEnumerable<IRegexFSMTransition<T>> IRegexFSMState<T>.GetOrderedTransitions() =>
             ((IRegexFSMState<T, BasicRegexFATransition<T, BasicRegexNFAState<T>>>)this).GetOrderedTransitions();

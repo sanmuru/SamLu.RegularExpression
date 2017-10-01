@@ -15,22 +15,22 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     [DebugInfoProxy(
-        typeof(RegexCaptureIDCheckTransitionDebugInfo<>),
+        typeof(RegexFSMCaptureIDCheckTransitionDebugInfo<>),
         new[] { TypeParameterFillin.TypeParameter_1 }
     )]
-    public sealed class RegexCaptureIDCheckTransition<T> : RegexPredicateTransition<T>
+    public sealed class RegexFSMCaptureIDCheckTransition<T> : RegexFSMPredicateTransition<T>
     {
         private object id;
 
-        [RegexFunctionalTransitionMetadata]
+        [RegexFSMFunctionalTransitionMetadata]
         public object ID => this.id;
 
-        public RegexCaptureIDCheckTransition(object id, Func<RegexCaptureIDCheckTransition<T>, object[], bool> predicate) : base()
+        public RegexFSMCaptureIDCheckTransition(object id, Func<RegexFSMCaptureIDCheckTransition<T>, object[], bool> predicate) : base()
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
             this.id = id;
-            base.predicate = (sender, args) => predicate((RegexCaptureIDCheckTransition<T>)sender, args);
+            base.predicate = (sender, args) => predicate((RegexFSMCaptureIDCheckTransition<T>)sender, args);
         }
     }
 
@@ -40,23 +40,23 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     /// <typeparam name="TState">正则构造的有限状态机的状态的类型。</typeparam>
     [DebugInfoProxy(
-        typeof(RegexCaptureIDCheckTransitionDebugInfo<,>),
+        typeof(RegexFSMCaptureIDCheckTransitionDebugInfo<,>),
         new[] { TypeParameterFillin.TypeParameter_1, TypeParameterFillin.TypeParameter_2 }
     )]
-    public sealed class RegexCaptureIDCheckTransition<T, TState> : RegexPredicateTransition<T, TState>
+    public sealed class RegexFSMCaptureIDCheckTransition<T, TState> : RegexFSMPredicateTransition<T, TState>
         where TState : IRegexFSMState<T>
     {
         private object id;
 
-        [RegexFunctionalTransitionMetadata]
+        [RegexFSMFunctionalTransitionMetadata]
         public object ID => this.id;
 
-        public RegexCaptureIDCheckTransition(object id, Func<RegexCaptureIDCheckTransition<T, TState>, object[], bool> predicate) : base()
+        public RegexFSMCaptureIDCheckTransition(object id, Func<RegexFSMCaptureIDCheckTransition<T, TState>, object[], bool> predicate) : base()
         {
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
             this.id = id;
-            base.predicate = (sender, args) => predicate((RegexCaptureIDCheckTransition<T, TState>)sender, args);
+            base.predicate = (sender, args) => predicate((RegexFSMCaptureIDCheckTransition<T, TState>)sender, args);
         }
     }
 }

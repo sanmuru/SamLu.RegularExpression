@@ -15,17 +15,17 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     [DebugInfoProxy(
-        typeof(RegexCaptureIDStorageTransitionDebugInfo<>),
+        typeof(RegexFSMCaptureIDStorageTransitionDebugInfo<>),
         new[] { TypeParameterFillin.TypeParameter_1 }
     )]
-    public sealed class RegexCaptureIDStorageTransition<T> : RegexFunctionalTransition<T>
+    public sealed class RegexFSMCaptureIDStorageTransition<T> : RegexFSMFunctionalTransition<T>
     {
         private object id;
 
-        [RegexFunctionalTransitionMetadata]
+        [RegexFSMFunctionalTransitionMetadata]
         public object ID => this.id;
 
-        public RegexCaptureIDStorageTransition(object id) => this.id = id;
+        public RegexFSMCaptureIDStorageTransition(object id) => this.id = id;
     }
 
     /// <summary>
@@ -34,17 +34,17 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     /// <typeparam name="TState">正则构造的有限状态机的状态的类型。</typeparam>
     [DebugInfoProxy(
-        typeof(RegexCaptureIDStorageTransitionDebugInfo<,>),
+        typeof(RegexFSMCaptureIDStorageTransitionDebugInfo<,>),
         new[] { TypeParameterFillin.TypeParameter_1, TypeParameterFillin.TypeParameter_2 }
     )]
-    public sealed class RegexCaptureIDStorageTransition<T, TState> : RegexFunctionalTransition<T, TState>
+    public sealed class RegexFSMCaptureIDStorageTransition<T, TState> : RegexFSMFunctionalTransition<T, TState>
         where TState : IRegexFSMState<T>
     {
         private object id;
 
-        [RegexFunctionalTransitionMetadata]
+        [RegexFSMFunctionalTransitionMetadata]
         public object ID => this.id;
 
-        public RegexCaptureIDStorageTransition(object id) => this.id = id;
+        public RegexFSMCaptureIDStorageTransition(object id) => this.id = id;
     }
 }

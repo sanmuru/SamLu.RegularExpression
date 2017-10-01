@@ -16,22 +16,22 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     [DebugInfoProxy(
-        typeof(RegexPredicateTransitionDebugInfo<>),
+        typeof(RegexFSMPredicateTransitionDebugInfo<>),
         new[] { TypeParameterFillin.TypeParameter_1 }
     )]
-    public class RegexPredicateTransition<T> : RegexFunctionalTransition<T>, IRegexFSMTransitionProxy<T>
+    public class RegexFSMPredicateTransition<T> : RegexFSMFunctionalTransition<T>, IRegexFSMTransitionProxy<T>
     {
         protected Func<object, object[], bool> predicate;
 
-        [RegexFunctionalTransitionMetadata]
+        [RegexFSMFunctionalTransitionMetadata]
         public Func<object, object[], bool> Predicate => this.predicate;
 
         /// <summary>
-        /// 初始化 <see cref="RegexPredicateTransition{T}"/> 类的新实例。子类默认调用此构造函数。
+        /// 初始化 <see cref="RegexFSMPredicateTransition{T}"/> 类的新实例。子类默认调用此构造函数。
         /// </summary>
-        protected RegexPredicateTransition() { }
+        protected RegexFSMPredicateTransition() { }
 
-        public RegexPredicateTransition(Func<object, object[], bool> predicate) : this() =>
+        public RegexFSMPredicateTransition(Func<object, object[], bool> predicate) : this() =>
             this.predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
 
         #region IRegexFSMTransitionProxy{T} Implementation
@@ -45,23 +45,23 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     /// <typeparam name="TState">正则构造的有限状态机的状态的类型。</typeparam>
     [DebugInfoProxy(
-        typeof(RegexPredicateTransitionDebugInfo<,>),
+        typeof(RegexFSMPredicateTransitionDebugInfo<,>),
         new[] { TypeParameterFillin.TypeParameter_1, TypeParameterFillin.TypeParameter_2 }
     )]
-    public class RegexPredicateTransition<T, TState> : RegexFunctionalTransition<T, TState>, IRegexFSMTransitionProxy<T, TState>
+    public class RegexFSMPredicateTransition<T, TState> : RegexFSMFunctionalTransition<T, TState>, IRegexFSMTransitionProxy<T, TState>
         where TState : IRegexFSMState<T>
     {
         protected Func<object, object[], bool> predicate;
 
-        [RegexFunctionalTransitionMetadata]
+        [RegexFSMFunctionalTransitionMetadata]
         public Func<object, object[], bool> Predicate => this.predicate;
 
         /// <summary>
-        /// 初始化 <see cref="RegexPredicateTransition{T, TState}"/> 类的新实例。子类默认调用此构造函数。
+        /// 初始化 <see cref="RegexFSMPredicateTransition{T, TState}"/> 类的新实例。子类默认调用此构造函数。
         /// </summary>
-        protected RegexPredicateTransition() { }
+        protected RegexFSMPredicateTransition() { }
 
-        public RegexPredicateTransition(Func<object, object[], bool> predicate) : this() =>
+        public RegexFSMPredicateTransition(Func<object, object[], bool> predicate) : this() =>
             this.predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
 
         #region IRegexFSMTransitionProxy{T}/IRegexFSMTransitionProxy{T, TState} Implementation

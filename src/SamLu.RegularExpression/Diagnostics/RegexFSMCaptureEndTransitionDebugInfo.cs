@@ -9,52 +9,52 @@ using System.Threading.Tasks;
 namespace SamLu.RegularExpression.Diagnostics
 {
     /// <summary>
-    /// 为 <see cref="RegexCaptureEndTransition{T}"/> 提供调试信息。
+    /// 为 <see cref="RegexFSMCaptureEndTransition{T}"/> 提供调试信息。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
-    public class RegexCaptureEndTransitionDebugInfo<T> : RegexFunctionalTransitionDebugInfoBase<T, RegexCaptureEndTransition<T>>
+    public class RegexFSMCaptureEndTransitionDebugInfo<T> : RegexFSMFunctionalTransitionDebugInfoBase<T, RegexFSMCaptureEndTransition<T>>
     {
         /// <summary>
-        /// 获取 <see cref="RegexCaptureEndTransition{T}"/> 的显式名称。
+        /// 获取 <see cref="RegexFSMCaptureEndTransition{T}"/> 的显式名称。
         /// </summary>
         protected override string Name => "end";
 
         /// <summary>
-        /// 获取 <see cref="RegexCaptureEndTransition{T}"/> 的显式参数序列。
+        /// 获取 <see cref="RegexFSMCaptureEndTransition{T}"/> 的显式参数序列。
         /// </summary>
         protected override IEnumerable<string> Parameters => null;
 
         /// <summary>
-        /// 使用规范参数列表初始化 <see cref="RegexCaptureEndTransitionDebugInfo{T}"/> 类的新实例。
+        /// 使用规范参数列表初始化 <see cref="RegexFSMCaptureEndTransitionDebugInfo{T}"/> 类的新实例。
         /// </summary>
         /// <param name="functionalTransition">正则表达式构造的有限状态机的功能转换。</param>
         /// <param name="args">获取调试信息的参数列表。</param>
-        public RegexCaptureEndTransitionDebugInfo(RegexCaptureEndTransition<T> functionalTransition, params object[] args) : base(functionalTransition, args) { }
+        public RegexFSMCaptureEndTransitionDebugInfo(RegexFSMCaptureEndTransition<T> functionalTransition, params object[] args) : base(functionalTransition, args) { }
     }
 
     /// <summary>
-    /// 为 <see cref="RegexCaptureEndTransition{T, TState}"/> 提供调试信息。
+    /// 为 <see cref="RegexFSMCaptureEndTransition{T, TState}"/> 提供调试信息。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     /// <typeparam name="TState">正则构造的有限状态机的状态的类型。</typeparam>
-    public class RegexCaptureEndTransitionDebugInfo<T, TState> : RegexFunctionalTransitionDebugInfoBase<T, RegexCaptureEndTransition<T, TState>>
+    public class RegexFSMCaptureEndTransitionDebugInfo<T, TState> : RegexFSMFunctionalTransitionDebugInfoBase<T, RegexFSMCaptureEndTransition<T, TState>>
         where TState : IRegexFSMState<T>
     {
         /// <summary>
-        /// 获取 <see cref="RegexCaptureEndTransition{T, TState}"/> 的显式名称。
+        /// 获取 <see cref="RegexFSMCaptureEndTransition{T, TState}"/> 的显式名称。
         /// </summary>
         protected override string Name => "end";
 
         /// <summary>
-        /// 获取 <see cref="RegexCaptureEndTransition{T, TState}"/> 的显式参数序列。
+        /// 获取 <see cref="RegexFSMCaptureEndTransition{T, TState}"/> 的显式参数序列。
         /// </summary>
         protected override IEnumerable<string> Parameters => null;
 
         /// <summary>
-        /// 使用规范参数列表初始化 <see cref="RegexCaptureEndTransitionDebugInfo{T, TState}"/> 类的新实例。
+        /// 使用规范参数列表初始化 <see cref="RegexFSMCaptureEndTransitionDebugInfo{T, TState}"/> 类的新实例。
         /// </summary>
         /// <param name="functionalTransition">正则表达式构造的有限状态机的功能转换。</param>
         /// <param name="args">获取调试信息的参数列表。</param>
-        public RegexCaptureEndTransitionDebugInfo(RegexCaptureEndTransition<T, TState> functionalTransition, params object[] args) : base(functionalTransition, args) { }
+        public RegexFSMCaptureEndTransitionDebugInfo(RegexFSMCaptureEndTransition<T, TState> functionalTransition, params object[] args) : base(functionalTransition, args) { }
     }
 }

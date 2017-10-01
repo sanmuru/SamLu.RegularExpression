@@ -16,17 +16,17 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     [DebugInfoProxy(
-        typeof(RegexCaptureEndTransitionDebugInfo<>),
+        typeof(RegexFSMCaptureEndTransitionDebugInfo<>),
         new[] { TypeParameterFillin.TypeParameter_1 }
     )]
-    public sealed class RegexCaptureEndTransition<T> : RegexFunctionalTransition<T>
+    public sealed class RegexFSMCaptureEndTransition<T> : RegexFSMFunctionalTransition<T>
     {
         private RegexGroup<T> group;
 
-        [RegexFunctionalTransitionMetadata]
+        [RegexFSMFunctionalTransitionMetadata]
         public RegexGroup<T> Group => this.group;
 
-        public RegexCaptureEndTransition(RegexGroup<T> group) =>
+        public RegexFSMCaptureEndTransition(RegexGroup<T> group) =>
             this.group = group ?? throw new ArgumentNullException(nameof(group));
     }
 
@@ -36,18 +36,18 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     /// <typeparam name="TState">正则构造的有限状态机的状态的类型。</typeparam>
     [DebugInfoProxy(
-        typeof(RegexCaptureEndTransitionDebugInfo<,>),
+        typeof(RegexFSMCaptureEndTransitionDebugInfo<,>),
         new[] { TypeParameterFillin.TypeParameter_1, TypeParameterFillin.TypeParameter_2 }
     )]
-    public sealed class RegexCaptureEndTransition<T, TState> : RegexFunctionalTransition<T, TState>
+    public sealed class RegexFSMCaptureEndTransition<T, TState> : RegexFSMFunctionalTransition<T, TState>
         where TState : IRegexFSMState<T>
     {
         private RegexGroup<T> group;
 
-        [RegexFunctionalTransitionMetadata]
+        [RegexFSMFunctionalTransitionMetadata]
         public RegexGroup<T> Group => this.group;
 
-        public RegexCaptureEndTransition(RegexGroup<T> group) =>
+        public RegexFSMCaptureEndTransition(RegexGroup<T> group) =>
             this.group = group ?? throw new ArgumentNullException(nameof(group));
     }
 }

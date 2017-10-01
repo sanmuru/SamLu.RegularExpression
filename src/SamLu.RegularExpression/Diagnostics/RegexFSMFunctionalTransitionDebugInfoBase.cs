@@ -9,17 +9,17 @@ using System.Threading.Tasks;
 namespace SamLu.RegularExpression.Diagnostics
 {
     /// <summary>
-    /// 为 <see cref="IRegexFunctionalTransition{T}"/> 及派生、实现其的类型提供调试信息。
+    /// 为 <see cref="IRegexFSMFunctionalTransition{T}"/> 及派生、实现其的类型提供调试信息。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
-    /// <typeparam name="TRegexFunctionalTransition">正则表达式构造的有限状态机的功能转换的类型。</typeparam>
-    public abstract class RegexFunctionalTransitionDebugInfoBase<T, TRegexFunctionalTransition> : IDebugInfo
-        where TRegexFunctionalTransition : IRegexFunctionalTransition<T>
+    /// <typeparam name="TFunctionalTransition">正则表达式构造的有限状态机的功能转换的类型。</typeparam>
+    public abstract class RegexFSMFunctionalTransitionDebugInfoBase<T, TFunctionalTransition> : IDebugInfo
+        where TFunctionalTransition : IRegexFSMFunctionalTransition<T>
     {
         /// <summary>
         /// 正则表达式构造的有限状态机的功能转换
         /// </summary>
-        protected TRegexFunctionalTransition functionalTransition;
+        protected TFunctionalTransition functionalTransition;
         /// <summary>
         /// 调试信息的参数列表。
         /// </summary>
@@ -45,11 +45,11 @@ namespace SamLu.RegularExpression.Diagnostics
             );
 
         /// <summary>
-        /// 使用规范参数列表初始化 <see cref="RegexFunctionalTransitionDebugInfoBase{T, TRegexFunctionalTransition}"/> 类的新实例。
+        /// 使用规范参数列表初始化 <see cref="RegexFSMFunctionalTransitionDebugInfoBase{T, TFunctionalTransition}"/> 类的新实例。
         /// </summary>
         /// <param name="functionalTransition">正则表达式构造的有限状态机的功能转换。</param>
         /// <param name="args">获取调试信息的参数列表。</param>
-        protected RegexFunctionalTransitionDebugInfoBase(TRegexFunctionalTransition functionalTransition, params object[] args)
+        protected RegexFSMFunctionalTransitionDebugInfoBase(TFunctionalTransition functionalTransition, params object[] args)
         {
             if (functionalTransition == null) throw new ArgumentNullException(nameof(functionalTransition));
             

@@ -45,6 +45,11 @@ namespace SamLu.RegularExpression.StateMachine
     public interface IRegexFSMState<T, TTransition> : IRegexFSMState<T>, IState<TTransition>
         where TTransition : IRegexFSMTransition<T>
     {
+        /// <summary>
+        /// 获取 <see cref="IRegexFSMState{T}"/> 的转换集。
+        /// </summary>
+        new ICollection<TTransition> Transitions { get; }
+
         new IEnumerable<TTransition> GetOrderedTransitions();
     }
 }

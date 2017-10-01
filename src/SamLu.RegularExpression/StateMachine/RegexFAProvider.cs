@@ -97,9 +97,9 @@ namespace SamLu.RegularExpression.StateMachine
 
             IRegexNFAState<T> nextState = state;
 
-            RegexPredicateTransition<T> predicateTransition;
+            RegexFSMPredicateTransition<T> predicateTransition;
 
-            predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            predicateTransition = new RegexFSMPredicateTransition<T>((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {
@@ -120,7 +120,7 @@ namespace SamLu.RegularExpression.StateMachine
             nextState = this.contextInfo.ActivateRegexNFAState();
             nfa.SetTarget(transition, nextState);
 
-            predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            predicateTransition = new RegexFSMPredicateTransition<T>((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {
@@ -142,7 +142,7 @@ namespace SamLu.RegularExpression.StateMachine
             IRegexNFAState<T> state
         )
         {
-            var predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            var predicateTransition = new RegexFSMPredicateTransition<T>((sender, args) =>
                 (args.FirstOrDefault() is IRegexFSM<T> fsm) &&
                     fsm.Index == 0
             );
@@ -157,7 +157,7 @@ namespace SamLu.RegularExpression.StateMachine
             IRegexNFAState<T> state
         )
         {
-            var predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            var predicateTransition = new RegexFSMPredicateTransition<T>((sender, args) =>
                 (args.FirstOrDefault() is IRegexFSM<T> fsm) &&
                     fsm.Index == fsm.Inputs.Count()
             );
@@ -172,7 +172,7 @@ namespace SamLu.RegularExpression.StateMachine
             IRegexNFAState<T> state
         )
         {
-            var predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            var predicateTransition = new RegexFSMPredicateTransition<T>((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {
@@ -243,14 +243,14 @@ namespace SamLu.RegularExpression.StateMachine
 
             IRegexNFAState<T> nextState = state;
 
-            var captureStartTransition = new RegexCaptureStartTransition<T>(group);
+            var captureStartTransition = new RegexFSMCaptureStartTransition<T>(group);
             captureStartTransition.TransitAction += new CustomizedAction((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {
                     var regexGroups = (Stack<RegexGroup<T>>)fsm.UserData[RegexProvider<T>.Cache.REGEX_GROUPS_CACHE_KEY];
 
-                    var _group = ((RegexCaptureStartTransition<T>)sender).Group;
+                    var _group = ((RegexFSMCaptureStartTransition<T>)sender).Group;
                     regexGroups.Push(_group);
 
                     if (_group.IsCaptive)
@@ -258,7 +258,7 @@ namespace SamLu.RegularExpression.StateMachine
                         CaptureService<T> captureService = fsm.GetService<CaptureService<T>>();
                         captureService.StartCapture(_group, _group.ID);
 
-                        ((RegexCaptureStartTransition<T>)sender).UserData[CAPTURE_SERVICE_KEY] = captureService;
+                        ((RegexFSMCaptureStartTransition<T>)sender).UserData[CAPTURE_SERVICE_KEY] = captureService;
                     }
                 }
             });
@@ -278,14 +278,14 @@ namespace SamLu.RegularExpression.StateMachine
 
             if (group.IsCaptive)
             {
-                var captureIDStorageTransition = new RegexCaptureIDStorageTransition<T>(group.ID);
+                var captureIDStorageTransition = new RegexFSMCaptureIDStorageTransition<T>(group.ID);
                 captureIDStorageTransition.TransitAction += new CustomizedAction((sender, args) =>
                 {
-                    var _group = ((RegexCaptureStartTransition<T>)sender).Group;
+                    var _group = ((RegexFSMCaptureStartTransition<T>)sender).Group;
 
                     if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                     {
-                        CaptureService<T> captureService = (CaptureService<T>)((RegexCaptureIDStorageTransition<T>)sender).UserData[CAPTURE_SERVICE_KEY];
+                        CaptureService<T> captureService = (CaptureService<T>)((RegexFSMCaptureIDStorageTransition<T>)sender).UserData[CAPTURE_SERVICE_KEY];
                         captureService.EndCapture(_group, fsm.Capture);
                     }
                 });
@@ -295,7 +295,7 @@ namespace SamLu.RegularExpression.StateMachine
                 nfa.SetTarget(captureIDStorageTransition, nextState);
             }
 
-            var captureEndTransition = new RegexCaptureEndTransition<T>(group);
+            var captureEndTransition = new RegexFSMCaptureEndTransition<T>(group);
             captureEndTransition.TransitAction += new CustomizedAction((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
@@ -319,7 +319,7 @@ namespace SamLu.RegularExpression.StateMachine
         {
             IRegexNFAState<T> nextState = state;
 
-            var captureStartTransition = new RegexCaptureStartTransition<T>(balanceGroup);
+            var captureStartTransition = new RegexFSMCaptureStartTransition<T>(balanceGroup);
             captureStartTransition.TransitAction += new CustomizedAction((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
@@ -335,7 +335,7 @@ namespace SamLu.RegularExpression.StateMachine
             nextState = this.contextInfo.ActivateRegexNFAState();
             nfa.SetTarget(transition, nextState);
 
-            var predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            var predicateTransition = new RegexFSMPredicateTransition<T>((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {
@@ -349,7 +349,7 @@ namespace SamLu.RegularExpression.StateMachine
             nextState = this.contextInfo.ActivateRegexNFAState();
             nfa.SetTarget(predicateTransition, nextState);
 
-            var captureEndTransition = new RegexCaptureEndTransition<T>(balanceGroup);
+            var captureEndTransition = new RegexFSMCaptureEndTransition<T>(balanceGroup);
             predicateTransition.TransitAction += new CustomizedAction((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
@@ -393,9 +393,9 @@ namespace SamLu.RegularExpression.StateMachine
             {
                 IRegexNFAState<T> nextState = state;
 
-                RegexPredicateTransition<T> predicateTransition;
+                RegexFSMPredicateTransition<T> predicateTransition;
 
-                predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+                predicateTransition = new RegexFSMPredicateTransition<T>((sender, args) =>
                 {
                     if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                     {
@@ -408,13 +408,13 @@ namespace SamLu.RegularExpression.StateMachine
                     else return false;
                 });
                 predicateTransition.TransitAction += new CustomizedAction((sender, args) =>
-                    ((IRegexFunctionalTransition<T>)sender).UserData["RESULT"] = (bool)balanceGroupItem.Method.DynamicInvoke()
+                    ((IRegexFSMFunctionalTransition<T>)sender).UserData["RESULT"] = (bool)balanceGroupItem.Method.DynamicInvoke()
                 );
                 nfa.AttachTransition(nextState, predicateTransition);
                 nextState = this.contextInfo.ActivateRegexNFAState();
                 nfa.SetTarget(predicateTransition, nextState);
-                predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
-                    (bool)((IRegexFunctionalTransition<T>)sender).UserData["RESULT"]
+                predicateTransition = new RegexFSMPredicateTransition<T>((sender, args) =>
+                    (bool)((IRegexFSMFunctionalTransition<T>)sender).UserData["RESULT"]
                 );
                 nfa.AttachTransition(nextState, predicateTransition);
                 nextState = this.contextInfo.ActivateRegexNFAState();
@@ -468,9 +468,9 @@ namespace SamLu.RegularExpression.StateMachine
         {
             IRegexNFAState<T> nextState = state;
 
-            RegexPredicateTransition<T> predicateTransition;
+            RegexFSMPredicateTransition<T> predicateTransition;
 
-            predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            predicateTransition = new RegexFSMPredicateTransition<T>((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {
@@ -506,9 +506,9 @@ namespace SamLu.RegularExpression.StateMachine
         {
             IRegexNFAState<T> nextState = state;
 
-            RegexPredicateTransition<T> predicateTransition;
+            RegexFSMPredicateTransition<T> predicateTransition;
 
-            predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            predicateTransition = new RegexFSMPredicateTransition<T>((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {
@@ -531,7 +531,7 @@ namespace SamLu.RegularExpression.StateMachine
             nfa.AttachTransition(nextState, predicateTransition);
             nextState = this.contextInfo.ActivateRegexNFAState();
             nfa.SetTarget(predicateTransition, nextState);
-            predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            predicateTransition = new RegexFSMPredicateTransition<T>((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {
@@ -559,9 +559,9 @@ namespace SamLu.RegularExpression.StateMachine
         {
             IRegexNFAState<T> nextState = state;
 
-            RegexPredicateTransition<T> predicateTransition;
+            RegexFSMPredicateTransition<T> predicateTransition;
 
-            predicateTransition = new RegexPredicateTransition<T>((sender, args) =>
+            predicateTransition = new RegexFSMPredicateTransition<T>((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {
@@ -669,7 +669,7 @@ namespace SamLu.RegularExpression.StateMachine
             IRegexNFAState<T> state
         )
         {
-            return new RegexPredicateTransition<T>((sender, args) =>
+            return new RegexFSMPredicateTransition<T>((sender, args) =>
             {
                 if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                 {

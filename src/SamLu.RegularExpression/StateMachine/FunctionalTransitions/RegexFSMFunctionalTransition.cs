@@ -9,19 +9,19 @@ using System.Threading.Tasks;
 namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
 {
     /// <summary>
-    /// 表示正则构造的有限状态机的功能转换。所有提供特殊行为支持的正则构造的有限状态机的转换应继承此类，或自行实现 <see cref="IRegexFunctionalTransition{T}"/> 接口。
+    /// 表示正则构造的有限状态机的功能转换。所有提供特殊行为支持的正则构造的有限状态机的转换应继承此类，或自行实现 <see cref="IRegexFSMFunctionalTransition{T}"/> 接口。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
-    public abstract class RegexFunctionalTransition<T> : FSMTransition, IRegexFunctionalTransition<T>
+    public abstract class RegexFSMFunctionalTransition<T> : FSMTransition, IRegexFSMFunctionalTransition<T>
     {
         /// <summary>
-        /// 获取 <see cref="RegexFunctionalTransition{T}"/> 的用户数据字典。
+        /// 获取 <see cref="RegexFSMFunctionalTransition{T}"/> 的用户数据字典。
         /// </summary>
-        [RegexFunctionalTransitionMetadata]
+        [RegexFSMFunctionalTransitionMetadata]
         public IDictionary<object, object> UserData { get; } = new Dictionary<object, object>();
 
         /// <summary>
-        /// 获取 <see cref="RegexFunctionalTransition{T}"/> 指向的状态。
+        /// 获取 <see cref="RegexFSMFunctionalTransition{T}"/> 指向的状态。
         /// </summary>
         new public virtual IRegexFSMState<T> Target => (IRegexFSMState<T>)base.Target;
 
@@ -45,17 +45,17 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
     }
 
     /// <summary>
-    /// 表示正则构造的有限状态机的功能转换。所有提供特殊行为支持的正则构造的有限状态机的转换应继承此类，或自行实现 <see cref="IRegexFunctionalTransition{T, TState}"/> 接口。
+    /// 表示正则构造的有限状态机的功能转换。所有提供特殊行为支持的正则构造的有限状态机的转换应继承此类，或自行实现 <see cref="IRegexFSMFunctionalTransition{T, TState}"/> 接口。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     /// <typeparam name="TState">正则构造的有限状态机的状态的类型。</typeparam>
-    public abstract class RegexFunctionalTransition<T, TState> : FSMTransition<TState>, IRegexFunctionalTransition<T, TState>
+    public abstract class RegexFSMFunctionalTransition<T, TState> : FSMTransition<TState>, IRegexFSMFunctionalTransition<T, TState>
         where TState : IRegexFSMState<T>
     {
         /// <summary>
-        /// 获取 <see cref="RegexFunctionalTransition{T, TState}"/> 的用户数据字典。
+        /// 获取 <see cref="RegexFSMFunctionalTransition{T, TState}"/> 的用户数据字典。
         /// </summary>
-        [RegexFunctionalTransitionMetadata]
+        [RegexFSMFunctionalTransitionMetadata]
         public IDictionary<object, object> UserData { get; } = new Dictionary<object, object>();
 
         #region IRegexFSMTransition{T} Implementation
@@ -66,9 +66,9 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
         #endregion
     }
 
-    public static class RegexFunctionalTransition
+    public static class RegexFSMFunctionalTransition
     {
-        public static Dictionary<string, object> GetMetadata<T>(this IRegexFunctionalTransition<T> functionalTransition)
+        public static Dictionary<string, object> GetMetadata<T>(this IRegexFSMFunctionalTransition<T> functionalTransition)
         {
             if (functionalTransition == null) throw new ArgumentNullException(nameof(functionalTransition));
 
@@ -77,7 +77,7 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
             Type type = functionalTransition.GetType();
             // 获取字段。
             foreach (var fieldInfo in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
-                if (fieldInfo.GetCustomAttribute<RegexFunctionalTransitionMetadataAttribute>() is RegexFunctionalTransitionMetadataAttribute attribute)
+                if (fieldInfo.GetCustomAttribute<RegexFSMFunctionalTransitionMetadataAttribute>() is RegexFSMFunctionalTransitionMetadataAttribute attribute)
                 {
                     metadata.Add(
                         attribute.Alias ?? fieldInfo.Name,
@@ -86,7 +86,7 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
                 }
             // 获取实例属性。
             foreach (var propertyInfo in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-                if (propertyInfo.GetCustomAttribute<RegexFunctionalTransitionMetadataAttribute>() is RegexFunctionalTransitionMetadataAttribute attribute)
+                if (propertyInfo.GetCustomAttribute<RegexFSMFunctionalTransitionMetadataAttribute>() is RegexFSMFunctionalTransitionMetadataAttribute attribute)
                 {
                     metadata.Add(
                         attribute.Alias ?? propertyInfo.Name,
@@ -95,7 +95,7 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
                 }
             // 获取静态属性。
             foreach (var propertyInfo in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
-                if (propertyInfo.GetCustomAttribute<RegexFunctionalTransitionMetadataAttribute>() is RegexFunctionalTransitionMetadataAttribute attribute)
+                if (propertyInfo.GetCustomAttribute<RegexFSMFunctionalTransitionMetadataAttribute>() is RegexFSMFunctionalTransitionMetadataAttribute attribute)
                 {
                     metadata.Add(
                         attribute.Alias ?? propertyInfo.Name,
