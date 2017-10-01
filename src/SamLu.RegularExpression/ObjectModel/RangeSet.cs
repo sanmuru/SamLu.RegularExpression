@@ -18,7 +18,7 @@ namespace SamLu.RegularExpression.ObjectModel
     /// </summary>
     /// <typeparam name="T">集包含的对象的类型。</typeparam>
     [DebuggerDisplay("Count = {Count}")]
-    [DebugInfoProxy(typeof(RangeSetDebugInfo<>), new[] { TypeParameterFillin.TypeParameter_0 })]
+    [DebugInfoProxy(typeof(RangeSetDebugInfo<>), new[] { TypeParameterFillin.TypeParameter_1 })]
     public class RangeSet<T> : ISet<T>, ISet<IRange<T>>
     {
         /// <summary>

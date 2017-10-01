@@ -26,7 +26,7 @@ namespace SamLu.IO
 		/// <summary>
 		/// 获取一个值，指示是否有下一个节点未读。
 		/// </summary>
-		/// <returns>一个值，指示是否有下一个节点未读。为<see langword="false"/>时指示已经读到结尾。</returns>
+		/// <returns>一个值，指示是否有下一个节点未读。为 false 时指示已经读到结尾。</returns>
 		bool HasNext();
 	}
 }

@@ -10,7 +10,7 @@ namespace SamLu.RegularExpression.Diagnostics
     /// <summary>
     /// 为 <see cref="IRange{T}"/> 及实现其的类型提供调试信息。
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">范围的内容的类型。</typeparam>
     public class RangeDebugInfo<T> : IDebugInfo
     {
         protected IRange<T> range;

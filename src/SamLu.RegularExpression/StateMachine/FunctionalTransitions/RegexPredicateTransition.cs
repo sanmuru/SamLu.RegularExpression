@@ -1,4 +1,7 @@
-﻿using SamLu.IO;
+﻿using SamLu.Diagnostics;
+using SamLu.IO;
+using SamLu.RegularExpression.Diagnostics;
+using SamLu.Runtime;
 using SamLu.StateMachine;
 using System;
 using System.Collections.Generic;
@@ -8,6 +11,14 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
 {
+    /// <summary>
+    /// 表示正则构造的有限状态机的条件功能转换。
+    /// </summary>
+    /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
+    [DebugInfoProxy(
+        typeof(RegexPredicateTransitionDebugInfo<>),
+        new[] { TypeParameterFillin.TypeParameter_1 }
+    )]
     public class RegexPredicateTransition<T> : RegexFunctionalTransition<T>, IRegexFSMTransitionProxy<T>
     {
         protected Func<object, object[], bool> predicate;
@@ -15,6 +26,9 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
         [RegexFunctionalTransitionMetadata]
         public Func<object, object[], bool> Predicate => this.predicate;
 
+        /// <summary>
+        /// 初始化 <see cref="RegexPredicateTransition{T}"/> 类的新实例。子类默认调用此构造函数。
+        /// </summary>
         protected RegexPredicateTransition() { }
 
         public RegexPredicateTransition(Func<object, object[], bool> predicate) : this() =>
@@ -25,6 +39,15 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
         #endregion
     }
 
+    /// <summary>
+    /// 表示正则构造的有限状态机的条件功能转换。
+    /// </summary>
+    /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
+    /// <typeparam name="TState">正则构造的有限状态机的状态的类型。</typeparam>
+    [DebugInfoProxy(
+        typeof(RegexPredicateTransitionDebugInfo<,>),
+        new[] { TypeParameterFillin.TypeParameter_1, TypeParameterFillin.TypeParameter_2 }
+    )]
     public class RegexPredicateTransition<T, TState> : RegexFunctionalTransition<T, TState>, IRegexFSMTransitionProxy<T, TState>
         where TState : IRegexFSMState<T>
     {
@@ -33,6 +56,9 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
         [RegexFunctionalTransitionMetadata]
         public Func<object, object[], bool> Predicate => this.predicate;
 
+        /// <summary>
+        /// 初始化 <see cref="RegexPredicateTransition{T, TState}"/> 类的新实例。子类默认调用此构造函数。
+        /// </summary>
         protected RegexPredicateTransition() { }
 
         public RegexPredicateTransition(Func<object, object[], bool> predicate) : this() =>

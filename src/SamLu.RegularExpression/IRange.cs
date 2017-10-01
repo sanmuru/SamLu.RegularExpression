@@ -13,7 +13,7 @@ namespace SamLu.RegularExpression
     /// 表示范围的对象应遵循的约束。
     /// </summary>
     /// <typeparam name="T">范围的内容的类型。</typeparam>
-    [DebugInfoProxy(typeof(RangeDebugInfo<>), new[] { TypeParameterFillin.TypeParameter_0 })]
+    [DebugInfoProxy(typeof(RangeDebugInfo<>), new[] { TypeParameterFillin.TypeParameter_1 })]
     public interface IRange<T>
     {
         /// <summary>

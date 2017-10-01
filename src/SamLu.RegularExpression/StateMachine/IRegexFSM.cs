@@ -107,12 +107,17 @@ namespace SamLu.RegularExpression.StateMachine
     /// 定义了正则表达式构造的有限状态机应遵循的基本约束。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
-    /// <typeparam name="TState">有限状态机的状态的类型。</typeparam>
-    /// <typeparam name="TTransition">有限状态机的转换的类型。</typeparam>
+    /// <typeparam name="TState">正则构造的有限状态机的状态的类型。</typeparam>
+    /// <typeparam name="TTransition">正则构造的有限状态机的转换的类型。</typeparam>
     public interface IRegexFSM<T, TState, TTransition> : IRegexFSM<T>, IFSM<TState, TTransition>
         where TState : IRegexFSMState<T, TTransition>
         where TTransition : IRegexFSMTransition<T, TState>
     {
+        /// <summary>
+        /// 获取 <see cref="IRegexFSM{T, TState, TTransition}"/> 的服务。
+        /// </summary>
+        /// <typeparam name="TService">服务的类型。</typeparam>
+        /// <returns><see cref="IRegexFSM{T, TState, TTransition}"/> 的指定类型的服务。</returns>
         new TService GetService<TService>() where TService : IRegexFSMService<T, TState, TTransition>, new();
     }
 }

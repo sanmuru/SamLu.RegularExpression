@@ -659,8 +659,8 @@ namespace SamLu.RegularExpression.StateMachine
     /// 表示正则表达式构造的有限状态机。
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
-    /// <typeparam name="TState">有限状态机的状态的类型。</typeparam>
-    /// <typeparam name="TTransition">有限状态机的转换的类型。</typeparam>
+    /// <typeparam name="TState">正则构造的有限状态机的状态的类型。</typeparam>
+    /// <typeparam name="TTransition">正则构造的有限状态机的转换的类型。</typeparam>
     [Obsolete("功能未实现。")]
     public class RegexFSM<T, TState, TTransition> : FSM<TState, TTransition>, IRegexFSM<T, TState, TTransition>
         where TState : IRegexFSMState<T, TTransition>

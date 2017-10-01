@@ -55,6 +55,13 @@
     <Compile Include="Adapter\SetAdaptor.cs" />
     <Compile Include="Capture.cs" />
     <Compile Include="CustomizedAction.cs" />
+    <Compile Include="Diagnostics\RegexCaptureIDCheckTransitionDebugInfo.cs" />
+    <Compile Include="Diagnostics\RegexCaptureIDStorageTransitionDebugInfo.cs" />
+    <Compile Include="Diagnostics\RegexCaptureStartTransitionDebugInfo.cs" />
+    <Compile Include="Diagnostics\RegexNegativeCaptureTransitionDebugInfo.cs" />
+    <Compile Include="Diagnostics\RegexNonGreedyRepeatTransitionDebugInfo.cs" />
+    <Compile Include="Diagnostics\RegexPositiveCaptureTransitionDebugInfo.cs" />
+    <Compile Include="Diagnostics\RegexPredicateTransitionDebugInfo.cs" />
     <Compile Include="Extend\Group.cs" />
     <Compile Include="Extend\GroupCollection.cs" />
     <Compile Include="Extend\IRegexAnchorPoint.cs" />
@@ -88,8 +95,11 @@
     <Compile Include="StateMachine\ConstAdaptorRegexFATransition.cs" />
     <Compile Include="StateMachine\BasicRegexStateMachineActivationContextInfo.cs" />
     <Compile Include="StateMachine\BasicRegexFATransitionAdaptor.cs" />
+    <Compile Include="Diagnostics\RegexCaptureEndTransitionDebugInfo.cs" />
+    <Compile Include="Diagnostics\RegexGreedyRepeatTransitionDebugInfo.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexPredicateTransition.cs" />
     <Compile Include="StateMachine\ObjectModel\CaptureStack.cs" />
+    <Compile Include="Diagnostics\RegexFunctionalTransitionDebugInfoBase.cs" />
     <Compile Include="StateMachine\ObjectModel\StateStack.cs" />
     <Compile Include="StateMachine\Service\CaptureService.cs" />
     <Compile Include="StateMachine\Service\IRegexFSMService.cs" />
