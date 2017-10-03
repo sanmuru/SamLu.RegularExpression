@@ -2,6 +2,7 @@
 using SamLu.Diagnostics;
 using SamLu.RegularExpression;
 using SamLu.RegularExpression.Adapter;
+using SamLu.RegularExpression.Extend;
 using SamLu.RegularExpression.ObjectModel;
 using SamLu.RegularExpression.StateMachine;
 using SamLu.StateMachine;
@@ -18,12 +19,18 @@ namespace RegexTest
     {
         static void Main(string[] args)
         {
+            Program.TestFunctionalTransitions(
+                Regex.Range('0', '9').NoneOrMany().NonGreedy() +
+                Regex.Range('0', '9').Many().NonGreedy().Group("sec", true).GroupReference(out RegexGroupReference<char> sec_GroupReference) +
+                sec_GroupReference
+            );
+
+#if false
             RangeSet<char> set = new RangeSet<char>(new CharRangeInfo());
             set.Add('a');
             set.Add('c');
             ;
 
-#if false
             Dictionary<int, int> d = new Dictionary<int, int>();
             var chars = Regex.Range('\0', 'z', true, false);
             var tchars = Regex.Range(new TT<char>('a'), new TT<char>('z'), false, true);
@@ -154,6 +161,20 @@ namespace RegexTest
 #endif
         }
 
+        private static void TestFunctionalTransitions(RegexObject<char> regex)
+        {
+            RegexFAProvider<char> provider = new MyRegexFAProvider<char>(new MyCharRegexRunContextInfo());
+            var nfa = provider.GenerateRegexFSMFromRegexObject(regex, RegexOptions.None);
+            var dfa = provider.GenerateRegexDFAFromRegexFSM(nfa);
+            IRegexFSM<char> fsm = dfa;
+            ;
+
+            var input = "1234564567";
+            fsm.TransitMany(input);
+            MatchCollection<char> matches = fsm.Matches;
+            ;
+        }
+
         public class MyRegexFAProvider<T> : RegexFAProvider<T>
         {
             public MyRegexFAProvider(IRegexStateMachineActivationContextInfo<T> contextInfo) : base(contextInfo) { }
@@ -279,7 +300,7 @@ namespace RegexTest
                 return new BasicRegexNFAState<char>(state.IsTerminal);
             }
 
-            public IRegexFSMState<char> ActivateRegexDFAState(bool isTerminal = false)
+            public IRegexDFAState<char> ActivateRegexDFAState(bool isTerminal = false)
             {
                 return new BasicRegexDFAState<char>(isTerminal);
             }
@@ -308,7 +329,7 @@ namespace RegexTest
             }
 
             public TRegexDFAState ActivateRegexDFAStateFromDumplication<TRegexDFAState>(TRegexDFAState state)
-                where TRegexDFAState : IRegexFSMState<char>
+                where TRegexDFAState : IRegexDFAState<char>
             {
                 if (typeof(BasicRegexDFAState<char>).IsAssignableFrom(typeof(TRegexDFAState)))
                     return (TRegexDFAState)(object)this.ActivateRegexDFAStateFromDumplication((BasicRegexDFAState<char>)(object)state);
@@ -505,13 +526,13 @@ namespace RegexTest
                     dfaTransitions
                         .Where(transition => transition != null)
                         .SelectMany(transition => 
-                            this.GetAccreditedSetFromRegexFSMTransition(transition)
+                            this.GetAccreditedSetFromRegexAcceptInputTransition(transition)
                         )
                 );
                 return this.ActivateRegexDFATransitionFromAccreditedSet(set);
             }
 
-            public ISet<char> GetAccreditedSetFromRegexFSMTransition(IAcceptInputTransition<char> transition)
+            public ISet<char> GetAccreditedSetFromRegexAcceptInputTransition(IAcceptInputTransition<char> transition)
             {
                 if (transition is SetRegexNFATransition set)
                     return set.Set;
@@ -649,13 +670,13 @@ namespace RegexTest
                 return new BasicRegexDFA<string>();
             }
 
-            public IRegexFSMState<string> ActivateRegexDFAState(bool isTerminal = false)
+            public IRegexDFAState<string> ActivateRegexDFAState(bool isTerminal = false)
             {
                 return new BasicRegexDFAState<string>(isTerminal);
             }
 
             public TRegexDFAState ActivateRegexDFAStateFromDumplication<TRegexDFAState>(TRegexDFAState state)
-                where TRegexDFAState : IRegexFSMState<string>
+                where TRegexDFAState : IRegexDFAState<string>
             {
                 if (typeof(BasicRegexDFAState<string>).IsAssignableFrom(typeof(TRegexDFAState)))
                     return (TRegexDFAState)(object)this.ActivateRegexDFAStateFromDumplication((BasicRegexDFAState<string>)(object)state);
@@ -776,14 +797,14 @@ namespace RegexTest
                     dfaTransitions
                         .Where(transition => transition != null)
                         .SelectMany(transition =>
-                            this.GetAccreditedSetFromRegexFSMTransition(transition)
+                            this.GetAccreditedSetFromRegexAcceptInputTransition(transition)
                         ),
                     this.rangeInfo
                 );
                 return this.ActivateRegexDFATransitionFromAccreditedSet(set);
             }
 
-            public ISet<string> GetAccreditedSetFromRegexFSMTransition(IAcceptInputTransition<string> transition)
+            public ISet<string> GetAccreditedSetFromRegexAcceptInputTransition(IAcceptInputTransition<string> transition)
             {
                 if (transition == null) throw new ArgumentNullException(nameof(transition));
 

@@ -11,7 +11,7 @@ namespace SamLu.RegularExpression.Diagnostics
     /// <summary>
     /// 为 <see cref="RangeSet{T}"/> 及其子类提供调试信息。
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">范围的内容的类型。</typeparam>
     public class RangeSetDebugInfo<T> : IDebugInfo
     {
         private RangeSet<T> rangeSet;

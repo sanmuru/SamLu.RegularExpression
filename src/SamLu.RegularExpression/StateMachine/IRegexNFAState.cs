@@ -36,9 +36,9 @@ namespace SamLu.RegularExpression.StateMachine
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     /// <typeparam name="TTransition">非确定的有限自动机的转换的类型。</typeparam>
     /// <typeparam name="TEpsilonTransition">非确定的有限自动机的 ε 转换的类型。</typeparam>
-    public interface IRegexNFAState<T, TTransition, TTEpsilonTransition> : IRegexNFAState<T>, IRegexFSMState<T, TTransition>, INFAState<TTransition, TTEpsilonTransition>
+    public interface IRegexNFAState<T, TTransition, TEpsilonTransition> : IRegexNFAState<T>, IRegexFSMState<T, TTransition>, INFAState<TTransition, TEpsilonTransition>
         where TTransition : class, IRegexFSMTransition<T>
-        where TTEpsilonTransition : TTransition, IRegexFSMEpsilonTransition<T>
+        where TEpsilonTransition : TTransition, IRegexFSMEpsilonTransition<T>
     {
     }
 }

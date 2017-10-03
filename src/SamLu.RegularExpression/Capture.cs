@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +10,8 @@ namespace SamLu.RegularExpression
     /// <summary>
     /// 表示一个捕获
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">正则接受的对象的类型。</typeparam>
+    [DebuggerDisplay("Index = {Index}, Length = {Length}, Value = {Value}")]
     public class Capture<T>
     {
         protected int index;

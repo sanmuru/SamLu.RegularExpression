@@ -250,6 +250,26 @@ namespace SamLu.RegularExpression.StateMachine
             return state.Transitions.OrderBy((transition => transition), comparer);
         }
 
+        public static IEnumerable<TTransition> GetOrderedTransitions<T, TTransition>(this IRegexFSMState<T> state)
+            where TTransition : IRegexFSMTransition<T>
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+
+            var comparer = Comparer<TTransition>.Create((x, y) =>
+            {
+                Func<TTransition, int> func = transition =>
+                {
+                    if (transition is IRegexFSMEpsilonTransition<T>) return 0;
+                    else if (transition is IRegexFSMFunctionalTransition<T>) return 1;
+                    else return 2;
+                };
+
+                return func(x).CompareTo(func(y));
+            });
+
+            return state.Transitions.Cast<TTransition>().OrderBy((transition => transition), comparer);
+        }
+
         public static IEnumerable<TTransition> GetOrderedTransitions<T, TState, TTransition>(this TState state)
             where TState : IRegexFSMState<T, TTransition>
             where TTransition :  IRegexFSMTransition<T, TState>

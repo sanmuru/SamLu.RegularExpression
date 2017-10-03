@@ -61,11 +61,11 @@ namespace SamLu.RegularExpression.StateMachine
         TRegexNFAState ActivateRegexNFAStateFromDumplication<TRegexNFAState>(TRegexNFAState state) where TRegexNFAState : IRegexNFAState<T>;
 
         /// <summary>
-        /// 远程创建 <see cref="IRegexFSMState{T}"/> 的新实例。
+        /// 远程创建 <see cref="IRegexDFAState{T}"/> 的新实例。
         /// </summary>
         /// <param name="isTerminal">一个值，指示该有限自动机的状态是否为结束状态。默认为 false 。</param>
-        /// <returns><see cref="IRegexFSMState{T}"/> 的新实例。</returns>
-        IRegexFSMState<T> ActivateRegexDFAState(bool isTerminal = false);
+        /// <returns><see cref="IRegexDFAState{T}"/> 的新实例。</returns>
+        IRegexDFAState<T> ActivateRegexDFAState(bool isTerminal = false);
 
         /// <summary>
         /// 远程创建指定 <typeparamref name="TRegexDFAState"/> 对象的空副本。
@@ -73,7 +73,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// <param name="state">指定正则构造确定自动机的状态。</param>
         /// <typeparam name="TRegexDFAState">正则构造确定自动机对象的状态的类型。</typeparam>
         /// <returns>指定正则构造确定自动机的状态的空副本。</returns>
-        TRegexDFAState ActivateRegexDFAStateFromDumplication<TRegexDFAState>(TRegexDFAState state) where TRegexDFAState : IRegexFSMState<T>;
+        TRegexDFAState ActivateRegexDFAStateFromDumplication<TRegexDFAState>(TRegexDFAState state) where TRegexDFAState : IRegexDFAState<T>;
 
         /// <summary>
         /// 从条件正则（ <see cref="RegexCondition{T}"/> ）对象中获取信息，远程创建 NFA 转换的新实例。
@@ -110,7 +110,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// </summary>
         /// <param name="transition">正则构造的状态机的转换。</param>
         /// <returns>可接受的对象集。</returns>
-        ISet<T> GetAccreditedSetFromRegexFSMTransition(IAcceptInputTransition<T> transition);
+        ISet<T> GetAccreditedSetFromRegexAcceptInputTransition(IAcceptInputTransition<T> transition);
 
         /// <summary>
         /// 获取两个 <see cref="ISet{T}"/> 的差集作为可接受对象集。

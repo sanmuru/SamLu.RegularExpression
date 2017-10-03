@@ -38,7 +38,7 @@ namespace SamLu.RegularExpression.Extend
         /// </summary>
         public bool IsDetermined => this.group != null;
 
-        public RegexGroupReference() : this(null) { }
+        protected RegexGroupReference() : this(null) { }
 
         public RegexGroupReference(object id)=>
             this.id = id ?? throw new ArgumentNullException(nameof(id));

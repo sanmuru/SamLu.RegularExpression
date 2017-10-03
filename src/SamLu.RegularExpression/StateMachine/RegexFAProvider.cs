@@ -60,6 +60,8 @@ namespace SamLu.RegularExpression.StateMachine
                 return this.GenerateNFATransitionFromRegexCondition(condition, nfa, state);
             else if (regex is RegexRepeat<T> repeat)
                 return this.GenerateNFATransitionFromRegexRepeat(repeat, nfa, state);
+            else if (regex is RegexNonGreedyRepeat<T> nonGreedyRepeat)
+                return this.GenerateNFATransitionFromRegexNonGreedyRepeat(nonGreedyRepeat, nfa, state);
             else if (regex is RegexSeries<T> series)
                 return this.GenerateNFATransitionFromRegexSeries(series, nfa, state);
             else if (regex is RegexParallels<T> parallels)
@@ -772,6 +774,16 @@ namespace SamLu.RegularExpression.StateMachine
             return epsilonTransition;
         }
 
+        protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexNonGreedyRepeat(RegexNonGreedyRepeat<T> nonGreedyRepeat, IRegexNFA<T> nfa, IRegexNFAState<T> state)
+        {
+            IRegexNFAState<T> nextState = state;
+
+            var nonGreedyRepeatTransition = new RegexFSMNonGreedyRepeatTransition<T>();
+            nfa.AttachTransition(nextState, nonGreedyRepeatTransition);
+
+            return this.GenerateNFATransitionFromRegexRepeat(nonGreedyRepeat.InnerRepeat, nfa, nextState);
+        }
+
         protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexSeries(
             RegexSeries<T> series,
             IRegexNFA<T> nfa,
@@ -851,7 +863,7 @@ namespace SamLu.RegularExpression.StateMachine
                 var accreditedSetsDic = transitions
                     .ToDictionary(
                         (transition => transition),
-                        (transition => this.contextInfo.GetAccreditedSetFromRegexFSMTransition((IAcceptInputTransition<T>)transition))
+                        (transition => this.contextInfo.GetAccreditedSetFromRegexAcceptInputTransition((IAcceptInputTransition<T>)transition))
                     );
                 // 计算接受的对象集的并集。
                 var sets = accreditedSetsDic.Values.ToArray();

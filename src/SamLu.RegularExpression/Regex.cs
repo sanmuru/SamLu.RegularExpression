@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SamLu.RegularExpression.Extend;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -245,6 +246,68 @@ namespace SamLu.RegularExpression
         /// <exception cref="ArgumentNullException"><paramref name="regex"/> 的值为 null 。</exception>
         public static RegexRepeat<T> RepeatMany<T>(this RegexObject<T> regex, ulong? minimumCount) =>
             new RegexRepeat<T>(regex ?? throw new ArgumentNullException(nameof(regex)), minimumCount, true);
+        #endregion
+
+        /// <summary>
+        /// 创建指定正则重复的非贪婪匹配模式重复。
+        /// </summary>
+        /// <typeparam name="T">正则接受的对象的类型。</typeparam>
+        /// <param name="repeat">指定的正则重复。</param>
+        /// <returns>指定正则重复的非贪婪匹配模式重复。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="repeat"/> 的值为 null 。</exception>
+        public static RegexNonGreedyRepeat<T> NonGreedy<T>(this RegexRepeat<T> repeat) =>
+            new RegexNonGreedyRepeat<T>(repeat ?? throw new ArgumentNullException(nameof(repeat)));
+
+        #region Group
+        /// <summary>
+        /// 创建以指定正则对象为匹配模式的正则组，并确定是否捕获此正则组。
+        /// </summary>
+        /// <typeparam name="T">正则接受的对象的类型。</typeparam>
+        /// <param name="regex">指定的正则对象。</param>
+        /// <param name="isCaptive">一个值，指示此正则组是否捕获。</param>
+        /// <returns>以指定正则对象为匹配模式的正则组。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="regex"/> 的值为 null 。</exception>
+        public static RegexGroup<T> Group<T>(this RegexObject<T> regex, bool isCaptive = true) =>
+            new RegexGroup<T>(regex ?? throw new ArgumentNullException(nameof(regex)), isCaptive);
+
+        /// <summary>
+        /// 创建以指定正则对象为匹配模式的正则组，指定此正则组的 ID 并确定是否捕获。
+        /// </summary>
+        /// <typeparam name="T">正则接受的对象的类型。</typeparam>
+        /// <param name="regex">指定的正则对象。</param>
+        /// <param name="id">指定的正则组的 ID 。</param>
+        /// <param name="isCaptive">一个值，指示此正则组是否捕获。</param>
+        /// <returns>以指定正则对象为匹配模式的正则组。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="regex"/> 的值为 null 。</exception>
+        public static RegexGroup<T> Group<T>(this RegexObject<T> regex, object id, bool isCaptive) =>
+            new RegexGroup<T>(regex ?? throw new ArgumentNullException(nameof(regex)), id, isCaptive);
+        #endregion
+
+        #region GroupReference
+        /// <summary>
+        /// 使用指定的正则组 ID 创建正则组引用。
+        /// </summary>
+        /// <typeparam name="T">正则接受的对象的类型。</typeparam>
+        /// <param name="id">指定的正则组 ID 。</param>
+        /// <returns>指定的正则组 ID 创建正则组引用。</returns>
+        public static RegexGroupReference<T> GroupReference<T>(object id) =>
+            new RegexGroupReference<T>(id);
+
+        /// <summary>
+        /// 由指定正则组创建引用其的正则组引用。
+        /// </summary>
+        /// <typeparam name="T">正则接受的对象的类型。</typeparam>
+        /// <param name="group">要获得引用的正则组。</param>
+        /// <param name="groupReference">引用 <paramref name="group"/> 的正则组引用。</param>
+        /// <returns>引用指定正则组的正则组引用。</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="group"/> 的值为 null 。</exception>
+        public static RegexGroup<T> GroupReference<T>(this RegexGroup<T> group, out RegexGroupReference<T> groupReference)
+        {
+            if (group == null) throw new ArgumentNullException(nameof(group));
+
+            groupReference = new RegexGroupReference<T>(group);
+            return group;
+        }
         #endregion
 
         #region ConcatMany

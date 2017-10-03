@@ -15,6 +15,7 @@ namespace SamLu.RegularExpression.StateMachine
     /// <summary>
     /// 表示正则表达式构造的有限状态机。
     /// </summary>
+    /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     public class RegexFSM<T> : FSM, IRegexFSM<T>
     {
         /// <summary>
@@ -131,8 +132,8 @@ namespace SamLu.RegularExpression.StateMachine
         /// <summary>
         /// 将 <see cref="RegexFSM{T}"/> 的一个指定转换的目标设为指定状态。
         /// </summary>
-        /// <param name="transition">指定的目标。</param>
-        /// <param name="state">指定的状态。</param>
+        /// <param name="transition">指定的转换。</param>
+        /// <param name="state">要设为目标的状态。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
         public sealed override bool SetTarget(ITransition transition, IState state) =>
             this.SetTarget((IRegexFSMTransition<T>)transition, (IRegexFSMState<T>)state);
@@ -140,8 +141,8 @@ namespace SamLu.RegularExpression.StateMachine
         /// <summary>
         /// 将 <see cref="RegexFSM{T}"/> 的一个指定转换的目标设为指定状态。
         /// </summary>
-        /// <param name="transition">指定的目标。</param>
-        /// <param name="state">指定的状态。</param>
+        /// <param name="transition">指定的转换。</param>
+        /// <param name="state">要设为目标的状态。</param>
         /// <returns>一个值，指示操作是否成功。</returns>
         public virtual bool SetTarget(IRegexFSMTransition<T> transition, IRegexFSMState<T> state) =>
             base.SetTarget(transition, state);
@@ -661,7 +662,6 @@ namespace SamLu.RegularExpression.StateMachine
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     /// <typeparam name="TState">正则构造的有限状态机的状态的类型。</typeparam>
     /// <typeparam name="TTransition">正则构造的有限状态机的转换的类型。</typeparam>
-    [Obsolete("功能未实现。")]
     public class RegexFSM<T, TState, TTransition> : FSM<TState, TTransition>, IRegexFSM<T, TState, TTransition>
         where TState : IRegexFSMState<T, TTransition>
         where TTransition : IRegexFSMTransition<T, TState>

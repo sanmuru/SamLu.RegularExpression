@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace SamLu.RegularExpression.StateMachine
 {
-    public class BasicRegexStateMachineActivationContextInfo<T> : IRegexStateMachineActivationContextInfo<T>
+    public class BasicRegexStateMachineActivationContextInfo<T> : RegexStateMachineActivationContextInfoBase<T>
     {
         protected RangeInfo<T> rangeInfo;
         protected ISet<T> accreditedSet;
 
-        public virtual ISet<T> AccreditedSet => this.accreditedSet;
+        public override ISet<T> AccreditedSet => this.accreditedSet;
 
         protected BasicRegexStateMachineActivationContextInfo(RangeInfo<T> rangeInfo)
         {
@@ -31,9 +31,9 @@ namespace SamLu.RegularExpression.StateMachine
             this.accreditedSet = accreditedSet;
         }
 
-        public virtual IRegexDFA<T> ActivateRegexDFA() => new BasicRegexDFA<T>();
+        public override IRegexDFA<T> ActivateRegexDFA() => new BasicRegexDFA<T>();
 
-        public virtual TRegexDFA ActivateRegexDFAFromDumplication<TRegexDFA>(TRegexDFA dfa) where TRegexDFA : IRegexDFA<T>
+        public override TRegexDFA ActivateRegexDFAFromDumplication<TRegexDFA>(TRegexDFA dfa)
         {
             if (typeof(BasicRegexDFA<T>).IsAssignableFrom(typeof(TRegexDFA)))
                 return (TRegexDFA)(object)this.ActivateRegexDFAFromDumplication((BasicRegexDFA<T>)(object)dfa);
@@ -48,9 +48,9 @@ namespace SamLu.RegularExpression.StateMachine
             return new BasicRegexDFA<T>() { StartState = dfa.StartState };
         }
 
-        public virtual IRegexFSMState<T> ActivateRegexDFAState(bool isTerminal = false) => new BasicRegexDFAState<T>(isTerminal);
+        public override IRegexDFAState<T> ActivateRegexDFAState(bool isTerminal = false) => new BasicRegexDFAState<T>(isTerminal);
 
-        public virtual TRegexDFAState ActivateRegexDFAStateFromDumplication<TRegexDFAState>(TRegexDFAState state) where TRegexDFAState : IRegexFSMState<T>
+        public override TRegexDFAState ActivateRegexDFAStateFromDumplication<TRegexDFAState>(TRegexDFAState state)
         {
             if (typeof(BasicRegexDFAState<T>).IsAssignableFrom(typeof(TRegexDFAState)))
                 return (TRegexDFAState)(object)this.ActivateRegexDFAStateFromDumplication((BasicRegexDFAState<T>)(object)state);
@@ -65,18 +65,18 @@ namespace SamLu.RegularExpression.StateMachine
             return new BasicRegexDFAState<T>(state.IsTerminal);
         }
 
-        public virtual IAcceptInputTransition<T> ActivateRegexDFATransitionFromAccreditedSet(ISet<T> set)
+        public override IAcceptInputTransition<T> ActivateRegexDFATransitionFromAccreditedSet(ISet<T> set)
         {
             if (set == null) throw new ArgumentNullException(nameof(set));
 
             return new RangeSetRegexFATransition<T, BasicRegexDFAState<T>>(new RangeSet<T>(this.GetAccreditedSetIntersectResult(this.AccreditedSet, set), rangeInfo));
         }
 
-        public virtual IRegexFSMEpsilonTransition<T> ActivateRegexFSMEpsilonTransition() => new BasicRegexFSMEpsilonTransition<T>();
+        public override IRegexFSMEpsilonTransition<T> ActivateRegexFSMEpsilonTransition() => new BasicRegexFSMEpsilonTransition<T>();
 
-        public virtual IRegexNFA<T> ActivateRegexNFA() => new BasicRegexNFA<T>();
+        public override IRegexNFA<T> ActivateRegexNFA() => new BasicRegexNFA<T>();
 
-        public virtual TRegexNFA ActivateRegexNFAFromDumplication<TRegexNFA>(TRegexNFA nfa) where TRegexNFA : IRegexNFA<T>
+        public override TRegexNFA ActivateRegexNFAFromDumplication<TRegexNFA>(TRegexNFA nfa)
         {
             if (typeof(BasicRegexNFA<T>).IsAssignableFrom(typeof(TRegexNFA)))
                 return (TRegexNFA)(object)this.ActivateRegexNFAFromDumplication((BasicRegexNFA<T>)(object)nfa);
@@ -91,9 +91,9 @@ namespace SamLu.RegularExpression.StateMachine
             return new BasicRegexNFA<T>() { StartState = nfa.StartState };
         }
 
-        public virtual IRegexNFAState<T> ActivateRegexNFAState(bool isTerminal = false) => new BasicRegexNFAState<T>(isTerminal);
+        public override IRegexNFAState<T> ActivateRegexNFAState(bool isTerminal = false) => new BasicRegexNFAState<T>(isTerminal);
 
-        public virtual TRegexNFAState ActivateRegexNFAStateFromDumplication<TRegexNFAState>(TRegexNFAState state) where TRegexNFAState : IRegexNFAState<T>
+        public override TRegexNFAState ActivateRegexNFAStateFromDumplication<TRegexNFAState>(TRegexNFAState state)
         {
             if (typeof(BasicRegexNFAState<T>).IsAssignableFrom(typeof(TRegexNFAState)))
                 return (TRegexNFAState)(object)this.ActivateRegexNFAStateFromDumplication((BasicRegexNFAState<T>)(object)state);
@@ -108,7 +108,7 @@ namespace SamLu.RegularExpression.StateMachine
             return new BasicRegexNFAState<T>(state.IsTerminal);
         }
 
-        public virtual TRegexNFATransition ActivateRegexNFATransitionFromDumplication<TRegexNFATransition>(TRegexNFATransition transition) where TRegexNFATransition : IRegexFSMTransition<T>
+        public override TRegexNFATransition ActivateRegexNFATransitionFromDumplication<TRegexNFATransition>(TRegexNFATransition transition)
         {
             if (typeof(BasicRegexFATransition<T, BasicRegexNFAState<T>>).IsAssignableFrom(typeof(TRegexNFATransition)))
                 return (TRegexNFATransition)(object)this.ActivateRegexNFATransitionFromDumplication((BasicRegexFATransition<T, BasicRegexNFAState<T>>)(object)transition);
@@ -133,7 +133,7 @@ namespace SamLu.RegularExpression.StateMachine
             return new RangeSetRegexFATransition<T, BasicRegexNFAState<T>>(new RangeSet<T>(transition.Set, this.rangeInfo));
         }
 
-        public virtual IAcceptInputTransition<T> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<T> regex)
+        public override IAcceptInputTransition<T> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<T> regex)
         {
             if (regex == null) throw new ArgumentNullException(nameof(regex));
 
@@ -196,30 +196,24 @@ namespace SamLu.RegularExpression.StateMachine
         {
             return new ConstAdaptorRegexFATransition<TTarget, T, BasicRegexNFAState<T>>(regex.Condition);
         }
-
-        public virtual IAcceptInputTransition<T> CombineRegexDFATransitions(IEnumerable<IAcceptInputTransition<T>> transitions)
+        
+        protected override Predicate<T> GetPredicateFromRegexAcceptInputTransition(IAcceptInputTransition<T> transition)
         {
-            if (transitions == null) throw new ArgumentNullException(nameof(transitions));
+            if (transition == null) return null;
+            else if (transition is RegexCondition<T>)
+                return ((RegexCondition<T>)transition).Condition;
+            else if (transition is RangeSetRegexFATransition<T, BasicRegexDFAState<T>>)
+                return ((RangeSetRegexFATransition<T, BasicRegexDFAState<T>>)transition).Predicate;
+            else
+                return transition.CanAccept;
+        }
 
-            Predicate<T> predicate = transitions
-                .Select(transition =>
-                {
-                    if (transition == null) return null;
-                    else if (transition is RegexCondition<T>)
-                        return ((RegexCondition<T>)transition).Condition;
-                    else if (transition is RangeSetRegexFATransition<T, BasicRegexDFAState<T>>)
-                        return ((RangeSetRegexFATransition<T, BasicRegexDFAState<T>>)transition).Predicate;
-                    else
-                        return transition.CanAccept;
-                })
-                .Aggregate(
-                    (Predicate<T>)null,
-                    ((seed, _predicate) => seed + _predicate)
-                );
+        protected override IAcceptInputTransition<T> ActivateRegexDFATransitionFromPredicate(Predicate<T> predicate)
+        {
             return new BasicRegexFATransition<T, BasicRegexDFAState<T>>(predicate);
         }
 
-        public virtual ISet<T> GetAccreditedSetFromRegexFSMTransition(IAcceptInputTransition<T> transition)
+        public override ISet<T> GetAccreditedSetFromRegexAcceptInputTransition(IAcceptInputTransition<T> transition)
         {
             if (transition == null) throw new ArgumentNullException(nameof(transition));
 
@@ -240,45 +234,13 @@ namespace SamLu.RegularExpression.StateMachine
             else
                 return new RangeSet<T>(this.AccreditedSet.Where(item => transition.Predicate(item)), this.rangeInfo);
         }
-
-        public virtual ISet<T> GetAccreditedSetExceptResult(ISet<T> first, ISet<T> second)
-        {
-            if (first == null) throw new ArgumentNullException(nameof(first));
-            if (second == null) throw new ArgumentNullException(nameof(second));
-
-            return new SetGroup<T>(new[] { first, second }, SetGroup<T>.ExceptGroupPredicate);
-        }
-
+        
         protected virtual ISet<T> GetAccreditedSetFromRegexFSMTransition<TRegexFAState>(RangeSetRegexFATransition<T, TRegexFAState> transition)
             where TRegexFAState : IRegexFSMState<T, BasicRegexFATransition<T, TRegexFAState>>
         {
             if (transition == null) throw new ArgumentNullException(nameof(transition));
 
             return transition.Set;
-        }
-
-        public virtual ISet<T> GetAccreditedSetIntersectResult(ISet<T> first, ISet<T> second)
-        {
-            if (first == null) throw new ArgumentNullException(nameof(first));
-            if (second == null) throw new ArgumentNullException(nameof(second));
-
-            return new SetGroup<T>(new[] { first, second }, SetGroup<T>.IntersectGroupPredicate);
-        }
-
-        public virtual ISet<T> GetAccreditedSetSymmetricExceptResult(ISet<T> first, ISet<T> second)
-        {
-            if (first == null) throw new ArgumentNullException(nameof(first));
-            if (second == null) throw new ArgumentNullException(nameof(second));
-
-            return new SetGroup<T>(new[] { first, second }, SetGroup<T>.SymmetricExceptGroupPredicate);
-        }
-
-        public virtual ISet<T> GetAccreditedSetUnionResult(ISet<T> first, ISet<T> second)
-        {
-            if (first == null) throw new ArgumentNullException(nameof(first));
-            if (second == null) throw new ArgumentNullException(nameof(second));
-
-            return new SetGroup<T>(new[] { first, second }, SetGroup<T>.UnionGroupPredicate);
         }
     }
 }
