@@ -92,6 +92,9 @@
     <Compile Include="IAcceptInputTransition.cs" />
     <Compile Include="IRange.cs" />
     <Compile Include="SamLu\IO\NodeArrayReader.cs" />
+    <Compile Include="SamLu\Runtime\MethodShunt.cs" />
+    <Compile Include="SamLu\Runtime\MethodShuntKey.cs" />
+    <Compile Include="SamLu\Runtime\MethodShuntSource.cs" />
     <Compile Include="StateMachine\CommonRegexFAState.cs" />
     <Compile Include="StateMachine\ConstAdaptorRegexFATransition.cs" />
     <Compile Include="StateMachine\BasicRegexStateMachineActivationContextInfo.cs" />

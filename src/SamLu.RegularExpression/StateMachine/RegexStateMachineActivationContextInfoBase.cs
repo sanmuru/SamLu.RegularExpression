@@ -1,5 +1,6 @@
 ﻿using SamLu.Collections.ObjectModel;
 using SamLu.RegularExpression.ObjectModel;
+using SamLu.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,12 @@ namespace SamLu.RegularExpression.StateMachine
 
         public virtual IRegexDFA<T> ActivateRegexDFA() => new RegexDFA<T>();
 
-        public abstract TRegexDFA ActivateRegexDFAFromDumplication<TRegexDFA>(TRegexDFA dfa) where TRegexDFA : IRegexDFA<T>;
+        public static readonly MethodShuntSource ActivateRegexDFAFromDumplicationSource = MethodShunt.CreateSource(typeof(RegexStateMachineActivationContextInfoBase<T>).GetMethod("ActivateRegexDFAFromDumplication"));
+
+        public virtual TRegexDFA ActivateRegexDFAFromDumplication<TRegexDFA>(TRegexDFA dfa) where TRegexDFA : IRegexDFA<T>
+        {
+            return (TRegexDFA)this.DynamicInvokeShunt(RegexStateMachineActivationContextInfoBase<T>.ActivateRegexDFAFromDumplicationSource, dfa);
+        }
 
         public virtual IRegexDFAState<T> ActivateRegexDFAState(bool isTerminal = false) =>
             isTerminal ?

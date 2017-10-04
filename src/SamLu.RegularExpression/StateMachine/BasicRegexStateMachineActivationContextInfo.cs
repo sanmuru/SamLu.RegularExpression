@@ -69,7 +69,7 @@ namespace SamLu.RegularExpression.StateMachine
         {
             if (set == null) throw new ArgumentNullException(nameof(set));
 
-            return new RangeSetRegexFATransition<T, BasicRegexDFAState<T>>(new RangeSet<T>(this.GetAccreditedSetIntersectResult(this.AccreditedSet, set), rangeInfo));
+            return new RangeSetRegexFATransition<T, BasicRegexDFAState<T>>(new RangeSet<T>(this.GetAccreditedSetIntersectResult(this.AccreditedSet, set), this.rangeInfo));
         }
 
         public override IRegexFSMEpsilonTransition<T> ActivateRegexFSMEpsilonTransition() => new BasicRegexFSMEpsilonTransition<T>();
