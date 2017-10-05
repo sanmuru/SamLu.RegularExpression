@@ -32,9 +32,53 @@ namespace SamLu.Runtime
             return key;
         }
 
-        public static object DynamicInvokeShunt(this object target, MethodShuntSource source, params object[] args)
+        public static MethodShuntResult DynamicInvokeShunt(this object target, MethodShuntSource source, params object[] parameters)
         {
-            throw new NotImplementedException();
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            if (MethodShunt.shuntDic.ContainsKey(source))
+            {
+                foreach (var key in MethodShunt.shuntDic[source])
+                {
+                    var result = MethodShunt.DynamicInvokeShuntInternal(target, key, parameters);
+                    if (result.Success)
+                        return new MethodShuntResult(true, result.ReturnValue);
+                }
+            }
+
+            return MethodShuntResult.Unsuccess;
+        }
+
+        [Obsolete]
+        private static MethodShuntResult DynamicInvokeShuntInternal(object target, MethodShuntKey key, object[] parameters)
+        {
+            var pairs =
+                from pi in key.Method.GetParameters()
+                join pv in parameters.Select((pv, index) => new { Value = pv, Index = index })
+                on pi.Position equals pv.Index
+                select new { Parameter = pi, Value = pv.Value }
+                into pair
+                orderby pair.Parameter.Position
+                select pair;
+
+            bool success = pairs.All(pair =>
+                pair.Parameter.ParameterType.IsAssignableFromValue(pair.Value)
+            );
+
+            if (success)
+                return new MethodShuntResult(true, key.Method.Invoke(target, parameters));
+            else
+                return MethodShuntResult.Unsuccess;
+        }
+        
+        internal static bool IsAssignableFromValue(this Type type, object value)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            
+            if (value == null)
+                return !type.IsValueType;
+            else
+                return type.IsAssignableFrom(value.GetType());
         }
     }
 }
