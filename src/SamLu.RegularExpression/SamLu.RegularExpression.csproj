@@ -55,13 +55,8 @@
     <Compile Include="Adapter\SetAdaptor.cs" />
     <Compile Include="Capture.cs" />
     <Compile Include="CustomizedAction.cs" />
-    <Compile Include="Diagnostics\RegexFSMCaptureIDCheckTransitionDebugInfo.cs" />
-    <Compile Include="Diagnostics\RegexFSMCaptureIDStorageTransitionDebugInfo.cs" />
-    <Compile Include="Diagnostics\RegexFSMCaptureStartTransitionDebugInfo.cs" />
-    <Compile Include="Diagnostics\RegexFSMNegativeCaptureTransitionDebugInfo.cs" />
-    <Compile Include="Diagnostics\RegexFSMNonGreedyRepeatTransitionDebugInfo.cs" />
-    <Compile Include="Diagnostics\RegexFSMPositiveCaptureTransitionDebugInfo.cs" />
-    <Compile Include="Diagnostics\RegexFSMPredicateTransitionDebugInfo.cs" />
+    <Compile Include="Diagnostics\BasicRegexFATransitionAdaptorDebugInfo.cs" />
+    <Compile Include="Diagnostics\CharRangeDebugInfo.cs" />
     <Compile Include="Extend\Group.cs" />
     <Compile Include="Extend\GroupCollection.cs" />
     <Compile Include="Extend\IRegexAnchorPoint.cs" />
@@ -91,6 +86,9 @@
     <Compile Include="Extend\RegexZeroLengthObject.cs" />
     <Compile Include="IAcceptInputTransition.cs" />
     <Compile Include="IRange.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexFSMLastCaptureReferenceTransition.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexFSMRepeatTransitionBase.cs" />
+    <Compile Include="StateMachine\RangeSetRegexStateMachineActivationContextInfo.cs" />
     <Compile Include="SamLu\IO\NodeArrayReader.cs" />
     <Compile Include="SamLu\Runtime\MethodShunt.cs" />
     <Compile Include="SamLu\Runtime\MethodShuntKey.cs" />
@@ -100,8 +98,6 @@
     <Compile Include="StateMachine\ConstAdaptorRegexFATransition.cs" />
     <Compile Include="StateMachine\BasicRegexStateMachineActivationContextInfo.cs" />
     <Compile Include="StateMachine\BasicRegexFATransitionAdaptor.cs" />
-    <Compile Include="Diagnostics\RegexFSMCaptureEndTransitionDebugInfo.cs" />
-    <Compile Include="Diagnostics\RegexFSMGreedyRepeatTransitionDebugInfo.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexFSMPredicateTransition.cs" />
     <Compile Include="StateMachine\IRegexDFAState.cs" />
     <Compile Include="StateMachine\ObjectModel\CaptureStack.cs" />
@@ -144,7 +140,7 @@
     <Compile Include="SamLu\IO\NodeReader.cs" />
     <Compile Include="SamLu\IO\StringLineReader.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexFSMCaptureEndTransition.cs" />
-    <Compile Include="StateMachine\FunctionalTransitions\RegexFSMCaptureIDCheckTransition.cs" />
+    <Compile Include="StateMachine\FunctionalTransitions\RegexFSMCaptureCheckTransition.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexFSMCaptureIDStorageTransition.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexFSMCaptureStartTransition.cs" />
     <Compile Include="StateMachine\FunctionalTransitions\RegexFSMGreedyRepeatTransition.cs" />

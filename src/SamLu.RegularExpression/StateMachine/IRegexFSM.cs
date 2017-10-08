@@ -82,11 +82,21 @@ namespace SamLu.RegularExpression.StateMachine
         /// <summary>
         /// 记录一个匹配。
         /// </summary>
-        /// <param name="captureIDToken">匹配的 ID 标志符。</param>
+        /// <param name="idToken">匹配的 ID 标志符。</param>
         /// <param name="id">捕获的 ID 。</param>
         /// <param name="start">捕获的开始位置。</param>
         /// <param name="length">捕获的长度。</param>
-        void Capture(object captureIDToken, object id, int start, int length);
+        void Capture(object idToken, object id, int start, int length);
+
+        /// <summary>
+        /// 尝试获取 <see cref="IRegexFSM{T}"/> 的指定匹配。
+        /// </summary>
+        /// <param name="idToken">匹配的 ID 标志符。</param>
+        /// <param name="id">捕获的 ID 。</param>
+        /// <param name="start">捕获的开始位置。</param>
+        /// <param name="length">捕获的长度。</param>
+        /// <returns>一个值，指示 <see cref="IRegexFSM{T}"/> 是否含有指定的匹配。</returns>
+        bool TryGetLastCapture(object idToken, object id, out int start, out int length);
 
         /// <summary>
         /// 接受一个指定输入序列并进行一组转换动作。

@@ -1,4 +1,6 @@
-﻿using SamLu.RegularExpression.DebugView;
+﻿using SamLu.Diagnostics;
+using SamLu.RegularExpression.DebugView;
+using SamLu.RegularExpression.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,6 +11,7 @@ using System.Threading.Tasks;
 namespace SamLu.RegularExpression.ObjectModel
 {
     [DebuggerTypeProxy(typeof(RangeDebugView<>))]
+    [DebugInfoProxy(typeof(CharRangeDebugInfo))]
     public class CharRange : ComparableRange<char>
     {
         public CharRange() : this(char.MinValue, char.MaxValue) { }

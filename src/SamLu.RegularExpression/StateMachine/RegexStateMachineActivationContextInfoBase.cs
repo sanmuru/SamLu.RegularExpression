@@ -123,12 +123,50 @@ namespace SamLu.RegularExpression.StateMachine
         }
         #endregion
 
+        #region ActivateRegexNFATransitionFromRegexCondition
+        public static readonly MethodShuntSource ActivateRegexNFATransitionFromRegexConditionSource = MethodShunt.CreateSource(typeof(RegexStateMachineActivationContextInfoBase<T>).GetMethod(nameof(ActivateRegexNFATransitionFromRegexCondition), new[] { typeof(RegexCondition<T>) }));
+
         public virtual IAcceptInputTransition<T> ActivateRegexNFATransitionFromRegexCondition(RegexCondition<T> regex)
+        {
+            if (regex == null) throw new ArgumentNullException(nameof(regex));
+
+            var result = this.DynamicInvokeShunt(RegexStateMachineActivationContextInfoBase<T>.ActivateRegexNFATransitionFromRegexConditionSource, regex);
+            if (result.Success)
+                return (IAcceptInputTransition<T>)result.ReturnValue;
+            else
+                return new BasicRegexFATransition<T>(regex.Condition);
+        }
+
+        protected static readonly MethodShuntKey ActivateRegexNFATransitionFromRegexConditionKey_RegexConst = MethodShunt.Register(
+            RegexStateMachineActivationContextInfoBase<T>.ActivateRegexNFATransitionFromRegexConditionSource,
+            typeof(RegexStateMachineActivationContextInfoBase<T>).GetMethod(
+                nameof(ActivateRegexNFATransitionFromRegexConst),
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance
+            )
+        );
+        
+        protected virtual IAcceptInputTransition<T> ActivateRegexNFATransitionFromRegexConst(RegexConst<T> regex)
+        {
+            if (regex == null) throw new ArgumentNullException(nameof(regex));
+
+            return new BasicRegexFATransition<T>(t => this.AccreditedSet.Any(_t => regex.Condition(_t)));
+        }
+
+        protected static readonly MethodShuntKey ActivateRegexNFATransitionFromRegexConditionKey_RegexRange = MethodShunt.Register(
+            RegexStateMachineActivationContextInfoBase<T>.ActivateRegexNFATransitionFromRegexConditionSource,
+            typeof(RegexStateMachineActivationContextInfoBase<T>).GetMethod(
+                nameof(ActivateRegexNFATransitionFromRegexRange),
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance
+            )
+        );
+
+        protected virtual IAcceptInputTransition<T> ActivateRegexNFATransitionFromRegexRange(RegexRange<T> regex)
         {
             if (regex == null) throw new ArgumentNullException(nameof(regex));
 
             return new BasicRegexFATransition<T>(regex.Condition);
         }
+        #endregion
 
         public virtual IAcceptInputTransition<T> CombineRegexDFATransitions(IEnumerable<IAcceptInputTransition<T>> transitions)
         {

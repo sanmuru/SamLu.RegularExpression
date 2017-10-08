@@ -16,7 +16,7 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
     /// </summary>
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     [DebugInfoProxy(
-        typeof(RegexFSMPredicateTransitionDebugInfo<>),
+        typeof(RegexFSMPredicateTransition<>._DebugInfo),
         new[] { TypeParameterFillin.TypeParameter_1 }
     )]
     public class RegexFSMPredicateTransition<T> : RegexFSMFunctionalTransition<T>, IRegexFSMTransitionProxy<T>
@@ -37,6 +37,29 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
         #region IRegexFSMTransitionProxy{T} Implementation
         bool IRegexFSMTransitionProxy<T>.TransitProxy(IReaderSource<T> readerSource, RegexFSMTransitProxyHandler<T> handler, params object[] args) => this.Predicate(this, args);
         #endregion
+
+        /// <summary>
+        /// 为 <see cref="RegexFSMPredicateTransition{T}"/> 提供调试信息。
+        /// </summary>
+        internal sealed class _DebugInfo : RegexFSMFunctionalTransitionDebugInfoBase<T, RegexFSMPredicateTransition<T>>
+        {
+            /// <summary>
+            /// 获取 <see cref="RegexFSMPredicateTransition{T}"/> 的显式名称。
+            /// </summary>
+            protected override string Name => "predicate";
+
+            /// <summary>
+            /// 获取 <see cref="RegexFSMPredicateTransition{T}"/> 的显式参数序列。
+            /// </summary>
+            protected override IEnumerable<string> Parameters => null;
+
+            /// <summary>
+            /// 使用规范参数列表初始化 <see cref="_DebugInfo"/> 类的新实例。
+            /// </summary>
+            /// <param name="functionalTransition">正则表达式构造的有限状态机的功能转换。</param>
+            /// <param name="args">获取调试信息的参数列表。</param>
+            public _DebugInfo(RegexFSMPredicateTransition<T> functionalTransition, params object[] args) : base(functionalTransition, args) { }
+        }
     }
 
     /// <summary>
@@ -45,7 +68,7 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
     /// <typeparam name="T">正则表达式处理的数据的类型。</typeparam>
     /// <typeparam name="TState">正则构造的有限状态机的状态的类型。</typeparam>
     [DebugInfoProxy(
-        typeof(RegexFSMPredicateTransitionDebugInfo<,>),
+        typeof(RegexFSMPredicateTransition<,>._DebugInfo),
         new[] { TypeParameterFillin.TypeParameter_1, TypeParameterFillin.TypeParameter_2 }
     )]
     public class RegexFSMPredicateTransition<T, TState> : RegexFSMFunctionalTransition<T, TState>, IRegexFSMTransitionProxy<T, TState>
@@ -69,5 +92,28 @@ namespace SamLu.RegularExpression.StateMachine.FunctionalTransitions
 
         bool IRegexFSMTransitionProxy<T, TState>.TransitProxy(IReaderSource<T> readerSource, RegexFSMTransitProxyHandler<T, TState> handler, params object[] args) => this.Predicate(this, args);
         #endregion
+
+        /// <summary>
+        /// 为 <see cref="RegexFSMPredicateTransition{T, TState}"/> 提供调试信息。
+        /// </summary>
+        internal sealed class _DebugInfo : RegexFSMFunctionalTransitionDebugInfoBase<T, RegexFSMPredicateTransition<T, TState>>
+        {
+            /// <summary>
+            /// 获取 <see cref="RegexFSMPredicateTransition{T, TState}"/> 的显式名称。
+            /// </summary>
+            protected override string Name => "predicate";
+
+            /// <summary>
+            /// 获取 <see cref="RegexFSMPredicateTransition{T, TState}"/> 的显式参数序列。
+            /// </summary>
+            protected override IEnumerable<string> Parameters => null;
+
+            /// <summary>
+            /// 使用规范参数列表初始化 <see cref="_DebugInfo"/> 类的新实例。
+            /// </summary>
+            /// <param name="functionalTransition">正则表达式构造的有限状态机的功能转换。</param>
+            /// <param name="args">获取调试信息的参数列表。</param>
+            public _DebugInfo(RegexFSMPredicateTransition<T, TState> functionalTransition, params object[] args) : base(functionalTransition, args) { }
+        }
     }
 }

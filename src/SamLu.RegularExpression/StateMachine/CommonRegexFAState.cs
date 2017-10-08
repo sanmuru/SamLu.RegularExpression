@@ -43,7 +43,7 @@ namespace SamLu.RegularExpression.StateMachine
         /// <summary>
         /// 获取一个值，指示此 <see cref="CommonRegexFAState{T}"/> 是否为 DFA 状态。
         /// </summary>
-        public bool IsDFAState { get => this.IsDFAState; }
+        public bool IsDFAState { get => this.isDFAState; }
 
         /// <summary>
         /// 初始化 <see cref="CommonRegexFAState{T}"/> 类的新实例。

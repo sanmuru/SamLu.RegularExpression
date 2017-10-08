@@ -201,20 +201,45 @@ namespace SamLu.RegularExpression.StateMachine
         /// <summary>
         /// 记录一个匹配。
         /// </summary>
-        /// <param name="captureIDToken">匹配的 ID 标志符。</param>
+        /// <param name="idToken">匹配的 ID 标志符。</param>
         /// <param name="id">捕获的 ID 。</param>
         /// <param name="start">捕获的开始位置。</param>
         /// <param name="length">捕获的长度。</param>
-        public virtual void Capture(object captureIDToken, object id, int start, int length)
+        public virtual void Capture(object idToken, object id, int start, int length)
         {
             this.captureStack.Push(new CaptureStack<T>.Item()
             {
                 StateStackCount = this.stateStack.Count,
-                CaptureIDToken = captureIDToken,
+                CaptureIDToken = idToken,
                 CaptureID = id,
                 CaptureStart = start,
                 CaptureLength = length
             });
+        }
+
+        /// <summary>
+        /// 尝试获取 <see cref="RegexFSM{T}"/> 的指定匹配。
+        /// </summary>
+        /// <param name="idToken">匹配的 ID 标志符。</param>
+        /// <param name="id">捕获的 ID 。</param>
+        /// <param name="start">捕获的开始位置。</param>
+        /// <param name="length">捕获的长度。</param>
+        /// <returns>一个值，指示 <see cref="IRegexFSM{T}"/> 是否含有指定的匹配。</returns>
+        public virtual bool TryGetLastCapture(object idToken, object id, out int start, out int length)
+        {
+            var capture = this.captureStack.FirstOrDefault(item => object.Equals(item.CaptureIDToken, idToken) && object.Equals(item.CaptureID, id));
+            if (capture == null)
+            {
+                start = 0;
+                length = 0;
+                return false;
+            }
+            else
+            {
+                start = capture.CaptureStart;
+                length = capture.CaptureLength;
+                return true;
+            }
         }
 
         /// <summary>
@@ -761,20 +786,45 @@ namespace SamLu.RegularExpression.StateMachine
         /// <summary>
         /// 记录一个匹配。
         /// </summary>
-        /// <param name="captureIDToken">匹配的 ID 标志符。</param>
+        /// <param name="idToken">匹配的 ID 标志符。</param>
         /// <param name="id">捕获的 ID 。</param>
         /// <param name="start">捕获的开始位置。</param>
         /// <param name="length">捕获的长度。</param>
-        public virtual void Capture(object captureIDToken, object id, int start, int length)
+        public virtual void Capture(object idToken, object id, int start, int length)
         {
             this.captureStack.Push(new CaptureStack<T>.Item()
             {
                 StateStackCount = this.stateStack.Count,
-                CaptureIDToken = captureIDToken,
+                CaptureIDToken = idToken,
                 CaptureID = id,
                 CaptureStart = start,
                 CaptureLength = length
             });
+        }
+
+        /// <summary>
+        /// 尝试获取 <see cref="RegexFSM{T, TState, TTransition}"/> 的指定匹配。
+        /// </summary>
+        /// <param name="idToken">匹配的 ID 标志符。</param>
+        /// <param name="id">捕获的 ID 。</param>
+        /// <param name="start">捕获的开始位置。</param>
+        /// <param name="length">捕获的长度。</param>
+        /// <returns>一个值，指示 <see cref="IRegexFSM{T}"/> 是否含有指定的匹配。</returns>
+        public virtual bool TryGetLastCapture(object idToken, object id, out int start, out int length)
+        {
+            var capture = this.captureStack.FirstOrDefault(item => object.Equals(item.CaptureIDToken, idToken) && object.Equals(item.CaptureID, id));
+            if (capture == null)
+            {
+                start = 0;
+                length = 0;
+                return false;
+            }
+            else
+            {
+                start = capture.CaptureStart;
+                length = capture.CaptureLength;
+                return true;
+            }
         }
 
         /// <summary>

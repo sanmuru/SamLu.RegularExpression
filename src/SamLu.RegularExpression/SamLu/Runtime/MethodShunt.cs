@@ -40,9 +40,8 @@ namespace SamLu.Runtime
             {
                 foreach (var key in MethodShunt.shuntDic[source])
                 {
-                    var result = MethodShunt.DynamicInvokeShuntInternal(target, key, parameters);
-                    if (result.Success)
-                        return new MethodShuntResult(true, result.ReturnValue);
+                    if (MethodShunt.DynamicInvokeShuntInternal(target, key, parameters, out object returnValue))
+                        return new MethodShuntResult(true, returnValue);
                 }
             }
 
@@ -50,7 +49,7 @@ namespace SamLu.Runtime
         }
 
         [Obsolete]
-        private static MethodShuntResult DynamicInvokeShuntInternal(object target, MethodShuntKey key, object[] parameters)
+        private static bool DynamicInvokeShuntInternal(object target, MethodShuntKey key, object[] parameters, out object returnValue)
         {
             var pairs =
                 from pi in key.Method.GetParameters()
@@ -66,9 +65,15 @@ namespace SamLu.Runtime
             );
 
             if (success)
-                return new MethodShuntResult(true, key.Method.Invoke(target, parameters));
+            {
+                returnValue = key.Method.Invoke(target, parameters);
+                return true;
+            }
             else
-                return MethodShuntResult.Unsuccess;
+            {
+                returnValue = null;
+                return false;
+            }
         }
         
         internal static bool IsAssignableFromValue(this Type type, object value)

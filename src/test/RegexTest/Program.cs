@@ -163,10 +163,18 @@ namespace RegexTest
 
         private static void TestFunctionalTransitions(RegexObject<char> regex)
         {
-            RegexFAProvider<char> provider = new MyRegexFAProvider<char>(new MyCharRegexRunContextInfo());
+            RegexFAProvider<char> provider = new MyRegexFAProvider<char>(new RangeSetRegexStateMachineActivationContextInfo<char>(new RangeSet<char>(new[] { new CharRange() }, new CharRangeInfo())));
+            IRegexFSM<char> fsm;
             var nfa = provider.GenerateRegexFSMFromRegexObject(regex, RegexOptions.None);
-            var dfa = provider.GenerateRegexDFAFromRegexFSM(nfa);
-            IRegexFSM<char> fsm = dfa;
+            try
+            {
+                var dfa = provider.GenerateRegexDFAFromRegexFSM(nfa);
+                fsm = dfa;
+            }
+            catch (Exception)
+            {
+                fsm = nfa;
+            }
             ;
 
             var input = "1234564567";

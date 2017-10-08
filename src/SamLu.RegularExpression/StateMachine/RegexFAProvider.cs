@@ -229,7 +229,36 @@ namespace SamLu.RegularExpression.StateMachine
                 }
             }
 
-            return this.GenerateNFATransitionFromRegexGroup(group, nfa, state);
+            IRegexNFAState<T> nextState = state;
+
+            var lastCaptureReferenceTransition = new RegexFSMLastCaptureReferenceTransition<T>(group, group.ID, (sender, readerSource, handler, args) =>
+            {
+
+                if (args.FirstOrDefault() is IRegexFSM<T> fsm)
+                {
+                    if (fsm.TryGetLastCapture(sender.IDToken, sender.ID, out int start, out int length))
+                    {
+                        var progressService = fsm.GetService<RegexFSM<T>.ProgressService>();
+                        var progress = progressService.GetProgress();
+
+                        foreach (var t in fsm.Inputs.Skip(start).Take(length))
+                        {
+                            if (!(readerSource.HasNext() && EqualityComparer<T>.Default.Equals(readerSource.Read(), t)))
+                            {
+                                progressService.SetProgress(progress);
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    }
+                }
+
+                return false;
+            });
+            nfa.AttachTransition(nextState, lastCaptureReferenceTransition);
+
+            return lastCaptureReferenceTransition;
         }
 
         private IList<RegexGroup<T>> regexGroups = new List<RegexGroup<T>>();
@@ -260,7 +289,7 @@ namespace SamLu.RegularExpression.StateMachine
                         CaptureService<T> captureService = fsm.GetService<CaptureService<T>>();
                         captureService.StartCapture(_group, _group.ID);
 
-                        ((RegexFSMCaptureStartTransition<T>)sender).UserData[CAPTURE_SERVICE_KEY] = captureService;
+                        fsm.UserData[CAPTURE_SERVICE_KEY] = captureService;
                     }
                 }
             });
@@ -287,11 +316,10 @@ namespace SamLu.RegularExpression.StateMachine
 
                     if (args.FirstOrDefault() is IRegexFSM<T> fsm)
                     {
-                        CaptureService<T> captureService = (CaptureService<T>)((RegexFSMCaptureIDStorageTransition<T>)sender).UserData[CAPTURE_SERVICE_KEY];
+                        CaptureService<T> captureService = (CaptureService<T>)fsm.UserData[CAPTURE_SERVICE_KEY];
                         captureService.EndCapture(_group, fsm.Capture);
                     }
                 });
-                captureIDStorageTransition.UserData[CAPTURE_SERVICE_KEY] = captureStartTransition.UserData[CAPTURE_SERVICE_KEY];
                 nfa.AttachTransition(nextState, captureIDStorageTransition);
                 nextState = this.contextInfo.ActivateRegexNFAState();
                 nfa.SetTarget(captureIDStorageTransition, nextState);
@@ -780,8 +808,19 @@ namespace SamLu.RegularExpression.StateMachine
 
             var nonGreedyRepeatTransition = new RegexFSMNonGreedyRepeatTransition<T>();
             nfa.AttachTransition(nextState, nonGreedyRepeatTransition);
+            nextState = this.contextInfo.ActivateRegexNFAState();
+            nfa.SetTarget(nonGreedyRepeatTransition, nextState);
+            nonGreedyRepeatTransition.StateFrom = nextState;
 
-            return this.GenerateNFATransitionFromRegexRepeat(nonGreedyRepeat.InnerRepeat, nfa, nextState);
+            var transition = this.GenerateNFATransitionFromRegexRepeat(nonGreedyRepeat.InnerRepeat, nfa, nextState);
+            nextState = this.contextInfo.ActivateRegexNFAState();
+            nfa.SetTarget(transition, nextState);
+            nonGreedyRepeatTransition.StateTo = nextState;
+
+            var epsilonTransition = this.contextInfo.ActivateRegexFSMEpsilonTransition();
+            nfa.AttachTransition(nextState, epsilonTransition);
+
+            return epsilonTransition;
         }
 
         protected virtual IRegexFSMTransition<T> GenerateNFATransitionFromRegexSeries(

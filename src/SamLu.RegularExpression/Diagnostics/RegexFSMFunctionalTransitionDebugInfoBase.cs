@@ -38,11 +38,17 @@ namespace SamLu.RegularExpression.Diagnostics
         /// <summary>
         /// 获取调试信息。
         /// </summary>
-        protected virtual string DebugInfo =>
-            string.Format("ft:'{0}'{1}",
-                this.Name,
-                (this.Parameters == null ? string.Empty : $" = {{{string.Join(",", this.Parameters)}}}")
-            );
+        protected virtual string DebugInfo
+        {
+            get
+            {
+                var parameters = this.Parameters?.Where(parameter => parameter != null);
+                return string.Format("< ft:'{0}'{1} >",
+                    this.Name,
+                    ((parameters == null || !parameters.Any()) ? string.Empty : $" = {{{string.Join(",", parameters)}}}")
+                );
+            }
+        }
 
         /// <summary>
         /// 使用规范参数列表初始化 <see cref="RegexFSMFunctionalTransitionDebugInfoBase{T, TFunctionalTransition}"/> 类的新实例。
@@ -52,7 +58,7 @@ namespace SamLu.RegularExpression.Diagnostics
         protected RegexFSMFunctionalTransitionDebugInfoBase(TFunctionalTransition functionalTransition, params object[] args)
         {
             if (functionalTransition == null) throw new ArgumentNullException(nameof(functionalTransition));
-            
+
             this.functionalTransition = functionalTransition;
             this.args = args;
         }
