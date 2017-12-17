@@ -276,7 +276,7 @@ namespace RegexTest
             {
                 private IRange<char> range;
                 public IRange<char> Range => this.range;
-
+                
                 public RangeRegexNFATransition(IRange<char> range) :
                     base(
                         new Func<IRange<char>, Predicate<char>>((_range) =>

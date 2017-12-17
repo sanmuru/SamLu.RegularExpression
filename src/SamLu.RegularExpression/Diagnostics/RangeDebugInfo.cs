@@ -13,7 +13,13 @@ namespace SamLu.RegularExpression.Diagnostics
     /// <typeparam name="T">范围的内容的类型。</typeparam>
     public class RangeDebugInfo<T> : IDebugInfo
     {
+        /// <summary>
+        /// 要获取调试信息的范围对象。
+        /// </summary>
         protected IRange<T> range;
+        /// <summary>
+        /// 获取调试信息时的参数。
+        /// </summary>
         protected object[] args;
 
         /// <summary>
