@@ -1,15 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamLu.RegularExpression", "SamLu.RegularExpression\SamLu.RegularExpression.csproj", "{11899032-8AD2-4440-90BE-DB0B5BF6AD53}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SamLu.RegularExpression", "SamLu.RegularExpression\SamLu.RegularExpression.csproj", "{209379AC-DA0B-44B0-9D8A-26A7B8D213FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamLu.StateMachine", "..\..\StateMachine_Develop\src\SamLu.StateMachine\SamLu.StateMachine.csproj", "{23A9B2DF-A5FF-4199-BC87-5EC50EDFB3B3}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{EBB21CC9-BE3F-44A1-85F6-AE355E42953C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegexTest", "test\RegexTest\RegexTest.csproj", "{BE27459E-9FB5-4149-B9C4-15D5B1ABC853}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SamLu.StateMachine", "..\..\StateMachine_Develop\src\SamLu.StateMachine\SamLu.StateMachine.csproj", "{03A2102F-F74B-4B5F-9943-5478287B6665}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,23 +13,19 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{11899032-8AD2-4440-90BE-DB0B5BF6AD53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{11899032-8AD2-4440-90BE-DB0B5BF6AD53}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{11899032-8AD2-4440-90BE-DB0B5BF6AD53}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{11899032-8AD2-4440-90BE-DB0B5BF6AD53}.Release|Any CPU.Build.0 = Release|Any CPU
-		{23A9B2DF-A5FF-4199-BC87-5EC50EDFB3B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{23A9B2DF-A5FF-4199-BC87-5EC50EDFB3B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{23A9B2DF-A5FF-4199-BC87-5EC50EDFB3B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{23A9B2DF-A5FF-4199-BC87-5EC50EDFB3B3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BE27459E-9FB5-4149-B9C4-15D5B1ABC853}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BE27459E-9FB5-4149-B9C4-15D5B1ABC853}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BE27459E-9FB5-4149-B9C4-15D5B1ABC853}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BE27459E-9FB5-4149-B9C4-15D5B1ABC853}.Release|Any CPU.Build.0 = Release|Any CPU
+		{209379AC-DA0B-44B0-9D8A-26A7B8D213FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{209379AC-DA0B-44B0-9D8A-26A7B8D213FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{209379AC-DA0B-44B0-9D8A-26A7B8D213FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{209379AC-DA0B-44B0-9D8A-26A7B8D213FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03A2102F-F74B-4B5F-9943-5478287B6665}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03A2102F-F74B-4B5F-9943-5478287B6665}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03A2102F-F74B-4B5F-9943-5478287B6665}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03A2102F-F74B-4B5F-9943-5478287B6665}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{BE27459E-9FB5-4149-B9C4-15D5B1ABC853} = {EBB21CC9-BE3F-44A1-85F6-AE355E42953C}
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FFBBE92D-7C87-4F03-BC76-A2890225BAF1}
 	EndGlobalSection
 EndGlobal
