@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SamLu.RegularExpression.StateMachine;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -84,5 +85,14 @@ namespace SamLu.RegularExpression
         /// </summary>
         /// <returns>范围正则对象的字符串表示。</returns>
         public override string? ToString() => $"{(this.CanTakeMinimum ? '[' : '(')}{this.Minimum},{this.Maximum}{(this.CanTakeMaximum ? ']' : ')')}";
+
+        /// <inheritdoc/>
+        public override (RegexTransition<T> start, RegexTransition<T> end) GenerateStateMachineSegment()
+        {
+            var transition =  this.provider.CreateRegexTransition((input, inputSymbols) =>
+                Math.Sign(inputSymbols.Compare(this.Minimum, input)) * Math.Sign(inputSymbols.Compare(this.Maximum,input)) <= 0
+            );
+            return (transition, transition);
+        }
     }
 }

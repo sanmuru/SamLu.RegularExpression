@@ -1,4 +1,7 @@
-﻿using System;
+﻿using SamLu.RegularExpression.StateMachine;
+using SamLu.StateMachine;
+using SamLu.StateMachine.ObjectModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -78,5 +81,11 @@ namespace SamLu.RegularExpression
 
             throw new CreatorNotSupportedException(typeof(TObject));
         }
+
+        public virtual RegexState<T> CreateRegexState() => new RegexState<T>();
+
+        public virtual RegexTransition<T> CreateRegexTransition() => new RegexTransition<T>();
+
+        public virtual RegexTransition<T> CreateRegexTransition(Func<T?, IInputSymbols<T>, bool> predicate) => new RegexTransition<T>(predicate);
     }
 }

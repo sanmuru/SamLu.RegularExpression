@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SamLu.RegularExpression.StateMachine;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -201,5 +202,7 @@ namespace SamLu.RegularExpression
         protected internal abstract RegexObject<T> Clone();
 
         object ICloneable.Clone() => this.Clone();
+
+        public abstract (RegexTransition<T> start, RegexTransition<T> end) GenerateStateMachineSegment();
     }
 }
